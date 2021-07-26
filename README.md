@@ -1,5 +1,16 @@
 # improved_data_quality
-this github repo contains the data and works on the challenge de mathematiques et entrepris 2021:  https://challenge-maths.sciencesconf.org/
+This github repo contains the data and works on the challenge de mathematiques et entrepris 2021:  https://challenge-maths.sciencesconf.org/
+# some useful git command
+The folder code will contains the file .py and .ibynb
+The folder report will contains the latex repo as file .tex (please do not add .pdf unless picture to prevent conflict).
+You can add this repo on your local machine using: git clone <url>
+Before any work session use: git pull
+this will prevent you from conflict
+when your work is done use:
+git add ... ,(to add your change)
+git commit -m "write a message explaining your change"
+git push , (to add your change online on gitub).
+# project informations:
 Nom of the company : Foyer : https://www.foyer.lu/en/homepage
 Bibliography:
 https://www.win.tue.nl/~mpechen/publications/pubs/Gama_ACMCS_AdaptationCD_accepted.pdf

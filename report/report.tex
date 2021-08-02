@@ -40,6 +40,26 @@ so the potential solution could look likes :
 \label{sub:DIMENSIONALITY REDUCTION ALGORITHM}
 Dimensionality reduction is helpful when working with visual and audio data involving speech, video, images, or text, and also when simplifying datasets in order to better fit a predictive model.
 Dimensionality reduction is the ML method used to identify patterns in data and deal with computationally extensive problems. This method includes a set of algorithms aimed to reduce the number of input variables in a dataset by projecting the original high-dimensional input data to a low-dimensional space.
+UMAP (Uniform Manifold Approximation and Projection) algorithm allows the construction of a high dimensional graph representation of data and further optimization of a low-dimensional graph to be as structurally similar as possible.
+DATA CLUSTERING:
+This approach is applicable for market and customer segmentation, recommendation engines, document classification, fraud identification, and other cases.
+Clustering allows defining a structure in a set of unlabeled data. Simply put, it organizes data into groups (clusters), basing on its similarity and dissimilarity.
+DBSCAN (density-based spatial clustering of applications with noise) algorithm takes all instances that are close to each other and groups them together, based on a distance measurement and a minimum number of instances specified by a data science engineer.
+ANOMALY DETECTION ALGORITHM
+The anomaly detection algorithm is not independent itself. It often goes along with the dimensionality reduction and clustering algorithms.By using the dimensionality reduction algorithm as a pre-stage for anomaly detection, we, firstly, transform high-dimensional space into a lower-dimensional one. Then we can figure out the density of the major data points in this lower-dimensional space, which may be identified as “normal.” Those data points located far away from the “normal” space are outliers or “anomalies.”
+ASSOCIATION MINING ALGORITHM
+Association mining is the unsupervised ML algorithm used to identify hidden relationships in large datasets which frequently occur together. association mining can deal with non-numeric, categorical data, which means that it requires more actions than simple counting.
+In the public sector, the association mining algorithm can be used for census data processing. As a result, it may help to optimize the planning of public services and businesses such as transport, education, health, setting up new shopping malls, and factories.
+we did the following:
+
+Created the virtual machine on the cloud
+Benchmarked it via running different tests in order to measure the performance of VM
+Collected about 2000 characteristics as raw data
+Analyzed the gathered raw data and extracted the most valuable benchmarks
+Compressed benchmarks into several coefficients (parallelization, one core, stability, database, RAM)
+Calculated the custom coefficient as a balance between the performance and price
+Selected the best instance type based on their characteristics and price
+In conclusion, I would say that there is no perfect path for any business case. And unsupervised machine learning is just a tool for getting expected results. It will work well if you are sure that it meets your business requirements.
 
 % subsection DIMENSIONALITY REDUCTION ALGORITHM (end)
 \end{document}

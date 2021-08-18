@@ -1,176 +1,36 @@
 %this will contains the latex report
 \documentclass{article}
 \usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
 
 \title{dsds}
 \author{dialahawat7 }
 \date{August 2021}
 
 \begin{document}
-
-\maketitle
-
-\section{Introduction}
-
-why is data quality important:
-there are many reason for why data quality are important. First the is growth of data within a company among the years is at exponential rate. the next point is how interconnected are the systems in terms of how much data is following between your systems. the third is increasingly data driven organization.
-In order to make sure that your theorem data quality is the best it can be we should follow this guide lines:
-Poor data quality has a substantial impact, such as financial loss. IVM estimate the loss of 3.1 trillion dollars annually  in USA because due to poor data quality. Productivity loss, Forrester came up with a study that 40\% spend 1/3 of their time validating and fixing data quality issues. All of that lead to a low trust data.
-Accuracy: is the data correct and precise? Create processes for verifying, entering, and updating CRM data right from the start.
-Completeness: Do we have all the information needed for each of the records? Identify what information is important for what actions and develop processes for getting thr information your team needs to do their jobs
-Uniformity: Is similar information presented in similar ways across your system?
-Uniqueness : is yours CRM full of duplicate data? Have process to combine and delete duplicate records or to avoid creating them in the first place.
-Timeliness: Is your information up to date? Regularly organize and clean your CRM data to ensure it's accurate unique and timely. Check for outdates information when perform bulk data imports.
-security: Is your information secure? Give each user the access they need to do their jobs and nothing more.
-%---------------------------------------
-%---------------------------------------
-\section{Approach to managing data quality }
-Traditional approach to managing data quality is full of pain points. It's done by 3 steps. The first is the identification which consists on asses each dataset, meeting the owners and develop fixed rules to detect known issue, Then the remediation which consists on creating replacement rules where possible, and finally the recommendation consisting on alerts all given similar treatment and manual investigations to know what other rules should be qualify as bad data.
-What can banking fraud teach us about how to fight data quality issues?
-Use the technics like that used to fight fraud, to fight fraud data issues since data since bad data is fraudulante data record leaving whithin your data set.
-Using AI technics applied to fight fraud for fighting data issue.
-So that in the identification step, they use some anomaly detection using unsupervised ML, find data records that looks like outliers, or supervised machine learning or they imbed an active learning to identify data quality issues so that after identifying data issues. In the remediation step they used a supervised ML to recommend what should we fixe, use active learning and then use supervised ML to automaticaly recommend how should we fix them or RPA.
-so the potential solution could look likes :
-\begin{enumerate}
-    \item identifying data quality issues: missing values, out of range, duplicates abd inconsistencies
-    \item suggests and/or remediates the issues: depending on how certain the model is it is possible to take different actions
-    \item Improves performance through active learning: giving feedback to the model the results will improve over time
-\end{enumerate}
-%---------------------------------------
-%---------------------------------------
-\section{unsupervised machine learning:}
-%https://mobidev.biz/blog/unsupervised-machine-learning-improve-data-quality
-\subsection{DIMENSIONALITY REDUCTION ALGORITHM} % (fold)
-\label{sub:DIMENSIONALITY REDUCTION ALGORITHM}
-Dimensionality reduction is helpful when working with visual and audio data involving speech, video, images, or text, and also when simplifying datasets in order to better fit a predictive model.
-Dimensionality reduction is the ML method used to identify patterns in data and deal with computationally extensive problems. This method includes a set of algorithms aimed to reduce the number of input variables in a dataset by projecting the original high-dimensional input data to a low-dimensional space.
-UMAP (Uniform Manifold Approximation and Projection) algorithm allows the construction of a high dimensional graph representation of data and further optimization of a low-dimensional graph to be as structurally similar as possible.
-DATA CLUSTERING:
-This approach is applicable for market and customer segmentation, recommendation engines, document classification, fraud identification, and other cases.
-Clustering allows defining a structure in a set of unlabeled data. Simply put, it organizes data into groups (clusters), basing on its similarity and dissimilarity.
-DBSCAN (density-based spatial clustering of applications with noise) algorithm takes all instances that are close to each other and groups them together, based on a distance measurement and a minimum number of instances specified by a data science engineer.
-ANOMALY DETECTION ALGORITHM
-The anomaly detection algorithm is not independent itself. It often goes along with the dimensionality reduction and clustering algorithms.By using the dimensionality reduction algorithm as a pre-stage for anomaly detection, we, firstly, transform high-dimensional space into a lower-dimensional one. Then we can figure out the density of the major data points in this lower-dimensional space, which may be identified as “normal.” Those data points located far away from the “normal” space are outliers or “anomalies.”
-ASSOCIATION MINING ALGORITHM
-Association mining is the unsupervised ML algorithm used to identify hidden relationships in large datasets which frequently occur together. association mining can deal with non-numeric, categorical data, which means that it requires more actions than simple counting.
-In the public sector, the association mining algorithm can be used for census data processing. As a result, it may help to optimize the planning of public services and businesses such as transport, education, health, setting up new shopping malls, and factories.
-we did the following:
-
-Created the virtual machine on the cloud
-Benchmarked it via running different tests in order to measure the performance of VM
-Collected about 2000 characteristics as raw data
-Analyzed the gathered raw data and extracted the most valuable benchmarks
-Compressed benchmarks into several coefficients (parallelization, one core, stability, database, RAM)
-Calculated the custom coefficient as a balance between the performance and price
-Selected the best instance type based on their characteristics and price
-In conclusion, I would say that there is no perfect path for any business case. And unsupervised machine learning is just a tool for getting expected results. It will work well if you are sure that it meets your business requirements.
-%------------------------------------------
-%-----------------------------------------
-\section{Improving Data Quality Through Deep Learning and Statistical Models:}
-traditional data quality control
-methods are based on users’ experience or
-previously established business rules, and this
-limits performance in addition to being a very
-time consuming process and low accuracy.
-Utilizing big data, we can leverage computing
-resources and advanced techniques to overcome
-these challenges and provide greater value to the
-business.
-Machine learning is a promising subfield of
-computer science to approach human-level
-artificial intelligence (AI), and is already used to
-self-driving car, data mining, and natural speech
-recognition.
-The AI algorithms can either
-be unsupervised or supervised. Additionally,
-deep learning is one of the supervised machine
-learning algorithms.
-Improving data quality
-is essential to data mining, data analysis, and big
-data. [16] mentions data quality assessment
-architecture via AI, but this paper does not
-discuss how to improve and how to identify data
-quality with special details based on AI and
-statistical modes.
-To the best of our knowledge,
-no literature improves data quality through bot
-machine learning and statistical quality control
-models
-%-------------------------------
-\subsection{outlier def}
-Outlier data means this data is totally
-different from the others. Hawkins officially
-defined it as “An outlier is an observation which
-deviates so much from the other observations as
-to arouse suspicions that it was generated by a
-different mechanism”.
-However, outlier data
-does not mean error data or problem data, but
-this data means it has potential error data or risk
-data
-%-----------------------------------------------
-\subsection{work presented by the paper}
-In this paper, we develop deep learning
-software based on KNIME and WEKA [16-20]
-because this software are visually interactive
-tools and the software supports JAVA programs.
-%-----------------------------------------------
-%----------------------------------------------
-\section{Data Quality Evaluation using Probability Models}
-A very bad paper.. incredible
-A decision tree algorithm is used to predict data quality based
-on no domain knowledge of the datasets under examination. It is shown that for the data examined, the ability
-to predict the quality of data based on simple good/bad pre-labelled learning examples is accurate, however
-in general it may not be sufficient for useful production data quality assessment.
-The main objective of this research was to examine if
-probability models can be used to improve indicators
-of data quality in a given dataset, with no domain
-specific knowledge.
-The most important dimensions of data
-quality relate to the accuracy, consistency, completeness, and correctness of the data under investigation.
-There was no particular regard to the
-domain of the dataset chosen, the main criteria for
-choice was that there was a small number of fields in
-the schema to facilitate efficient processing of data
-from a model creation and analysis point of view.
-%--------------------------------
-%-------------------------------
-\section{Automating Large-Scale Data Quality Verification}
-The system is built on the following principles: at the heart of our system is declarativity; we
-want users to spend time on thinking ‘how’ their data should
-look like, and not have to worry too much about how to implement the actual quality checks. Therefore, our system offers a declarative API that allows users to define checks on their data by composing a huge variety of available constraints.
-Additionally, data validation tools should provide
-high flexibility to their users. The users should be able to
-leverage external data and custom code for validation (e.g.,
-call a REST service for some data and write a complex function that compares the result to some statistic computed on
-the data).
-. Our vision is that users should be able to write
-‘unit-tests’ for data (Section 3.1), analogous to established
-testing practices in software engineering. Furthermore, data
-validation systems have to acknowledge the fact that data is
-being continuously produced, therefore they should allow for
-the integration of growing datasets. Our proposed system
-explicitly supports the incremental computation of quality
-metrics on growing datasets (Section 3.2), and allows its
-users to run anomaly detection algorithms on the resulting
-historical time series of quality metrics (Section 3.4). The
-last principle to address is scalability: data validation systems should seamlessly scale to large datasets. To address
-this requirement, we designed our system to translate the
-required data metrics computations to aggregation queries,
-which can be efficiently executed at scale with a distributed
-dataflow engine such as Apache Spark.
-We first present our declarative API, which allows users to specify constraints on their
-datasets, and detail how we translate these constraints into
-computations of metrics on the data, which allow us to subsequently evaluate the constraints
-%------------------------------------
-\subsection{data quality}
-We first take a look at data quality literature to understand common dimensions of quality. The quality of data
-can refer to the extension of the data (i.e., data values), or to
-the intension of the data (i.e., the schema)
-\subsection{methods}
-Unit Tests for Data: The general idea behind our system is to enable users to easily define unit tests for their datasets in a declarative manner. These unit-tests consist of constraints on
-the data which can be combined with user-defined functions. We want them to focus on the definition of their checks and their validation code, but not on the computation of the metrics required for the constraints.
-Declarative definition of data quality constraints: users define checks for their datasets, which either result in errors or warnings during execution, if the validation fails.
-we advise the system to detect anomalies in the time series of sizes of records that have been added to the dataset over time and issue a warning if the is size more than three standard deviations away from the previous mean and throw an error if it is more than four standard deviations away. Finally, we define a predictability check for the countryResidence column which dictates that our system should be able to predict values in this column with a precision of 99 per cent by inspecting the corresponding values in the zipCode and cityResidence columns.
-
+\section{supervised machine learning}
+In machine learning the supervised learning problem is formally defined as follows.
+We aim to predict a target variable $y \in \mathbb{R}$ in regression tasks (or y categorical in classification tasks) given a set of input feature $X \in \mathbb{R}^p$.
+In the training examples, that are used for model building, both X and y are known.
+In the new examples, on which the predictive model is applied, X is known, but y is not known at the time of prediction.
+According to the Bayesian Decision Theory a classification can
+be described by the prior probabilities of the classes $\mathbb{P}(y)$ and the class conditional density functions $\mathbb{P}(X/y)$, for all classes $y=1,...,c,$ where $c$ is the number of classes.
+The classification decision is made according to the posterior probabilities of the classes, which for class y can be represented as
+$$\mathbb{P}(y/X) = \frac{\mathbb{P}(y)\mathbb{P}(X/y)}{\mathbb{P}(X)},$$
+where $\mathbb{P}(X)= \sum_{y=1}^c \mathbb{P}(y)\mathbb{P}(X/y)$.
+Here equal costs of misclassification are assumed.
+The type of the target variable space depends on the task.
+In classification the target variable takes categorical values (class labels), while in regression the target variable takes continuous values.
+%---------------
+%----------------
+\section{Online learning and offline learning}
+We can distinguish two learning modes: offline learning and online learning.
+In offline learning the whole training data must be available at the time of model training.
+Only when training is completed the model can be used for predicting. In contrast, online algorithms process data sequentially. They produce a model and put it in operation without having the complete training data set available at the beginning.
+The model is continuously updated during operation as more training data arrives.
+Less restrictive than online algorithms are incremental algorithms that process input examples one-by-one (or batch-by-batch) and update the decision model after receiving each example.
+Incremental algorithms may have random access to previous examples or representative/selected examples.
+In such a case these algorithms are called incremental algorithms with partial memory.
+Typically, in incremental algorithms, for any new presentation of data, the update operation of the model is based on the previous one.
 \end{document}

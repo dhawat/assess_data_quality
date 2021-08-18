@@ -22,6 +22,8 @@ Uniformity: Is similar information presented in similar ways across your system?
 Uniqueness : is yours CRM full of duplicate data? Have process to combine and delete duplicate records or to avoid creating them in the first place.
 Timeliness: Is your information up to date? Regularly organize and clean your CRM data to ensure it's accurate unique and timely. Check for outdates information when perform bulk data imports.
 security: Is your information secure? Give each user the access they need to do their jobs and nothing more.
+%---------------------------------------
+%---------------------------------------
 \section{Approach to managing data quality }
 Traditional approach to managing data quality is full of pain points. It's done by 3 steps. The first is the identification which consists on asses each dataset, meeting the owners and develop fixed rules to detect known issue, Then the remediation which consists on creating replacement rules where possible, and finally the recommendation consisting on alerts all given similar treatment and manual investigations to know what other rules should be qualify as bad data.
 What can banking fraud teach us about how to fight data quality issues?
@@ -34,6 +36,8 @@ so the potential solution could look likes :
     \item suggests and/or remediates the issues: depending on how certain the model is it is possible to take different actions
     \item Improves performance through active learning: giving feedback to the model the results will improve over time
 \end{enumerate}
+%---------------------------------------
+%---------------------------------------
 \section{unsupervised machine learning:}
 %https://mobidev.biz/blog/unsupervised-machine-learning-improve-data-quality
 \subsection{DIMENSIONALITY REDUCTION ALGORITHM} % (fold)
@@ -60,6 +64,8 @@ Compressed benchmarks into several coefficients (parallelization, one core, stab
 Calculated the custom coefficient as a balance between the performance and price
 Selected the best instance type based on their characteristics and price
 In conclusion, I would say that there is no perfect path for any business case. And unsupervised machine learning is just a tool for getting expected results. It will work well if you are sure that it meets your business requirements.
+%------------------------------------------
+%-----------------------------------------
 \section{Improving Data Quality Through Deep Learning and Statistical Models:}
 traditional data quality control
 methods are based on users’ experience or
@@ -90,6 +96,7 @@ To the best of our knowledge,
 no literature improves data quality through bot
 machine learning and statistical quality control
 models
+%-------------------------------
 \subsection{outlier def}
 Outlier data means this data is totally
 different from the others. Hawkins officially
@@ -100,13 +107,15 @@ different mechanism”.
 However, outlier data
 does not mean error data or problem data, but
 this data means it has potential error data or risk
-dataß
-\subsection{work in the paper}
+data
+%-----------------------------------------------
+\subsection{work presented by the paper}
 In this paper, we develop deep learning
 software based on KNIME and WEKA [16-20]
 because this software are visually interactive
 tools and the software supports JAVA programs.
-% subsection DIMENSIONALITY REDUCTION ALGORITHM (end)
+%-----------------------------------------------
+%----------------------------------------------
 \section{Data Quality Evaluation using Probability Models}
 A very bad paper.. incredible
 A decision tree algorithm is used to predict data quality based
@@ -124,4 +133,44 @@ domain of the dataset chosen, the main criteria for
 choice was that there was a small number of fields in
 the schema to facilitate efficient processing of data
 from a model creation and analysis point of view.
+%--------------------------------
+%-------------------------------
+\section{Automating Large-Scale Data Quality Verification}
+The system is built on the following principles: at the heart of our system is declarativity; we
+want users to spend time on thinking ‘how’ their data should
+look like, and not have to worry too much about how to implement the actual quality checks. Therefore, our system offers a declarative API that allows users to define checks on their data by composing a huge variety of available constraints.
+Additionally, data validation tools should provide
+high flexibility to their users. The users should be able to
+leverage external data and custom code for validation (e.g.,
+call a REST service for some data and write a complex function that compares the result to some statistic computed on
+the data).
+. Our vision is that users should be able to write
+‘unit-tests’ for data (Section 3.1), analogous to established
+testing practices in software engineering. Furthermore, data
+validation systems have to acknowledge the fact that data is
+being continuously produced, therefore they should allow for
+the integration of growing datasets. Our proposed system
+explicitly supports the incremental computation of quality
+metrics on growing datasets (Section 3.2), and allows its
+users to run anomaly detection algorithms on the resulting
+historical time series of quality metrics (Section 3.4). The
+last principle to address is scalability: data validation systems should seamlessly scale to large datasets. To address
+this requirement, we designed our system to translate the
+required data metrics computations to aggregation queries,
+which can be efficiently executed at scale with a distributed
+dataflow engine such as Apache Spark.
+We first present our declarative API, which allows users to specify constraints on their
+datasets, and detail how we translate these constraints into
+computations of metrics on the data, which allow us to subsequently evaluate the constraints
+%------------------------------------
+\subsection{data quality}
+We first take a look at data quality literature to understand common dimensions of quality. The quality of data
+can refer to the extension of the data (i.e., data values), or to
+the intension of the data (i.e., the schema)
+\subsection{methods}
+Unit Tests for Data: The general idea behind our system is to enable users to easily define unit tests for their datasets in a declarative manner. These unit-tests consist of constraints on
+the data which can be combined with user-defined functions. We want them to focus on the definition of their checks and their validation code, but not on the computation of the metrics required for the constraints.
+Declarative definition of data quality constraints: users define checks for their datasets, which either result in errors or warnings during execution, if the validation fails.
+we advise the system to detect anomalies in the time series of sizes of records that have been added to the dataset over time and issue a warning if the is size more than three standard deviations away from the previous mean and throw an error if it is more than four standard deviations away. Finally, we define a predictability check for the countryResidence column which dictates that our system should be able to predict values in this column with a precision of 99 per cent by inspecting the corresponding values in the zipCode and cityResidence columns.
+
 \end{document}

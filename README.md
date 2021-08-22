@@ -11,7 +11,7 @@ git add ... ,(to add your change)
 git commit -m "write a message explaining your change"
 git push , (to add your change online on gitub).
 # project informations:
-Nom of the company : Foyer : https://www.foyer.lu/en/homepage
+Nom of the company : Foyer : https://www.foyer.lu/en/homepage \\
 Bibliography:
 https://www.win.tue.nl/~mpechen/publications/pubs/Gama_ACMCS_AdaptationCD_accepted.pdf :
 dynamically changing environments, (problem related to the change of data (there distribution)  with time). he start to talk on supervised machine learning on dynamic evolving data (non stationary distribution of the target (to predict) variable)

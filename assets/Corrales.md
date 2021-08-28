@@ -31,7 +31,7 @@ sources are joined .
 - **Timeliness**: corresponds to the degree of representation of the real world through data in  
 a required point in time .
 
-!(assets/Pasted image 20210828135932.png)
+!(../assets/Pasted image 20210828135932.png)
 !(assets/Pasted image 20210828152635.png)
 !(assets/Pasted image 20210828152711.png)
 !(assets/Pasted image 20210828152754.png)

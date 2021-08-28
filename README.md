@@ -10,6 +10,7 @@ when your work is done use:
 git add ... ,(to add your change)
 git commit -m "write a message explaining your change"
 git push , (to add your change online on gitub).
+for notebook please clear the output before push to prevent conflict, and load data.
 # project informations:
 Nom of the company : Foyer : https://www.foyer.lu/en/homepage
 \

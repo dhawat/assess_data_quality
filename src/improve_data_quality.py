@@ -1,4 +1,4 @@
-import src.utils as utils
+import utils as utils
 
 
 class ImproveDataQuality:

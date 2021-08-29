@@ -3,9 +3,12 @@
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{amsfonts}
+\usepackage{xcolor}
 
-\title{Improve data quality}
-\date{August 2021}
+\newcommand\dhawat[1]{\textcolor{red}{DH: #1}}
+\newcommand\mabaach[1]{\textcolor{magenta}{MA: #1}}
+\newcommand\mboussaa[1]{\textcolor{blue}{MB: #1}}
+
 
 \begin{document}
 \section{Intoduction} % (fold)
@@ -17,27 +20,27 @@
 
 
 \section{supervised machine learning}
-In machine learning the supervised learning problem is formally defined as follows.
-We aim to predict a target variable $y \in \mathbb{R}$ in regression tasks (or y categorical in classification tasks) given a set of input feature $X \in \mathbb{R}^p$.
-In the training examples, that are used for model building, both X and y are known.
-In the new examples, on which the predictive model is applied, X is known, but y is not known at the time of prediction.
-According to the Bayesian Decision Theory a classification can
-be described by the prior probabilities of the classes $\mathbb{P}(y)$ and the class conditional density functions $\mathbb{P}(X/y)$, for all classes $y=1,...,c,$ where $c$ is the number of classes.
-The classification decision is made according to the posterior probabilities of the classes, which for class y can be represented as
+\dhawat{In machine learning the supervised learning problem is formally defined as follows.
+    We aim to predict a target variable $y \in \mathbb{R}$ in regression tasks (or y categorical in classification tasks) given a set of input feature $X \in \mathbb{R}^p$.
+    In the training examples, that are used for model building, both X and y are known.
+    In the new examples, on which the predictive model is applied, X is known, but y is not known at the time of prediction.
+    According to the Bayesian Decision Theory a classification can
+    be described by the prior probabilities of the classes $\mathbb{P}(y)$ and the class conditional density functions $\mathbb{P}(X/y)$, for all classes $y=1,...,c,$ where $c$ is the number of classes.
+    The classification decision is made according to the posterior probabilities of the classes, which for class y can be represented as}
 $$\mathbb{P}(y/X) = \frac{\mathbb{P}(y)\mathbb{P}(X/y)}{\mathbb{P}(X)},$$
 where $\mathbb{P}(X)= \sum_{y=1}^c \mathbb{P}(y)\mathbb{P}(X/y)$.
-Here equal costs of misclassification are assumed.
-The type of the target variable space depends on the task.
-In classification the target variable takes categorical values (class labels), while in regression the target variable takes continuous values.
+\dhawat{Here equal costs of misclassification are assumed.
+    The type of the target variable space depends on the task.
+    In classification the target variable takes categorical values (class labels), while in regression the target variable takes continuous values.}
 %---------------
 %----------------
 \section{Online learning and offline learning}
-We can distinguish two learning modes: offline learning and online learning.
-In offline learning the whole training data must be available at the time of model training.
-Only when training is completed the model can be used for predicting. In contrast, online algorithms process data sequentially. They produce a model and put it in operation without having the complete training data set available at the beginning.
-The model is continuously updated during operation as more training data arrives.
-Less restrictive than online algorithms are incremental algorithms that process input examples one-by-one (or batch-by-batch) and update the decision model after receiving each example.
-Incremental algorithms may have random access to previous examples or representative/selected examples.
-In such a case these algorithms are called incremental algorithms with partial memory.
-Typically, in incremental algorithms, for any new presentation of data, the update operation of the model is based on the previous one.
+\dhawat{We can distinguish two learning modes: offline learning and online learning.
+    In offline learning the whole training data must be available at the time of model training.
+    Only when training is completed the model can be used for predicting. In contrast, online algorithms process data sequentially. They produce a model and put it in operation without having the complete training data set available at the beginning.
+    The model is continuously updated during operation as more training data arrives.
+    Less restrictive than online algorithms are incremental algorithms that process input examples one-by-one (or batch-by-batch) and update the decision model after receiving each example.
+    Incremental algorithms may have random access to previous examples or representative/selected examples.
+    In such a case these algorithms are called incremental algorithms with partial memory.
+    Typically, in incremental algorithms, for any new presentation of data, the update operation of the model is based on the previous one.}
 \end{document}

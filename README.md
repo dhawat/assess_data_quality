@@ -29,9 +29,13 @@ https://arxiv.org/ftp/arxiv/papers/1810/1810.07132.pdf Done
 https://res.mdpi.com/d_attachment/symmetry/symmetry-10-00248/article_deploy/symmetry-10-00248.pdf not bad specify some algo may be interesting, talk about cleaning data used for classification purspose there basic algo not present in the paper
 \
 https://arxiv.org/ftp/arxiv/papers/2009/2009.06672.pdf Done (bad paper)
-
+**Important link and ref**
 \
 redit dataset used by amazon as a test sample:
 https://www.kaggle.com/reddit/reddit-comments-may-2015
+\
 amazon github:
 https://github.com/awslabs/python-deequ
+\
+difference entre pyspark and pandas:
+https://www.geeksforgeeks.org/difference-between-spark-dataframe-and-pandas-dataframe/

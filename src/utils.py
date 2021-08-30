@@ -162,5 +162,6 @@ def _is_none(df, col_name=""):
                 0 means non none
     """
     _, df_clean = _is_duplicated(df)
-    ratio = len(df_clean[col_name].isnull()) / df_clean.shape[0]
+    none_element = df_clean[col_name][df_clean[col_name].isnull()]
+    ratio = len(none_element) / df_clean.shape[0]
     return ratio

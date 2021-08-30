@@ -43,3 +43,62 @@ def _to_DataFrame(data):
     f_dict = {'csv': pd.read_csv, 'json': pd.read_json, 'sql': pd.read_sq, 'xlsx': pd.read_excel}
     df = f_dict[ext]()
     return df
+
+def get_metadata(df):
+    """read a dataframe and generate relevant metadata such as columns types etc
+
+    Args:
+        df (DataFrame): data
+
+    Returns:
+        dict: {name_of_column: metadata_associated}
+    """
+    metadata = []
+    for column in df:
+        metadata.append(check_data_type(df[column]))
+    return metadata
+
+def check_data_type(column):
+    """ check type in a column which type is it using a voting method from all the non na data
+
+    Args:
+        column (pandas.core.series.Series): column from a dataframe
+
+    Returns:
+        [type]: [description]
+    """
+    types_dict = {}
+    for e in column[column.notna()]:
+        try:
+            e = parse(e, False)
+        except:
+            pass
+        if type(e) not in types_dict:
+            types_dict[type(e)] = 1
+        else:
+            types_dict[type(e)] += 1
+    if len(types_dict) != 0:
+        return max(types_dict, key=types_dict.get)
+    else:
+        return
+
+
+def is_date(string, fuzzy=False):
+    """check if a given string is a date and return the date if true and raise a Valueerror if false
+
+    Args:
+        string (string): string to check 
+        fuzzy (bool, optional): Enable a more leniant search in the string. Defaults to False.
+
+    Raises:
+        ValueError: raised when string is not likely to be a date
+
+    Returns:
+        string: datetime as a string
+    """
+    try: 
+        pd.to_datetime(string)
+        return pd.to_datetime(string)
+
+    except ValueError:
+        raise ValueError

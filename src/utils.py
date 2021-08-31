@@ -2,6 +2,11 @@ import pandas as pd
 import re
 from dateutil.parser import parse
 
+from sklearn.cluster import AffinityPropagation
+from difflib import SequenceMatcher
+
+
+
 """df = pd.read_csv("logs.csv")  # read data
 
 df = df.set_index("d")  # to re-index with a column 'd'
@@ -179,3 +184,35 @@ def proba_model(df, col_name, mean, std, tresh=6):
     ]  # trancate values from the column
     df_trunc = df_clean[(col > tree_std) * (col < t_std)]  # clean dataframe
     return df_col_trunc, df_trunc
+
+# Possibilité d'améliorer
+# Threshold for anomalie is fixed at Q_1 = round(np.percentile(unique_counts, 5)), could be improved. 
+# DBSCAN for example on the number of occurences on words.
+
+def uncorrect_grammar(df_names, cluster):
+    words = np.asarray(df_names)
+    unique_words, unique_counts = np.unique(df_names, return_counts = True)
+    Q_1 = round(np.percentile(unique_counts, 5))
+    Low_risk_words = unique_words[np.where(unique_counts > Q_1)[0]]
+    index_In_words = []
+    for w in cluster:
+        if not (w in list(Low_risk_words)):
+            index_In_words = index_In_words + np.ndarray.tolist(np.where(words == w)[0])
+    return index_In_words
+
+def Index_Uncorrect_grammar(df_State):
+    df_State = df["state"]
+    df_State_unique = np.unique(df_State)
+    words = np.asarray(df_State_unique) #So that indexing with a list will work
+    lev_similarity = np.array([[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words])
+    affprop = AffinityPropagation(affinity = "precomputed", damping=0.5)
+    affprop.fit(lev_similarity)
+    list_uncorrect = []
+    if len(np.unique(affprop.labels_)) == 1:
+        return list_uncorrect
+    else:
+        for cluster_id in np.unique(affprop.labels_):
+            cluster = np.unique(words[np.nonzero(affprop.labels_ == cluster_id)])
+            list_uncorrect = list_uncorrect + uncorrect_grammar(df_State, cluster)
+    return list_uncorrect
+

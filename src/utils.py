@@ -76,10 +76,6 @@ def check_data_type(column):
     """
     types_dict = {}
     for e in column[column.notna()]:
-        try:
-            e = parse(e, False)
-        except:
-            pass
         if type(e) not in types_dict:
             types_dict[type(e)] = 1
         else:
@@ -90,7 +86,7 @@ def check_data_type(column):
         return
 
 
-def is_date(string, fuzzy=False):
+def _is_date(string, fuzzy=False):
     """check if a given string is a date and return the date if true and raise a ValueError if false
 
     Args:
@@ -139,19 +135,11 @@ def _is_unique(df, col_name=""):
                 if 1 means all values are unique
     """
     df_clean, _ = _is_duplicated(df)
-    if df_clean[col_name].is_unique:
-        ratio = 1
-    else:
-        repeated = pd.concat(
-            g for _, g in df_clean.groupby(col_name) if len(g) > 1
-        )  # repeated columns
-
-        ratio = 1 - len(repeated) / df_clean.shape[0]
-    return ratio
+    return df_clean[col_name].nuinque() / df_clean[col_name].shape[0]
 
 
 def _is_none(df, col_name=""):
-    """find none ration in a specific columns
+    """find none ratio in a specific columns
 
     Args:
         df ([type]): [description]

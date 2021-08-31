@@ -4,28 +4,27 @@ import utils as utils
 class Data:
     """Data class holding a column by column profile and index flagged as low quality data"""
 
+    def __init__(self, path):
+        """
+        Args:
+            data (CSV, JSON, SQL): data set.
+        """
+        if utils.check_extension(path) == "none":
+            raise TypeError("data should be of provided as .csv or .json or .sql file")
 
-def __init__(self, path):
-    """
-    Args:
-        data (CSV, JSON, SQL): data set.
-    """
-    if utils.check_extension(path) == "none":
-        raise TypeError("data should be of provided as .csv or .json or .sql file")
+        self.data = utils._to_DataFrame(path)
+        self._profile = None
+        self._good_index = [range(self.data.shape[0])]
+        self._bad_index = []
 
-    self.data = utils._to_DataFrame(path)
-    self._profile = None
-    self._good_index = [range(data.shape[0])]
-    self._bad_index = []
-
-   @property
+    @property
     def profile(self):
         if self._profile is None:
             raise Exception('profile is None')
         return self._profile
     
-    def set_profile(self, df_results):
-         profile = Profiler(self.data)
+    def set_profile(self):
+         profile = [Profile(self, column) for column in self.data.columns]
          self._profile = profile
 
     @property
@@ -60,17 +59,42 @@ class Profile:
     """
 
     def __init__(self, Data, column):
-        self._completeness = 
-        self._size = 
-        self._uniqueness =
-        self._col_type = utils.check_data_types(column)
-        if _col_type == type(str()):
+        self._emptiness = utils._is_none(Data.data, column)
+        self._size = Data.data[column].shape[0]
+        self._uniqueness = utils._is_unique(Data.data, column)
+        self._col_type = utils.check_data_type(Data.data[column])
+        if self._col_type == type(str()):
             pass
-        if _col_type == type(int()) or == type(float()):
-            self._min = Data[column].min()
-            self._max = Data[column].max()
-            self._mean = Data[column].mean()
-            self._std = Data[column].std()
-        self
+        if self._col_type in [type(int()), type(float())]:
+            self._min = Data.data[column].min()
+            self._max = Data.data[column].max()
+            self._mean = Data.data[column].mean()
+            self._std = Data.data[column].std()
 
-        
+    @property
+    def emptiness(self):
+        return self._emptiness
+
+    @emptiness.setter
+    def emptiness(self, value):
+        self._emptiness = value
+    
+    @property
+    def size(self):
+        return self._size
+
+    @size.setter
+    def size(self, value):
+        self._size = value
+
+    @property
+    def uniqueness(self):
+        return self._uniqueness
+
+    @uniqueness.setter
+    def uniqueness(self, value):
+        self._uniqueness = value
+
+    @property
+    def col_type(self):
+        return self._col_type

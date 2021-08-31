@@ -24,7 +24,7 @@ class Data:
         return self._profile
     
     def set_profile(self):
-         profile = [Profile(self, column) for column in self.data.columns]
+         profile = {column: Profile(self, column) for column in self.data.columns}
          self._profile = profile
 
     @property
@@ -43,16 +43,43 @@ class Data:
     def good_index(self, list_idx):
         if len(list_idx) > self.data.shape[0]:
             raise ValueError('Index length must be smaller than the length of the dataframe')
-        self._good_index = list_idx 
-    
+        self._good_index = list_idx
+
+    def get_str_col(self):
+        col_list = []
+        for column in self.data.columns:
+            if self.profile[column]._col_type == tpye(str()):
+                col_list.append(column)
+        return col_list
+
+    def get_nbr_col(self):
+        col_list = []
+        for column in self.data.columns:
+            if self.profile[column]._col_type in [tpye(int()), type(float())]
+                col_list.append(column)
+        return col_list
+        
     def push_bad_index(self, list_idx): #Find a better method name
         for elem in list_idx:
             try:
                 self.bad_index.append(elem)
-                self.good_index.remove(elem)
             except:
                 pass
-            
+
+    def firstpass(self):
+        # Deterministic pass
+        n_duped_idx = self.data[~good_index_is_duplicated(self.data)[1]].index
+        
+        # Probabilistic pass
+        for column in get_str_col():
+            idx = index_uncorrect_grammar(self.data[column][n_duped_idx][self.data[column][n_duped_idx].notna()]) #get the non duped indexes and not na from a column
+            idx = self.data[column][n_duped_idx][self.data[column][n_duped_idx].notna()].iloc[idx].index
+            self.bad_index(idx)
+        for column in get_nbr_col():
+            idx = utils.proba_model(self.data[column][n_duped_idx][self.data[column][n_duped_idx].notna()], \
+                self.profile[column]._mean, self.profile[column]._std)
+            idx = self.data[column][n_duped_idx][self.data[column][n_duped_idx].notna()].iloc[idx].index
+            self.bad_index(idx)
 
 class Profile:
     """A profile for a dataframe column.

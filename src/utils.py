@@ -124,7 +124,7 @@ def _is_duplicated(df):
     df_new = df.drop(["Unnamed: 0"], axis=1)
     duplicated_row = df[df_new.duplicated()]  # duplicated row
     df_clean = df[~df_new.duplicated()]  # without duplication row
-    return duplicated_row, df_clean
+    return df_clean, duplicated_row
 
 
 def _is_unique(df, col_name=""):
@@ -135,17 +135,18 @@ def _is_unique(df, col_name=""):
         col_name (str, optional): Column name. Defaults to "".
 
     Returns:
-        ratio : (number of repeated data in a column)/card(the column)
+        ratio : 1 - (number of repeated data in a column)/card(the column)
                 if 1 means all values are unique
     """
-    _, df_clean = _is_duplicated(df)
+    df_clean, _ = _is_duplicated(df)
     if df_clean[col_name].is_unique:
         ratio = 1
     else:
         repeated = pd.concat(
             g for _, g in df_clean.groupby(col_name) if len(g) > 1
         )  # repeated columns
-        ratio = len(repeated) / df_clean.shape[0]
+
+        ratio = 1 - len(repeated) / df_clean.shape[0]
     return ratio
 
 
@@ -161,7 +162,7 @@ def _is_none(df, col_name=""):
                 1 means all the columns is none
                 0 means non none
     """
-    _, df_clean = _is_duplicated(df)
+    df_clean, _ = _is_duplicated(df)
     none_element = df_clean[col_name][df_clean[col_name].isnull()]
     ratio = len(none_element) / df_clean.shape[0]
     return ratio

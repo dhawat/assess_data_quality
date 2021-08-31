@@ -160,7 +160,7 @@ def _is_none(df, col_name=""):
     return ratio
 
 
-def proba_model(df, col_name, mean, std, tresh=6):
+def proba_model(col, mean, std, tresh=3):
     """cutting distribution between mean-3*std and mean+3*std
 
     Args:
@@ -173,16 +173,13 @@ def proba_model(df, col_name, mean, std, tresh=6):
     Returns:
         [type]: [description]
     """
-    df_clean, _ = _is_duplicated(df)
-    col = df_clean[col_name]
     upper_bound = mean + tresh * std
     lower_bound = mean - tresh * std
-    print(upper_bound, lower_bound)
-    df_col_trunc = col[
+    idx = col[
         ~((col > lower_bound) * (col < upper_bound))
-    ]  # trancate values from the column
-    df_trunc = df_clean[(col > lower_bound) * (col < upper_bound)]  # clean dataframe
-    return df_col_trunc, df_trunc
+    ].index  # trancate values from the column
+    # clean dataframe
+    return idx
 
 
 # Possibilité d'améliorer

@@ -20,12 +20,13 @@ class Data:
     @property
     def profile(self):
         if self._profile is None:
-            raise Exception('profile is None')
+            raise Exception("profile is None")
         return self._profile
-    
+
     def set_profile(self):
-         profile = {column: Profile(self, column) for column in self.data.columns}
-         self._profile = profile
+        """ """
+        profile = {column: Profile(self, column) for column in self.data.columns}
+        self._profile = profile
 
     @property
     def good_index(self):
@@ -34,7 +35,7 @@ class Data:
     @property
     def bad_index(self):
         return self._bad_index
-    
+
     @bad_index.setter
     def bad_index(self, list_idx):
         self._bad_index = list_idx
@@ -42,24 +43,26 @@ class Data:
     @good_index.setter
     def good_index(self, list_idx):
         if len(list_idx) > self.data.shape[0]:
-            raise ValueError('Index length must be smaller than the length of the dataframe')
+            raise ValueError(
+                "Index length must be smaller than the length of the dataframe"
+            )
         self._good_index = list_idx
 
     def get_str_col(self):
         col_list = []
         for column in self.data.columns:
-            if self.profile[column]._col_type == tpye(str()):
+            if self.profile[column]._col_type == type(str()):
                 col_list.append(column)
         return col_list
 
     def get_nbr_col(self):
         col_list = []
         for column in self.data.columns:
-            if self.profile[column]._col_type in [tpye(int()), type(float())]
+            if self.profile[column]._col_type in [type(int()), type(float())]:
                 col_list.append(column)
         return col_list
-        
-    def push_bad_index(self, list_idx): #Find a better method name
+
+    def push_bad_index(self, list_idx):  # Find a better method name
         for elem in list_idx:
             try:
                 self.bad_index.append(elem)
@@ -69,21 +72,34 @@ class Data:
     def firstpass(self):
         # Deterministic pass
         n_duped_idx = self.data[~good_index_is_duplicated(self.data)[1]].index
-        
+
         # Probabilistic pass
         for column in get_str_col():
-            idx = index_uncorrect_grammar(self.data[column][n_duped_idx][self.data[column][n_duped_idx].notna()]) #get the non duped indexes and not na from a column
-            idx = self.data[column][n_duped_idx][self.data[column][n_duped_idx].notna()].iloc[idx].index
+            idx = index_uncorrect_grammar(
+                self.data[column][n_duped_idx][self.data[column][n_duped_idx].notna()]
+            )  # get the non duped indexes and not na from a column
+            idx = (
+                self.data[column][n_duped_idx][self.data[column][n_duped_idx].notna()]
+                .iloc[idx]
+                .index
+            )
             self.bad_index(idx)
         for column in get_nbr_col():
-            idx = utils.proba_model(self.data[column][n_duped_idx][self.data[column][n_duped_idx].notna()], \
-                self.profile[column]._mean, self.profile[column]._std)
-            idx = self.data[column][n_duped_idx][self.data[column][n_duped_idx].notna()].iloc[idx].index
+            idx = utils.proba_model(
+                self.data[column][n_duped_idx][self.data[column][n_duped_idx].notna()],
+                self.profile[column]._mean,
+                self.profile[column]._std,
+            )
+            idx = (
+                self.data[column][n_duped_idx][self.data[column][n_duped_idx].notna()]
+                .iloc[idx]
+                .index
+            )
             self.bad_index(idx)
 
+
 class Profile:
-    """A profile for a dataframe column.
-    """
+    """A profile for a dataframe column."""
 
     def __init__(self, Data, column):
         self._emptiness = utils._is_none(Data.data, column)
@@ -105,7 +121,7 @@ class Profile:
     @emptiness.setter
     def emptiness(self, value):
         self._emptiness = value
-    
+
     @property
     def size(self):
         return self._size

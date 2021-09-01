@@ -154,7 +154,7 @@ def _is_none(df, col_name=""):
                 1 means all the columns is none
                 0 means non none
     """
-    df_clean, _ = _is_duplicated(df)
+    df_clean, _ = _is_duplicated(df)  # remove duplicated lines
     none_element = df_clean[col_name][df_clean[col_name].isnull()]
     ratio = len(none_element) / df_clean.shape[0]
     return ratio
@@ -175,10 +175,10 @@ def proba_model(col, mean, std, tresh=3):
     """
     upper_bound = mean + tresh * std
     lower_bound = mean - tresh * std
+    print(lower_bound, upper_bound)
     idx = col[
-        ~((col > lower_bound) * (col < upper_bound))
+        ~((col > lower_bound) & (col < upper_bound))
     ].index  # trancate values from the column
-    # clean dataframe
     return idx
 
 
@@ -223,3 +223,43 @@ def Index_Uncorrect_grammar(df_State):
             cluster = np.unique(words[np.nonzero(affprop.labels_ == cluster_id)])
             list_uncorrect = list_uncorrect + uncorrect_grammar(df_State, cluster)
     return list_uncorrect
+
+
+def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
+    """check row having mean number of none > thresh_row_1 in the data frame cleaned and > thresh_row_2 in data frame cleaned from columns having mean number of none > threshcol.
+
+    Args:
+        df ([type]): [description]
+        thresh_row_1 (float, optional): [description]. Defaults to 0.75.
+        thresh_row_2 (float, optional): [description]. Defaults to 0.5.
+        thresh_col (float, optional): [description]. Defaults to 0.8.
+
+    Returns:
+        [type]: [description]
+    """
+    df_clean, _ = _is_duplicated(df)
+
+    mean_none_row_1 = df_clean.isnull().mean(axis=1)  # mean(none) in each row of df_c
+    list_drop_row_1 = mean_none_row_1[mean_none_row_1 >= thresh_row_1]
+    index_1 = list_drop_row_1.index  # index of drop rows
+    print(index_1)
+
+    mean_none_col = df_clean.isnull().mean(axis=0)  # mean(none) in each column of df_c
+    index_col_drop = mean_none_col[
+        mean_none_col >= thresh_col
+    ].index  # list of names of the column with none mean>thresh_col
+    df_drop_col = df_clean.drop(
+        labels=index_col_drop, axis=1
+    )  # drop column with mean(none)>thresh_col from df_clean
+    mean_none_row_2 = df_drop_col.isnull().mean(
+        axis=1
+    )  # mean number of none in each row
+    list_drop_row_2 = mean_none_row_2[
+        mean_none_row_2 >= thresh_row_2
+    ]  # drop row having mean(none)>thresh_row over df_drop_col
+    index_2 = list_drop_row_2.index
+    print(index_2)
+
+    ind = index_1 & index_2
+
+    return ind

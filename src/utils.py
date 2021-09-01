@@ -182,11 +182,9 @@ def proba_model(col, mean, std, tresh=3):
     return idx
 
 
-# Possibilité d'améliorer
-# Threshold for anomalie is fixed at Q_1 = round(np.percentile(unique_counts, 5)), could be improved.
-# DBSCAN for example on the number of occurences on words.
+# todo: Possibilité d'améliorer: Threshold for anomalie is fixed at Q_1 = round(np.percentile(unique_counts, 5)), could be improved. DBSCAN for example on the number of occurences on words.
 
-
+# todo: or the repeated words also could be detected by this method, for each word detected as outlier we can divide the score by  the number of repetition of the word
 def uncorrect_grammar(df_names, cluster):
     """index of element
 

@@ -1,5 +1,6 @@
 import pandas as pd
 import re
+import numpy as np
 from dateutil.parser import parse
 
 from sklearn.cluster import AffinityPropagation
@@ -126,6 +127,9 @@ def _is_duplicated(df):
     df_clean = df[~df_new.duplicated()]  # without duplication row
     return df_clean, duplicated_row
 
+def _duplicated_idx(df):
+    df_new = df.drop(["Unnamed: 0"], axis=1)
+    return df_new.duplicated()
 
 def _is_unique(df, col_name=""):
     """verify uniqueness over a specified column, and find the uniqueness coefficient
@@ -160,8 +164,8 @@ def _is_none(df, col_name=""):
     return ratio
 
 
-def proba_model(col, mean, std, tresh=3):
-    """cutting distribution between mean-3*std and mean+3*std
+def proba_model(col, mean, std, tresh=6):
+    """cutting distribution between mean-6*std and mean+6*std
 
     Args:
         df ([type]): [description]
@@ -175,7 +179,6 @@ def proba_model(col, mean, std, tresh=3):
     """
     upper_bound = mean + tresh * std
     lower_bound = mean - tresh * std
-    print(lower_bound, upper_bound)
     idx = col[
         ~((col > lower_bound) & (col < upper_bound))
     ].index  # trancate values from the column
@@ -185,35 +188,32 @@ def proba_model(col, mean, std, tresh=3):
 # todo: Possibilité d'améliorer: Threshold for anomalie is fixed at Q_1 = round(np.percentile(unique_counts, 5)), could be improved. DBSCAN for example on the number of occurences on words.
 
 # todo: or the repeated words also could be detected by this method, for each word detected as outlier we can divide the score by  the number of repetition of the word
-def uncorrect_grammar(df_names, cluster):
+def uncorrect_grammar(df_names, cluster, min_occurence):
     """index of element
 
     Args:
         df_names ([type]): [description]
         cluster ([type]): [description]
+        min_occurence (int): [min # of répétition of a label to be considered an error]
 
     Returns:
         [type]: [description]
     """
     words = np.asarray(df_names)
     unique_words, unique_counts = np.unique(df_names, return_counts=True)
-    Q_1 = round(np.percentile(unique_counts, 5))
-    Low_risk_words = unique_words[np.where(unique_counts > Q_1)[0]]
     index_In_words = []
     for w in cluster:
-        if not (w in list(Low_risk_words)):
+        count = unique_counts[np.where(unique_words == w)[0]][0]
+        if count <= min_occurence:
             index_In_words = index_In_words + np.ndarray.tolist(np.where(words == w)[0])
     return index_In_words
 
 
-def Index_Uncorrect_grammar(df_State):
-    df_State = df["state"]
+def index_uncorrect_grammar(df_State):
     df_State_unique = np.unique(df_State)
-    words = np.asarray(df_State_unique)  # So that indexing with a list will work
-    lev_similarity = np.array(
-        [[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words]
-    )
-    affprop = AffinityPropagation(affinity="precomputed", damping=0.5)
+    words = np.asarray(df_State_unique) #So that indexing with a list will work
+    lev_similarity = np.array([[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words])
+    affprop = AffinityPropagation(affinity = "precomputed", damping=0.5)
     affprop.fit(lev_similarity)
     list_uncorrect = []
     if len(np.unique(affprop.labels_)) == 1:
@@ -221,7 +221,8 @@ def Index_Uncorrect_grammar(df_State):
     else:
         for cluster_id in np.unique(affprop.labels_):
             cluster = np.unique(words[np.nonzero(affprop.labels_ == cluster_id)])
-            list_uncorrect = list_uncorrect + uncorrect_grammar(df_State, cluster)
+            if len(cluster) > 1:
+                list_uncorrect = list_uncorrect + uncorrect_grammar(df_State, cluster, 10)
     return list_uncorrect
 
 

@@ -117,7 +117,7 @@ class Data:
 
     def firstpass(self):
         """Push into self.bad_index the indexes and error types of data.
-        This first pass detects duplicated data, typo and extreme values
+        This first pass detects duplicated data, typo, extreme values and incompleteness by row.
         """
         # Deterministic pass
         n_duped_idx = ~utils._duplicated_idx(self.data)
@@ -126,8 +126,9 @@ class Data:
             self.bad_index = self.bad_index.append({'idx': index, 'column': 'All', 'errtype': 'duplication'}, ignore_index=True)
         
         # Probabilistic pass
-        for column in self.get_str_col(): # Columns of strings only
-            if data.profile[column]._uniqueness <= 0.005: # Filter column with too many different words
+        # Columns of strings only
+        for column in self.get_str_col(): 
+            if self.profile[column]._uniqueness <= 0.005: # Filter column with too many different words
                 clean_df = self.data[n_duped_idx]
                 clean_df = clean_df[column][clean_df[column].notna().values]
                 idx = utils.index_uncorrect_grammar(clean_df) #get the non duped indexes and not na from a column
@@ -137,7 +138,8 @@ class Data:
                     row = {'idx': index, 'column': column, 'errtype': 'typo'}
                     self.bad_index = self.bad_index.append(row, ignore_index=True)
 
-        for column in self.get_nbr_col(): # Columns of numbers only
+        # Columns of numbers only
+        for column in self.get_nbr_col(): 
             clean_df = self.data[n_duped_idx]
             clean_df = clean_df[column][clean_df[column].notna().values]
             idx = utils.proba_model(clean_df, self.profile[column]._mean, self.profile[column]._std)
@@ -147,6 +149,11 @@ class Data:
                 row = {'idx': index, 'column': column, 'errtype': 'extreme value'}
                 self.bad_index = self.bad_index.append(row, ignore_index=True)
 
+        # Completeness pass on each row                
+        idx = utils._row_is_none(data.data)
+        for index in idx:
+                row = {'idx': index, 'column': 'All', 'errtype': 'too much nan'}
+                self.bad_index = self.bad_index.append(row, ignore_index=True)
 class Profile:
     """A profile for a dataframe column.
     """
@@ -224,7 +231,7 @@ class Profile:
 
 
 
-data = Data('..\data_avec_erreurs_wasserstein.csv')
+data = Data('..\data\data_avec_erreurs_wasserstein.csv')
 data.set_profile()
 data.firstpass()
 data.bad_index.to_csv('exemple.csv')

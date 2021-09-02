@@ -115,7 +115,8 @@ def index_uncorrect_grammar_suggestion(df, nb_suggestion=1):
 
 
 from improve_data_quality import Data 
-data = Data('..\data_avec_erreurs_wasserstein.csv')
-idx, suggestion = index_uncorrect_grammar_suggestion(data.data['state'], 1)
+data = Data('..\data\echantillon.csv')
+print(data.data.head())
+idx, suggestion = index_uncorrect_grammar_suggestion(data.data, 1)
 #print(data.data['state'].iloc[idx], suggestion)
-print(list(zip(data.data['state'].iloc[idx], suggestion)))
+print(list(zip(data.data.iloc[idx], suggestion)))

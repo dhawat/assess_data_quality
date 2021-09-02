@@ -177,7 +177,7 @@ def _is_none(df, col_name=""):
     return ratio
 
 
-def proba_model(col, mean, std, tresh=6):
+def _z_score(col, mean, std, tresh=6):
     """cutting distribution between mean-6*std and mean+6*std
 
     Args:

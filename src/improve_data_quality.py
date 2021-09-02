@@ -199,12 +199,12 @@ class Data:
         params.setdefault("n_jobs", -1)
 
         # drop unique column
-        df_drop_col0 = self.data.drop(
+        df_drop_col0 = self.drop(
             labels=self.data.columns[0], axis=1
         )  # drop unique column
 
         # imputation
-        df_drop_col0 = self.imputation_method()
+        df_drop_col0 = self.data.imputation_method()
 
         # lof phase
         clf = LocalOutlierFactor(**params)

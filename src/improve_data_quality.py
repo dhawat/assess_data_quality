@@ -153,8 +153,8 @@ class Data:
         for column in self.nbr_col:  # Columns of numbers only
             clean_df = self.data[n_duped_idx]
             clean_df = clean_df[column][clean_df[column].notna().values]
-            idx = utils.proba_model(
-                clean_df, self.data[column].mean(), self.data[column].std()
+            idx = utils.z_score(
+                clean_df, clean_df[column].mean(), clean_df[column].std()
             )
             idx = clean_df[idx].index
 

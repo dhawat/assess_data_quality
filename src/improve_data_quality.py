@@ -120,7 +120,7 @@ class Data:
 
     def firstpass(self):
         """Push into self.bad_index the indexes and error types of data.
-        This first pass detects duplicated data, typo and extreme values
+        This first pass detects duplicated data, typo, extreme values and incompleteness by row.
         """
         # Deterministic pass
         n_duped_idx = ~utils._duplicated_idx(self.data)
@@ -132,9 +132,10 @@ class Data:
             )
 
         # Probabilistic pass
-        for column in self.get_str_col():  # Columns of strings only
+        # Columns of strings only
+        for column in self.get_str_col():
             if (
-                data.profile[column]._uniqueness <= 0.005
+                self.profile[column]._uniqueness <= 0.005
             ):  # Filter column with too many different words
                 clean_df = self.data[n_duped_idx]
                 clean_df = clean_df[column][clean_df[column].notna().values]
@@ -159,21 +160,11 @@ class Data:
                 row = {"idx": index, "column": column, "errtype": "extreme value"}
                 self.bad_index = self.bad_index.append(row, ignore_index=True)
 
-    def imputation_method(df, **params):
-        # todo doc
-        params.setdefault("n_neighbors", 20)
-        params.setdefalt("weights", "uniform")
-        df.set_profile()
-        list_numeric_col_name = df.get_nbr_col()  # name of numerical column
-        numeric_df = df[list_numeric_col_name]  # numeric dataframe
-
-        numeric_df_spec_nan = numeric_df.fillna(np.nan)  # fill none with np.nan
-        imputer = KNNImputer(params)  # initialize imputation
-        numeric_df_imputation = imputer.fit_transform(
-            numeric_df_spec_nan
-        )  # imputation if df
-        numeric_df_imputation = pd.DataFrame(numeric_df_2)
-        return numeric_df_imputation
+        # Completeness pass on each row
+        idx = utils._row_is_none(data.data)
+        for index in idx:
+            row = {"idx": index, "column": "All", "errtype": "too much nan"}
+            self.bad_index = self.bad_index.append(row, ignore_index=True)
 
 
 class Profile:

@@ -1,10 +1,12 @@
 import pandas as pd
 import re
 import numpy as np
-from dateutil.parser import parse
 
-from sklearn.cluster import AffinityPropagation
+from dateutil.parser import parse
 from difflib import SequenceMatcher
+from sklearn import preprocessing
+from sklearn.cluster import AffinityPropagation
+
 
 
 """df = pd.read_csv("logs.csv")  # read data
@@ -248,7 +250,7 @@ def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
     """check row having mean number of none > thresh_row_1 in the data frame cleaned and > thresh_row_2 in data frame cleaned from columns having mean number of none > threshcol.
 
     Args:
-        df ([type]): [description]
+        df ([DataFrame]): [description]
         thresh_row_1 (float, optional): [description]. Defaults to 0.75.
         thresh_row_2 (float, optional): [description]. Defaults to 0.5.
         thresh_col (float, optional): [description]. Defaults to 0.8.
@@ -261,7 +263,6 @@ def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
     mean_none_row_1 = df_clean.isnull().mean(axis=1)  # mean(none) in each row of df_c
     list_drop_row_1 = mean_none_row_1[mean_none_row_1 >= thresh_row_1]
     index_1 = list_drop_row_1.index  # index of drop rows
-    print(index_1)
 
     mean_none_col = df_clean.isnull().mean(axis=0)  # mean(none) in each column of df_c
     index_col_drop = mean_none_col[
@@ -277,8 +278,26 @@ def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
         mean_none_row_2 >= thresh_row_2
     ]  # drop row having mean(none)>thresh_row over df_drop_col
     index_2 = list_drop_row_2.index
-    print(index_2)
 
     ind = index_1 & index_2
 
     return ind
+
+def _string_to_nbr(df, keep_na=True):
+    """Convert a DataFrame (which may have multiple columns) of strings into a return df 
+    with numbers inside.
+
+
+    Args:
+        df ([DataFrame]): [DataFrame containing strings]
+        keep_na (bool, optional): [If set to false drops the nan inside the dataFrame]. Defaults to True.
+
+    Returns:
+        [DataFrame]: [DataFrame converted into numbers]
+    """
+    le = preprocessing.LabelEncoder()
+    le.fit(df.stack(dropna=~keep_na).reset_index(drop=True))
+    for col in df.columns:
+        df[col] = le.transform(df[col])
+    classes_dict = {name: value for name, value in zip(le.classes_, le.transform(le.classes_))}
+    return df, classes_dict

@@ -18,6 +18,7 @@ class Data:
 
         self.data = utils._to_DataFrame(path)
         self._profile = None
+        self.set_profile()
         self._good_index = [range(self.data.shape[0])]
         self._bad_index = pd.DataFrame(columns=["idx", "column", "errtype"])
 

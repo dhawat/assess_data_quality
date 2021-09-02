@@ -3,6 +3,7 @@ import ipdb
 import pandas as pd
 from sklearn.impute import KNNImputer
 import numpy as np
+from sklearn.neighbors import LocalOutlierFactor
 
 
 class Data:
@@ -169,19 +170,57 @@ class Data:
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
     def imputation_method(self, **params):
-        params.setdefault("n_neighbors", 20)
+        params.setdefault("n_neighbors", 10)
         params.setdefault("weights", "uniform")
-
-        list_numeric_col_name = self.data.get_nbr_col()  # name of numerical column
+        self.data, _ = utils._is_duplicated(self.data)
+        list_numeric_col_name = self.get_nbr_col()  # name of numerical column
         numeric_df = self.data[list_numeric_col_name]  # numeric dataframe
-
-        numeric_df_spec_nan = numeric_df.fillna(np.nan)  # fill none with np.nan
-        imputer = KNNImputer(params)  # initialize imputation
-        numeric_df_imputation = imputer.fit_transform(
-            numeric_df_spec_nan
-        )  # imputation if df
+        numeric_df = numeric_df.fillna(np.nan)  # fill none with np.nan
+        imputer = KNNImputer(**params)  # initialize imputation
+        numeric_df_imputation = imputer.fit_transform(numeric_df)  # imputation if df
         numeric_df_imputation = pd.DataFrame(numeric_df_imputation)
+        numeric_df_imputation.columns = list_numeric_col_name
         return numeric_df_imputation
+
+    def outlier_lof(self, **params):
+        """outlier detection over rows, from numerical columns
+
+        .. warning::
+                automatic imputation on the numerical columns
+
+
+        Returns:
+            [type]: [description]
+        """
+        # set default params
+        params.setdefault("n_neighbors", 20)
+        params.setdefault("contamination", 0.001)
+        params.setdefault("metric", "correlation")
+        params.setdefault("n_jobs", -1)
+
+        # drop unique column
+        df_drop_col0 = self.drop(
+            labels=self.data.columns[0], axis=1
+        )  # drop unique column
+
+        # imputation
+        df_drop_col0 = imputation_method(self)
+
+        # lof phase
+        clf = LocalOutlierFactor(**params)
+        y_pred = clf.fit_predict(np.asarray(df_drop_col0))
+        ind = self.data.loc[y_pred == -1].index  # index of outlier dected
+        neg_lof_score = clf.negative_outlier_factor_
+        normalized_lof_score = np.abs(neg_lof_score[y_pred == -1]) / np.max(
+            abs(neg_lof_score[y_pred == -1])
+        )  # normalized lof score
+
+        # adding lof score column to the data frame
+        df_with_score = self.data
+        df_with_score["lof"] = ""
+        df_with_score["lof"].loc[ind] = normalized_lof_score
+
+        return ind, normalized_lof_score, df_with_score
 
 
 class Profile:

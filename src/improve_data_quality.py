@@ -169,6 +169,22 @@ class Data:
             row = {"idx": index, "column": "All", "errtype": "too much nan"}
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
+    def secondpass(self):
+        """Push into self.bad_index the indexes.
+        This second pass detects only idx where outliers may lie.
+        """
+        # Outlier pass, less explicable.
+
+        nbr_col = []
+        for column in self.get_nbr_col():
+            nbr_col.append(column)
+        
+        idx = self.outlier_lof()[0]
+        for index in idx:
+            row = {"idx": index, "column": "NA", "errtype": "NA"}
+            self.bad_index = self.bad_index.append(row, ignore_index=True)
+
+
     def imputation_method(self, **params):
         params.setdefault("n_neighbors", 10)
         params.setdefault("weights", "uniform")

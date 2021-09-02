@@ -302,3 +302,22 @@ def _string_to_nbr(df, keep_na=True):
         name: value for name, value in zip(le.classes_, le.transform(le.classes_))
     }
     return df, classes_dict
+
+def _year(x):
+    return x.year + x.month/12 + x.day/365
+
+def _to_date_and_float(df):
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            try:
+                df[col] = pd.to_datetime(df[col])
+            except ValueError:
+                pass
+    for col in df.columns:
+        if df[col].dtype == 'datetime64[ns]':
+            df[col] = df[col].apply(lambda x : _year(x))
+        elif df[col].dtype == 'int64':
+            df[col] = df[col].apply(lambda x : float(x))
+        else:
+            pass
+    return df

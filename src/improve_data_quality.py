@@ -6,6 +6,81 @@ import numpy as np
 from sklearn.neighbors import LocalOutlierFactor
 
 
+class Profile:
+    """A profile for a dataframe column."""
+
+    def __init__(self, Data, column):
+        self._emptiness = utils._is_none(Data.data, column)
+        self._size = Data.data[column].shape[0]
+        self._uniqueness = utils._is_unique(Data.data, column)
+        self._col_type = utils.check_data_type(Data.data[column])
+        if self._col_type == type(str()):
+            pass
+        if self._col_type in [type(int()), type(float())]:
+            self._min = Data.data[column].min()
+            self._max = Data.data[column].max()
+            self._mean = Data.data[column].mean()
+            self._std = Data.data[column].std()
+
+    @property
+    def emptiness(self):
+        """getter of private attribute _emptiness
+
+        Returns:
+            [float]: ratio of na inside column
+        """
+        return self._emptiness
+
+    @emptiness.setter
+    def emptiness(self, value):
+        """setter of private attribute _emptiness
+
+        Args:
+            value (float): ratio of na inside column
+        """
+        self._emptiness = value
+
+    @property
+    def size(self):
+        """getter of private attribute _size
+
+        Returns:
+            [int]: size of the column
+        """
+        return self._size
+
+    @size.setter
+    def size(self, value):
+        """setter of private attribute _size
+
+        Args:
+            value ([int]): size of the column
+        """  # To note : make truly private
+        self._size = value
+
+    @property
+    def uniqueness(self):
+        """getter of private attribute _uniqueness
+
+        Returns:
+            [float]: ratio of unique element inside column
+        """
+        return self._uniqueness
+
+    @uniqueness.setter
+    def uniqueness(self, value):
+        self._uniqueness = value
+
+    @property
+    def col_type(self):
+        """getter of private attribute _col_type
+
+        Returns:
+            [type]: returns type python object of the type of the column
+        """
+        return self._col_type
+
+
 class Data:
     """Data class holding a column by column profile and index flagged as low quality data"""
 
@@ -154,19 +229,19 @@ class Data:
         for column in self.get_nbr_col():  # Columns of numbers only
             clean_df = self.data[n_duped_idx]
             clean_df = clean_df[column][clean_df[column].notna().values]
-            idx = utils.proba_model(
+            idx = utils._z_score(
                 clean_df, self.profile[column]._mean, self.profile[column]._std
             )
             idx = clean_df[idx].index
 
             for index in idx:
-                row = {"idx": index, "column": column, "errtype": "extreme value"}
+                row = {"idx": index, "column": column, "errtype": "Extreme value"}
                 self.bad_index = self.bad_index.append(row, ignore_index=True)
 
         # Completeness pass on each row
         idx = utils._row_is_none(data.data)
         for index in idx:
-            row = {"idx": index, "column": "All", "errtype": "too much nan"}
+            row = {"idx": index, "column": "All", "errtype": "Unsignificant "}
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
     def secondpass(self):
@@ -178,12 +253,11 @@ class Data:
         nbr_col = []
         for column in self.get_nbr_col():
             nbr_col.append(column)
-        
+
         idx = self.outlier_lof()[0]
         for index in idx:
-            row = {"idx": index, "column": "NA", "errtype": "NA"}
+            row = {"idx": index, "column": "NA", "errtype": "Outlier "}
             self.bad_index = self.bad_index.append(row, ignore_index=True)
-
 
     def imputation_method(self, **params):
         params.setdefault("n_neighbors", 10)
@@ -237,81 +311,6 @@ class Data:
         df_with_score["lof"].loc[ind] = normalized_lof_score
 
         return ind, normalized_lof_score, df_with_score
-
-
-class Profile:
-    """A profile for a dataframe column."""
-
-    def __init__(self, Data, column):
-        self._emptiness = utils._is_none(Data.data, column)
-        self._size = Data.data[column].shape[0]
-        self._uniqueness = utils._is_unique(Data.data, column)
-        self._col_type = utils.check_data_type(Data.data[column])
-        if self._col_type == type(str()):
-            pass
-        if self._col_type in [type(int()), type(float())]:
-            self._min = Data.data[column].min()
-            self._max = Data.data[column].max()
-            self._mean = Data.data[column].mean()
-            self._std = Data.data[column].std()
-
-    @property
-    def emptiness(self):
-        """getter of private attribute _emptiness
-
-        Returns:
-            [float]: ratio of na inside column
-        """
-        return self._emptiness
-
-    @emptiness.setter
-    def emptiness(self, value):
-        """setter of private attribute _emptiness
-
-        Args:
-            value (float): ratio of na inside column
-        """
-        self._emptiness = value
-
-    @property
-    def size(self):
-        """getter of private attribute _size
-
-        Returns:
-            [int]: size of the column
-        """
-        return self._size
-
-    @size.setter
-    def size(self, value):
-        """setter of private attribute _size
-
-        Args:
-            value ([int]): size of the column
-        """  # To note : make truly private
-        self._size = value
-
-    @property
-    def uniqueness(self):
-        """getter of private attribute _uniqueness
-
-        Returns:
-            [float]: ratio of unique element inside column
-        """
-        return self._uniqueness
-
-    @uniqueness.setter
-    def uniqueness(self, value):
-        self._uniqueness = value
-
-    @property
-    def col_type(self):
-        """getter of private attribute _col_type
-
-        Returns:
-            [type]: returns type python object of the type of the column
-        """
-        return self._col_type
 
 
 # data = Data('..\data_avec_erreurs_wasserstein.csv')

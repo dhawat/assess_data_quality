@@ -3,6 +3,7 @@ from sklearn.cluster import AffinityPropagation
 from difflib import SequenceMatcher
 import ipdb
 
+
 def uncorrect_grammar(df_names, cluster, min_occurence):
     """index of element
 
@@ -37,9 +38,11 @@ def index_uncorrect_grammar(df):
     """
 
     df_unique = np.unique(df)
-    words = np.asarray(df_unique) #So that indexing with a list will work
-    lev_similarity = np.array([[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words])
-    affprop = AffinityPropagation(affinity = "precomputed", damping=0.5)
+    words = np.asarray(df_unique)  # So that indexing with a list will work
+    lev_similarity = np.array(
+        [[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words]
+    )
+    affprop = AffinityPropagation(affinity="precomputed", damping=0.5)
     affprop.fit(lev_similarity)
     list_uncorrect = []
     if len(np.unique(affprop.labels_)) == 1:
@@ -52,7 +55,6 @@ def index_uncorrect_grammar(df):
                 list_uncorrect = list_uncorrect + uncorrect_grammar(df, cluster, 10)
 
     return list_uncorrect
-
 
 
 def uncorrect_grammar_suggestion(df_names, cluster, min_occurence, nb_suggestion):
@@ -95,9 +97,11 @@ def index_uncorrect_grammar_suggestion(df, nb_suggestion=1):
     """
 
     df_unique = np.unique(df)
-    words = np.asarray(df_unique) #So that indexing with a list will work
-    lev_similarity = np.array([[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words])
-    affprop = AffinityPropagation(affinity = "precomputed", damping=0.5)
+    words = np.asarray(df_unique)  # So that indexing with a list will work
+    lev_similarity = np.array(
+        [[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words]
+    )
+    affprop = AffinityPropagation(affinity="precomputed", damping=0.5)
     affprop.fit(lev_similarity)
     list_uncorrect = []
     list_suggestion = []
@@ -109,13 +113,12 @@ def index_uncorrect_grammar_suggestion(df, nb_suggestion=1):
             if len(cluster) > 1:
                 guess = uncorrect_grammar_suggestion(df, cluster, 10, nb_suggestion)
                 list_uncorrect += guess[0]
-                list_suggestion +=guess[1]
+                list_suggestion += guess[1]
     return list_uncorrect, list_suggestion
 
 
-
-from improve_data_quality import Data 
+"""from improve_data_quality import Data
 data = Data('..\data_avec_erreurs_wasserstein.csv')
 idx, suggestion = index_uncorrect_grammar_suggestion(data.data['state'], 1)
 #print(data.data['state'].iloc[idx], suggestion)
-print(list(zip(data.data['state'].iloc[idx], suggestion)))
+print(list(zip(data.data['state'].iloc[idx], suggestion)))"""

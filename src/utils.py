@@ -127,9 +127,22 @@ def _is_duplicated(df):
     df_clean = df[~df_new.duplicated()]  # without duplication row
     return df_clean, duplicated_row
 
+
+# todo change "Unnamed: 0" to generalize to all tables
 def _duplicated_idx(df):
     df_new = df.drop(["Unnamed: 0"], axis=1)
     return df_new.duplicated()
+
+
+def _summery_duplication(df, col_name):
+    """summery of duplications in a specific column
+
+    Args:
+        df ([type]): Data frame
+        col_name ([type]): column name
+    """
+    df.pivot_table(columns=[col_name], aggfunc="size")  # summery of duplication
+
 
 def _is_unique(df, col_name=""):
     """verify uniqueness over a specified column, and find the uniqueness coefficient
@@ -182,6 +195,7 @@ def proba_model(col, mean, std, tresh=6):
     idx = col[
         ~((col > lower_bound) & (col < upper_bound))
     ].index  # trancate values from the column
+    print(mean, std)
     return idx
 
 
@@ -211,9 +225,11 @@ def uncorrect_grammar(df_names, cluster, min_occurence):
 
 def index_uncorrect_grammar(df_State):
     df_State_unique = np.unique(df_State)
-    words = np.asarray(df_State_unique) #So that indexing with a list will work
-    lev_similarity = np.array([[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words])
-    affprop = AffinityPropagation(affinity = "precomputed", damping=0.5)
+    words = np.asarray(df_State_unique)  # So that indexing with a list will work
+    lev_similarity = np.array(
+        [[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words]
+    )
+    affprop = AffinityPropagation(affinity="precomputed", damping=0.5)
     affprop.fit(lev_similarity)
     list_uncorrect = []
     if len(np.unique(affprop.labels_)) == 1:
@@ -222,7 +238,9 @@ def index_uncorrect_grammar(df_State):
         for cluster_id in np.unique(affprop.labels_):
             cluster = np.unique(words[np.nonzero(affprop.labels_ == cluster_id)])
             if len(cluster) > 1:
-                list_uncorrect = list_uncorrect + uncorrect_grammar(df_State, cluster, 10)
+                list_uncorrect = list_uncorrect + uncorrect_grammar(
+                    df_State, cluster, 10
+                )
     return list_uncorrect
 
 

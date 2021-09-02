@@ -22,7 +22,7 @@ class Data:
         self._bad_index = pd.DataFrame(columns=["idx", "column", "errtype"])
         self._nbr_col = []
         self._str_col = []
-
+        
 
 
     @property
@@ -77,14 +77,14 @@ class Data:
         """
         if not self._str_col:
             for column in self.data.columns:
-                col_type = check_data_type(column)
+                col_type = utils.check_data_type(self.data[column])
                 if  col_type == type(str()):
-                    _str_col.append(column)
+                    self._str_col.append(column)
                 elif col_type in [type(float()), type(int())]:
-                    _nbr_col.append(column)
-        return _str_col
+                    self._nbr_col.append(column)
+        return self._str_col
 
-    @setter._str_col
+    @str_col.setter
     def str_col(self, value):
         self._str_col = value
 
@@ -97,14 +97,14 @@ class Data:
         """
         if not self._nbr_col:
             for column in self.data.columns:
-                col_type = check_data_type(column)
+                col_type = utils.check_data_type(self.data[column])
                 if  col_type == type(str()):
-                    _str_col.append(column)
+                    self._str_col.append(column)
                 elif col_type in [type(float()), type(int())]:
-                    _nbr_col.append(column)
-        return _nbr_col
+                    self._nbr_col.append(column)
+        return self._nbr_col
 
-    @setter._nbr_col
+    @nbr_col.setter
     def nbr_col(self, value):
         self._nbr_col = value
 
@@ -135,9 +135,9 @@ class Data:
 
         # Probabilistic pass
         # Columns of strings only
-        for column in self.get_str_col():
+        for column in self.str_col:
             if (
-                self.profile[column]._uniqueness <= 0.005
+                utils._is_unique(self.data, column) <= 0.005
             ):  # Filter column with too many different words
                 clean_df = self.data[n_duped_idx]
                 clean_df = clean_df[column][clean_df[column].notna().values]
@@ -150,11 +150,11 @@ class Data:
                     row = {"idx": index, "column": column, "errtype": "typo"}
                     self.bad_index = self.bad_index.append(row, ignore_index=True)
 
-        for column in self.get_nbr_col():  # Columns of numbers only
+        for column in self.nbr_col:  # Columns of numbers only
             clean_df = self.data[n_duped_idx]
             clean_df = clean_df[column][clean_df[column].notna().values]
             idx = utils.proba_model(
-                clean_df, self.profile[column]._mean, self.profile[column]._std
+                clean_df, self.data[column].mean(), self.data[column].std()
             )
             idx = clean_df[idx].index
 
@@ -168,11 +168,22 @@ class Data:
             row = {"idx": index, "column": "All", "errtype": "too much nan"}
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
+    def secondpass(self):
+        """Push into self.bad_index the indexes.
+        This second pass detects only idx where outliers may lie.
+        """
+        # Outlier pass, less explicable.
+        idx = self.outlier_lof()[0]
+        for index in idx:
+            row = {"idx": index, "column": "NA", "errtype": "Outlier "}
+            self.bad_index = self.bad_index.append(row, ignore_index=True)
+
+
     def imputation_method(self, **params):
         params.setdefault("n_neighbors", 10)
         params.setdefault("weights", "uniform")
         self.data, _ = utils._is_duplicated(self.data)
-        list_numeric_col_name = self.get_nbr_col()  # name of numerical column
+        list_numeric_col_name = self.nbr_col  # name of numerical column
         numeric_df = self.data[list_numeric_col_name]  # numeric dataframe
         numeric_df = numeric_df.fillna(np.nan)  # fill none with np.nan
         imputer = KNNImputer(**params)  # initialize imputation
@@ -183,11 +194,8 @@ class Data:
 
     def outlier_lof(self, **params):
         """outlier detection over rows, from numerical columns
-
         .. warning::
                 automatic imputation on the numerical columns
-
-
         Returns:
             [type]: [description]
         """
@@ -198,12 +206,12 @@ class Data:
         params.setdefault("n_jobs", -1)
 
         # drop unique column
-        df_drop_col0 = self.drop(
+        df_drop_col0 = self.data.drop(
             labels=self.data.columns[0], axis=1
         )  # drop unique column
 
         # imputation
-        df_drop_col0 = imputation_method(self)
+        df_drop_col0 = self.imputation_method()
 
         # lof phase
         clf = LocalOutlierFactor(**params)
@@ -223,7 +231,7 @@ class Data:
 
 
 
-# data = Data('..\data_avec_erreurs_wasserstein.csv')
-# data.set_profile()
-# data.firstpass()
-# data.bad_index.to_csv('exemple.csv')
+data = Data('..\data\data_avec_erreurs_wasserstein.csv')
+data.firstpass()
+data.secondpass()
+data.bad_index.to_csv('exemple.csv')

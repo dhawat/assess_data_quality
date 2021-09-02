@@ -166,6 +166,21 @@ class Data:
             row = {"idx": index, "column": "All", "errtype": "too much nan"}
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
+    def imputation_method(df, **params):
+        params.setdefault("n_neighbors", 20)
+        params.setdefalt("weights", "uniform")
+        df.set_profile()
+        list_numeric_col_name = df.get_nbr_col()  # name of numerical column
+        numeric_df = df[list_numeric_col_name]  # numeric dataframe
+
+        numeric_df_spec_nan = numeric_df.fillna(np.nan)  # fill none with np.nan
+        imputer = KNNImputer(params)  # initialize imputation
+        numeric_df_imputation = imputer.fit_transform(
+            numeric_df_spec_nan
+        )  # imputation if df
+        numeric_df_imputation = pd.DataFrame(numeric_df_imputation)
+        return numeric_df_imputation
+
 
 class Profile:
     """A profile for a dataframe column."""

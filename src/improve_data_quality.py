@@ -2,6 +2,7 @@ import utils as utils
 import ipdb
 import pandas as pd
 from sklearn.impute import KNNImputer
+import numpy as np
 
 
 class Data:
@@ -166,12 +167,12 @@ class Data:
             row = {"idx": index, "column": "All", "errtype": "too much nan"}
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
-    def imputation_method(df, **params):
+    def imputation_method(self, **params):
         params.setdefault("n_neighbors", 20)
-        params.setdefalt("weights", "uniform")
-        df.set_profile()
-        list_numeric_col_name = df.get_nbr_col()  # name of numerical column
-        numeric_df = df[list_numeric_col_name]  # numeric dataframe
+        params.setdefault("weights", "uniform")
+
+        list_numeric_col_name = self.data.get_nbr_col()  # name of numerical column
+        numeric_df = self.data[list_numeric_col_name]  # numeric dataframe
 
         numeric_df_spec_nan = numeric_df.fillna(np.nan)  # fill none with np.nan
         imputer = KNNImputer(params)  # initialize imputation

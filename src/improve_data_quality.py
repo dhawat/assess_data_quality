@@ -18,29 +18,12 @@ class Data:
             raise TypeError("data should be of provided as .csv or .json or .sql file")
 
         self.data = utils._to_DataFrame(path)
-        self._profile = None
-        self.set_profile()
         self._good_index = [range(self.data.shape[0])]
         self._bad_index = pd.DataFrame(columns=["idx", "column", "errtype"])
+        self._nbr_col = []
+        self._str_col = []
 
-    @property
-    def profile(self):
-        """getter for private attribute _profile
 
-        Raises:
-            Exception: If profile is not yet initialize it raise an error.
-
-        Returns:
-            Object: Profile object
-        """
-        if self._profile is None:
-            raise Exception("profile is None")
-        return self._profile
-
-    def set_profile(self):
-        """profile setter, to use after initializing the instance."""
-        profile = {column: Profile(self, column) for column in self.data.columns}
-        self._profile = profile
 
     @property
     def good_index(self):
@@ -85,29 +68,45 @@ class Data:
             )
         self._good_index = list_idx
 
-    def get_str_col(self):
-        """return names of string columns of the dataFrame, raises an exception if profile is not set.
+    @property
+    def str_col(self):
+        """getter for private attribute _str_col
 
         Returns:
             [list]: list of string columns
         """
-        col_list = []
-        for column in self.data.columns:
-            if self.profile[column]._col_type == type(str()):
-                col_list.append(column)
-        return col_list
+        if not self._str_col:
+            for column in self.data.columns:
+                col_type = check_data_type(column)
+                if  col_type == type(str()):
+                    _str_col.append(column)
+                elif col_type in [type(float()), type(int())]:
+                    _nbr_col.append(column)
+        return _str_col
 
-    def get_nbr_col(self):
-        """return names of number columns of the dataFrame, raises an exception if profile is not set.
+    @setter._str_col
+    def str_col(self, value):
+        self._str_col = value
+
+    @property
+    def nbr_col(self):
+        """getter for private attribute _nbr_col
 
         Returns:
             [list]: list of number columns
         """
-        col_list = []
-        for column in self.data.columns:
-            if self.profile[column]._col_type in [type(int()), type(float())]:
-                col_list.append(column)
-        return col_list
+        if not self._nbr_col:
+            for column in self.data.columns:
+                col_type = check_data_type(column)
+                if  col_type == type(str()):
+                    _str_col.append(column)
+                elif col_type in [type(float()), type(int())]:
+                    _nbr_col.append(column)
+        return _nbr_col
+
+    @setter._nbr_col
+    def nbr_col(self, value):
+        self._nbr_col = value
 
     def push_bad_index(self, list_idx):  # Find a better method name
         """decrepated, not sure if will be used or not.
@@ -164,7 +163,7 @@ class Data:
                 self.bad_index = self.bad_index.append(row, ignore_index=True)
 
         # Completeness pass on each row
-        idx = utils._row_is_none(data.data)
+        idx = utils._row_is_none(self.data)
         for index in idx:
             row = {"idx": index, "column": "All", "errtype": "too much nan"}
             self.bad_index = self.bad_index.append(row, ignore_index=True)
@@ -222,80 +221,6 @@ class Data:
 
         return ind, normalized_lof_score, df_with_score
 
-
-class Profile:
-    """A profile for a dataframe column."""
-
-    def __init__(self, Data, column):
-        self._emptiness = utils._is_none(Data.data, column)
-        self._size = Data.data[column].shape[0]
-        self._uniqueness = utils._is_unique(Data.data, column)
-        self._col_type = utils.check_data_type(Data.data[column])
-        if self._col_type == type(str()):
-            pass
-        if self._col_type in [type(int()), type(float())]:
-            self._min = Data.data[column].min()
-            self._max = Data.data[column].max()
-            self._mean = Data.data[column].mean()
-            self._std = Data.data[column].std()
-
-    @property
-    def emptiness(self):
-        """getter of private attribute _emptiness
-
-        Returns:
-            [float]: ratio of na inside column
-        """
-        return self._emptiness
-
-    @emptiness.setter
-    def emptiness(self, value):
-        """setter of private attribute _emptiness
-
-        Args:
-            value (float): ratio of na inside column
-        """
-        self._emptiness = value
-
-    @property
-    def size(self):
-        """getter of private attribute _size
-
-        Returns:
-            [int]: size of the column
-        """
-        return self._size
-
-    @size.setter
-    def size(self, value):
-        """setter of private attribute _size
-
-        Args:
-            value ([int]): size of the column
-        """  # To note : make truly private
-        self._size = value
-
-    @property
-    def uniqueness(self):
-        """getter of private attribute _uniqueness
-
-        Returns:
-            [float]: ratio of unique element inside column
-        """
-        return self._uniqueness
-
-    @uniqueness.setter
-    def uniqueness(self, value):
-        self._uniqueness = value
-
-    @property
-    def col_type(self):
-        """getter of private attribute _col_type
-
-        Returns:
-            [type]: returns type python object of the type of the column
-        """
-        return self._col_type
 
 
 # data = Data('..\data_avec_erreurs_wasserstein.csv')

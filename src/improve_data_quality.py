@@ -1,6 +1,8 @@
 import utils as utils
 import ipdb
 import pandas as pd
+from sklearn.impute import KNNImputer
+
 
 class Data:
     """Data class holding a column by column profile and index flagged as low quality data"""
@@ -16,7 +18,7 @@ class Data:
         self.data = utils._to_DataFrame(path)
         self._profile = None
         self._good_index = [range(self.data.shape[0])]
-        self._bad_index = pd.DataFrame(columns=['idx', 'column', 'errtype'])
+        self._bad_index = pd.DataFrame(columns=["idx", "column", "errtype"])
 
     @property
     def profile(self):
@@ -29,12 +31,11 @@ class Data:
             Object: Profile object
         """
         if self._profile is None:
-            raise Exception('profile is None')
+            raise Exception("profile is None")
         return self._profile
-    
+
     def set_profile(self):
-        """profile setter, to use after initializing the instance.
-        """
+        """profile setter, to use after initializing the instance."""
         profile = {column: Profile(self, column) for column in self.data.columns}
         self._profile = profile
 
@@ -55,7 +56,7 @@ class Data:
             dataFrame: dataFrame containing error indexes and if applicable column and an explaination of the error
         """
         return self._bad_index
-    
+
     @bad_index.setter
     def bad_index(self, list_idx):
         """setter if private attribute bad_index
@@ -76,7 +77,9 @@ class Data:
             ValueError: if length is greater than the initial dataFrame raises Valueerror
         """
         if len(list_idx) > self.data.shape[0]:
-            raise ValueError('Index length must be smaller than the length of the dataframe')
+            raise ValueError(
+                "Index length must be smaller than the length of the dataframe"
+            )
         self._good_index = list_idx
 
     def get_str_col(self):
@@ -102,8 +105,8 @@ class Data:
             if self.profile[column]._col_type in [type(int()), type(float())]:
                 col_list.append(column)
         return col_list
-        
-    def push_bad_index(self, list_idx): #Find a better method name
+
+    def push_bad_index(self, list_idx):  # Find a better method name
         """decrepated, not sure if will be used or not.
 
         Args:
@@ -123,33 +126,58 @@ class Data:
         n_duped_idx = ~utils._duplicated_idx(self.data)
 
         for index in n_duped_idx[~n_duped_idx].index.values.tolist():
-            self.bad_index = self.bad_index.append({'idx': index, 'column': 'All', 'errtype': 'duplication'}, ignore_index=True)
-        
+            self.bad_index = self.bad_index.append(
+                {"idx": index, "column": "All", "errtype": "duplication"},
+                ignore_index=True,
+            )
+
         # Probabilistic pass
-        for column in self.get_str_col(): # Columns of strings only
-            if data.profile[column]._uniqueness <= 0.005: # Filter column with too many different words
+        for column in self.get_str_col():  # Columns of strings only
+            if (
+                data.profile[column]._uniqueness <= 0.005
+            ):  # Filter column with too many different words
                 clean_df = self.data[n_duped_idx]
                 clean_df = clean_df[column][clean_df[column].notna().values]
-                idx = utils.index_uncorrect_grammar(clean_df) #get the non duped indexes and not na from a column
+                idx = utils.index_uncorrect_grammar(
+                    clean_df
+                )  # get the non duped indexes and not na from a column
                 idx = clean_df.iloc[idx].index
-                
+
                 for index in idx:
-                    row = {'idx': index, 'column': column, 'errtype': 'typo'}
+                    row = {"idx": index, "column": column, "errtype": "typo"}
                     self.bad_index = self.bad_index.append(row, ignore_index=True)
 
-        for column in self.get_nbr_col(): # Columns of numbers only
+        for column in self.get_nbr_col():  # Columns of numbers only
             clean_df = self.data[n_duped_idx]
             clean_df = clean_df[column][clean_df[column].notna().values]
-            idx = utils.proba_model(clean_df, self.profile[column]._mean, self.profile[column]._std)
+            idx = utils.proba_model(
+                clean_df, self.profile[column]._mean, self.profile[column]._std
+            )
             idx = clean_df[idx].index
 
             for index in idx:
-                row = {'idx': index, 'column': column, 'errtype': 'extreme value'}
+                row = {"idx": index, "column": column, "errtype": "extreme value"}
                 self.bad_index = self.bad_index.append(row, ignore_index=True)
 
+    def imputation_method(df, **params):
+        # todo doc
+        params.setdefault("n_neighbors", 20)
+        params.setdefalt("weights", "uniform")
+        df.set_profile()
+        list_numeric_col_name = df.get_nbr_col()  # name of numerical column
+        numeric_df = df[list_numeric_col_name]  # numeric dataframe
+
+        numeric_df_spec_nan = numeric_df.fillna(np.nan)  # fill none with np.nan
+        imputer = KNNImputer(params)  # initialize imputation
+        numeric_df_imputation = imputer.fit_transform(
+            numeric_df_spec_nan
+        )  # imputation if df
+        numeric_df_imputation = pd.DataFrame(numeric_df_2)
+        return numeric_df_imputation
+
+
 class Profile:
-    """A profile for a dataframe column.
-    """
+    """A profile for a dataframe column."""
 
     def __init__(self, Data, column):
         self._emptiness = utils._is_none(Data.data, column)
@@ -181,7 +209,7 @@ class Profile:
             value (float): ratio of na inside column
         """
         self._emptiness = value
-    
+
     @property
     def size(self):
         """getter of private attribute _size
@@ -196,8 +224,8 @@ class Profile:
         """setter of private attribute _size
 
         Args:
-            value ([int]): size of the column 
-        """ # To note : make truly private
+            value ([int]): size of the column
+        """  # To note : make truly private
         self._size = value
 
     @property
@@ -218,13 +246,12 @@ class Profile:
         """getter of private attribute _col_type
 
         Returns:
-            [type]: returns type python object of the type of the column 
+            [type]: returns type python object of the type of the column
         """
         return self._col_type
 
 
-
-data = Data('..\data_avec_erreurs_wasserstein.csv')
-data.set_profile()
-data.firstpass()
-data.bad_index.to_csv('exemple.csv')
+# data = Data('..\data_avec_erreurs_wasserstein.csv')
+# data.set_profile()
+# data.firstpass()
+# data.bad_index.to_csv('exemple.csv')

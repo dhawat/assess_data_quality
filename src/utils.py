@@ -9,17 +9,14 @@ from sklearn.cluster import AffinityPropagation
 
 
 """df = pd.read_csv("logs.csv")  # read data
-
 df = df.set_index("d")  # to re-index with a column 'd'
 df = df.sort_index()  # to sort with respect to the index """
 
 
 def check_extension(data):
     """check if the extension of data is within CSV, JSON or SQL
-
     Args:
         data (): data set
-
     Returns:
         type of allowed extension or none.
     """
@@ -36,10 +33,8 @@ def check_extension(data):
 
 def _to_DataFrame(data):
     """read data and transform it to DataFrame
-
     Args:
         data (csv, json, sql, xlsx): data
-
     Returns:
         Dataframe
     """
@@ -58,10 +53,8 @@ def _to_DataFrame(data):
 
 def get_metadata(df):
     """read a dataframe and generate relevant metadata such as columns types etc
-
     Args:
         df (DataFrame): data
-
     Returns:
         dict: {name_of_column: metadata_associated}
     """
@@ -73,10 +66,8 @@ def get_metadata(df):
 
 def check_data_type(column):
     """check type in a column which type is it using a voting method from all the non na data
-
     Args:
         column (pandas.core.series.Series): column from a dataframe
-
     Returns:
         [type]: [description]
     """
@@ -94,14 +85,11 @@ def check_data_type(column):
 
 def _is_date(string, fuzzy=False):
     """check if a given string is a date and return the date if true and raise a ValueError if false
-
     Args:
         string (string): string to check
         fuzzy (bool, optional): Enable a more lenient search in the string. Defaults to False.
-
     Raises:
         ValueError: raised when string is not likely to be a date
-
     Returns:
         string: datetime as a string
     """
@@ -115,10 +103,8 @@ def _is_date(string, fuzzy=False):
 
 def _is_duplicated(df):
     """Find duplicated row and return dataframe without the duplication
-
     Args:
         df (pandas.DataFrame): data frame
-
     Returns:
         duplicated_row: the duplicated rows
         df_clean: the DataFrame without the duplicated rows
@@ -136,7 +122,6 @@ def _duplicated_idx(df):
 
 def _summery_duplication(df, col_name):
     """summery of duplications in a specific column
-
     Args:
         df ([type]): Data frame
         col_name ([type]): column name
@@ -146,11 +131,9 @@ def _summery_duplication(df, col_name):
 
 def _is_unique(df, col_name=""):
     """verify uniqueness over a specified column, and find the uniqueness coefficient
-
     Args:
         df (pandas.DataFrame): Data Frame.
         col_name (str, optional): Column name. Defaults to "".
-
     Returns:
         ratio : 1 - (number of repeated data in a column)/card(the column)
                 if 1 means all values are unique
@@ -161,11 +144,9 @@ def _is_unique(df, col_name=""):
 
 def _is_none(df, col_name=""):
     """find none ratio in a specific columns
-
     Args:
         df ([type]): [description]
         col_name (str, optional): [description]. Defaults to "".
-
     Returns:
         ratio: none ration in the columns
                 1 means all the columns is none
@@ -179,14 +160,12 @@ def _is_none(df, col_name=""):
 
 def _z_score(col, mean, std, tresh=6):
     """cutting distribution between mean-6*std and mean+6*std
-
     Args:
         df ([type]): [description]
         col_name ([type]): [description]
         mean ([type]): [description]
         std ([type]): [description]
         tresh (int, optional): [description]. Defaults to 6.
-
     Returns:
         [type]: [description]
     """
@@ -204,12 +183,10 @@ def _z_score(col, mean, std, tresh=6):
 # todo: or the repeated words also could be detected by this method, for each word detected as outlier we can divide the score by  the number of repetition of the word
 def uncorrect_grammar(df_names, cluster, min_occurence):
     """index of element
-
     Args:
         df_names ([type]): [description]
         cluster ([type]): [description]
         min_occurence (int): [min # of répétition of a label to be considered an error]
-
     Returns:
         [type]: [description]
     """
@@ -246,13 +223,11 @@ def index_uncorrect_grammar(df_State):
 
 def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
     """check row having mean number of none > thresh_row_1 in the data frame cleaned and > thresh_row_2 in data frame cleaned from columns having mean number of none > threshcol.
-
     Args:
         df ([DataFrame]): [description]
         thresh_row_1 (float, optional): [description]. Defaults to 0.75.
         thresh_row_2 (float, optional): [description]. Defaults to 0.5.
         thresh_col (float, optional): [description]. Defaults to 0.8.
-
     Returns:
         [type]: [description]
     """
@@ -285,12 +260,9 @@ def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
 def _string_to_nbr(df, keep_na=True):
     """Convert a DataFrame (which may have multiple columns) of strings into a return df
     with numbers inside.
-
-
     Args:
         df ([DataFrame]): [DataFrame containing strings]
         keep_na (bool, optional): [If set to false drops the nan inside the dataFrame]. Defaults to True.
-
     Returns:
         [DataFrame]: [DataFrame converted into numbers]
     """

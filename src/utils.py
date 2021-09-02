@@ -8,7 +8,6 @@ from sklearn import preprocessing
 from sklearn.cluster import AffinityPropagation
 
 
-
 """df = pd.read_csv("logs.csv")  # read data
 
 df = df.set_index("d")  # to re-index with a column 'd'
@@ -130,9 +129,8 @@ def _is_duplicated(df):
     return df_clean, duplicated_row
 
 
-# todo change "Unnamed: 0" to generalize to all tables
 def _duplicated_idx(df):
-    df_new = df.drop(["Unnamed: 0"], axis=1)
+    df_new = df.drop([df.columns[0]], axis=1)
     return df_new.duplicated()
 
 
@@ -283,8 +281,9 @@ def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
 
     return ind
 
+
 def _string_to_nbr(df, keep_na=True):
-    """Convert a DataFrame (which may have multiple columns) of strings into a return df 
+    """Convert a DataFrame (which may have multiple columns) of strings into a return df
     with numbers inside.
 
 
@@ -299,5 +298,7 @@ def _string_to_nbr(df, keep_na=True):
     le.fit(df.stack(dropna=~keep_na).reset_index(drop=True))
     for col in df.columns:
         df[col] = le.transform(df[col])
-    classes_dict = {name: value for name, value in zip(le.classes_, le.transform(le.classes_))}
+    classes_dict = {
+        name: value for name, value in zip(le.classes_, le.transform(le.classes_))
+    }
     return df, classes_dict

@@ -283,6 +283,7 @@ def _year(x):
 
 
 def _to_date_and_float(df):
+    pd.options.mode.chained_assignment = None 
     for col in df.columns:
         if df[col].dtype == "object":
             try:
@@ -297,3 +298,22 @@ def _to_date_and_float(df):
         else:
             pass
     return df
+
+def _tendancy_detection(df, thresh):
+    """
+    df = dataframe
+    thresh = threshold for the tendancy detection 
+    return:
+            dictionnaire with the pair of columns and the anomaly index detected.
+    """
+    dictionnaire_anomalie_tendance = {}
+    for w1 in df.loc[ : , df.dtypes == float]:
+        for w2 in df.loc[ : , df.dtypes == float]:
+            proportion = np.shape(np.where(df[w1] <  df[w2])[0])[0]/len(df)
+            if  proportion > thresh:
+                range_anomalie = np.shape(np.where(df[w1] > df[w2])[0])[0]
+            if range_anomalie > 0:
+                dictionnaire_anomalie_tendance[(w1, w2)] = np.ndarray.tolist(np.where(df[w1] > df[w2])[0])
+    return dictionnaire_anomalie_tendance        
+    
+    

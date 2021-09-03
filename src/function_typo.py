@@ -44,3 +44,6 @@ def Typo_correction(df_names):
                             unique_words[list(list_clust)][np.argmax(count_cluster)]
                         ] * len(np.ndarray.tolist(np.where(words == w)[0]))
     return (words[index_incorrect_words], correct_words)
+
+
+

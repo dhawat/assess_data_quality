@@ -6,6 +6,8 @@ from dateutil.parser import parse
 from difflib import SequenceMatcher
 from sklearn import preprocessing
 from sklearn.cluster import AffinityPropagation
+from gensim.models import Word2Vec
+
 
 
 """df = pd.read_csv("logs.csv")  # read data
@@ -259,23 +261,22 @@ def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
     return ind
 
 
-def _string_to_nbr(df, keep_na=True):
+def _string_to_nbr(df):
     """Convert a DataFrame (which may have multiple columns) of strings into a return df
-    with numbers inside.
+    with vectors inside.
     Args:
         df ([DataFrame]): [DataFrame containing strings]
-        keep_na (bool, optional): [If set to false drops the nan inside the dataFrame]. Defaults to True.
     Returns:
-        [DataFrame]: [DataFrame converted into numbers]
+        [DataFrame]: [DataFrame converted into vectors]
     """
-    le = preprocessing.LabelEncoder()
-    le.fit(df.stack(dropna=~keep_na).reset_index(drop=True))
+    df = df.fillna('Nan')
+    document = []
     for col in df.columns:
-        df[col] = le.transform(df[col])
-    classes_dict = {
-        name: value for name, value in zip(le.classes_, le.transform(le.classes_))
-    }
-    return df, classes_dict
+        document.append(df[col].fillna('Nan').tolist())
+    tokenized_sentences = document
+    model = Word2Vec(tokenized_sentences, vector_size=100, window=2, min_count=0, workers=6)
+    df = df.applymap(lambda x: model.wv[x])
+    return df
 
 
 def _year(x):

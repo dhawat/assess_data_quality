@@ -74,11 +74,20 @@ def check_data_type(column):
         [type]: [description]
     """
     types_dict = {}
+    if column.dropna().values.size == 0:
+        return type(None)
+
     for e in column[column.notna()]:
         if type(e) not in types_dict:
             types_dict[type(e)] = 1
         else:
             types_dict[type(e)] += 1
+    if max(types_dict, key=types_dict.get) not in [type(int()), type(float())]:
+        try:
+            column = pd.to_datetime(column.dropna())
+            return column.dtype
+        except ValueError:
+            pass
     if len(types_dict) != 0:
         return max(types_dict, key=types_dict.get)
     else:
@@ -282,15 +291,8 @@ def _string_to_nbr(df):
 def _year(x):
     return x.year + x.month / 12 + x.day / 365
 
-
 def _to_date_and_float(df):
     pd.options.mode.chained_assignment = None 
-    for col in df.columns:
-        if df[col].dtype == "object":
-            try:
-                df[col] = pd.to_datetime(df[col])
-            except ValueError:
-                pass
     for col in df.columns:
         if df[col].dtype == "datetime64[ns]":
             df[col] = df[col].apply(lambda x: _year(x))
@@ -300,7 +302,7 @@ def _to_date_and_float(df):
             pass
     return df
 
-def _tendancy_detection(df, thresh):
+def _tendancy_detection(df, thresh=0.999):
     """
     df = dataframe
     thresh = threshold for the tendancy detection 
@@ -308,13 +310,13 @@ def _tendancy_detection(df, thresh):
             dictionnaire with the pair of columns and the anomaly index detected.
     """
     dictionnaire_anomalie_tendance = {}
-    for w1 in df.loc[ : , df.dtypes == float]:
-        for w2 in df.loc[ : , df.dtypes == float]:
+
+    for w1 in df:
+        for w2 in df:
+            range_anomalie = 0
             proportion = np.shape(np.where(df[w1] <  df[w2])[0])[0]/len(df)
             if  proportion > thresh:
                 range_anomalie = np.shape(np.where(df[w1] > df[w2])[0])[0]
-            if range_anomalie > 0:
-                dictionnaire_anomalie_tendance[(w1, w2)] = np.ndarray.tolist(np.where(df[w1] > df[w2])[0])
-    return dictionnaire_anomalie_tendance        
-    
-    
+                if range_anomalie > 0:
+                    dictionnaire_anomalie_tendance[(w1, w2)] = np.ndarray.tolist(np.where(df[w1] > df[w2])[0])
+    return dictionnaire_anomalie_tendance  

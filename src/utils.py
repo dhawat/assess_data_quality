@@ -6,9 +6,9 @@ from dateutil.parser import parse
 from difflib import SequenceMatcher
 from sklearn import preprocessing
 from sklearn.cluster import AffinityPropagation
-from gensim.models import Word2Vec
 
-
+# from gensim.models import Word2Vec
+#! add insignifante column test for non in column
 
 """df = pd.read_csv("logs.csv")  # read data
 df = df.set_index("d")  # to re-index with a column 'd'
@@ -162,7 +162,7 @@ def _is_none(df, col_name=""):
     return ratio
 
 
-def _z_score(col, mean, std, tresh=6):
+def _z_score(col, mean, std, tresh=3):
     """cutting distribution between mean-6*std and mean+6*std
     Args:
         df ([type]): [description]
@@ -178,7 +178,6 @@ def _z_score(col, mean, std, tresh=6):
     idx = col[
         ~((col > lower_bound) & (col < upper_bound))
     ].index  # trancate values from the column
-    print(mean, std)
     return idx
 
 
@@ -269,12 +268,14 @@ def _string_to_nbr(df):
     Returns:
         [DataFrame]: [DataFrame converted into vectors]
     """
-    df = df.fillna('Nan')
+    df = df.fillna("Nan")
     document = []
     for col in df.columns:
-        document.append(df[col].fillna('Nan').tolist())
+        document.append(df[col].fillna("Nan").tolist())
     tokenized_sentences = document
-    model = Word2Vec(tokenized_sentences, vector_size=100, window=2, min_count=0, workers=6)
+    model = Word2Vec(
+        tokenized_sentences, vector_size=100, window=2, min_count=0, workers=6
+    )
     df = df.applymap(lambda x: model.wv[x])
     return df
 
@@ -284,7 +285,7 @@ def _year(x):
 
 
 def _to_date_and_float(df):
-    pd.options.mode.chained_assignment = None 
+    pd.options.mode.chained_assignment = None
     for col in df.columns:
         if df[col].dtype == "object":
             try:
@@ -300,21 +301,22 @@ def _to_date_and_float(df):
             pass
     return df
 
+
 def _tendancy_detection(df, thresh):
     """
     df = dataframe
-    thresh = threshold for the tendancy detection 
+    thresh = threshold for the tendancy detection
     return:
             dictionnaire with the pair of columns and the anomaly index detected.
     """
     dictionnaire_anomalie_tendance = {}
-    for w1 in df.loc[ : , df.dtypes == float]:
-        for w2 in df.loc[ : , df.dtypes == float]:
-            proportion = np.shape(np.where(df[w1] <  df[w2])[0])[0]/len(df)
-            if  proportion > thresh:
+    for w1 in df.loc[:, df.dtypes == float]:
+        for w2 in df.loc[:, df.dtypes == float]:
+            proportion = np.shape(np.where(df[w1] < df[w2])[0])[0] / len(df)
+            if proportion > thresh:
                 range_anomalie = np.shape(np.where(df[w1] > df[w2])[0])[0]
             if range_anomalie > 0:
-                dictionnaire_anomalie_tendance[(w1, w2)] = np.ndarray.tolist(np.where(df[w1] > df[w2])[0])
-    return dictionnaire_anomalie_tendance        
-    
-    
+                dictionnaire_anomalie_tendance[(w1, w2)] = np.ndarray.tolist(
+                    np.where(df[w1] > df[w2])[0]
+                )
+    return dictionnaire_anomalie_tendance

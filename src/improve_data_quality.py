@@ -198,9 +198,9 @@ class Data:
             [type]: [description]
         """
         # set default params
-        params.setdefault("n_neighbors", 5)
-        params.setdefault("contamination", 0.01)
-        params.setdefault("metric", "manhattan")
+        params.setdefault("n_neighbors", 20)
+        params.setdefault("contamination", 0.0005)
+        params.setdefault("metric", "chebyshev")
         params.setdefault("n_jobs", -1)
 
         # drop unique column
@@ -216,12 +216,10 @@ class Data:
             df_drop_col0 = self.imputation_method()
 
         # lof phase
-        print(df_drop_col0)
         clf = LocalOutlierFactor(**params)
         y_pred = clf.fit_predict(np.asarray(df_drop_col0))
         ind = self.data.loc[y_pred == -1].index  # index of outlier dected
         neg_lof_score = clf.negative_outlier_factor_
-        print(neg_lof_score[y_pred == -1])
         normalized_lof_score = np.abs(neg_lof_score[y_pred == -1]) / np.max(
             abs(neg_lof_score[y_pred == -1])
         )  # normalized lof score

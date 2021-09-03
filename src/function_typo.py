@@ -38,3 +38,4 @@ def Typo_correction(df_names):
     return (words[index_incorrect_words], correct_words)
 
 
+

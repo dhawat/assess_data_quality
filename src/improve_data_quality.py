@@ -79,8 +79,14 @@ class Data:
                 col_type = utils.check_data_type(self.data[column])
                 if col_type == type(str()):
                     self._str_col.append(column)
-                elif col_type in [type(float()), type(int())]:
+                elif col_type in [type(int()), type(float())]:
                     self._nbr_col.append(column)
+                elif str(col_type) == "datetime64[ns]":
+                    self.data[column] = pd.to_datetime(self.data[column]).apply(
+                        lambda x: utils._year(x)
+                    )
+                    self._nbr_col.append(column)
+
         return self._str_col
 
     @str_col.setter
@@ -99,8 +105,14 @@ class Data:
                 col_type = utils.check_data_type(self.data[column])
                 if col_type == type(str()):
                     self._str_col.append(column)
-                elif col_type in [type(float()), type(int())]:
+                elif col_type in [type(int()), type(float())]:
                     self._nbr_col.append(column)
+                elif str(col_type) == "datetime64[ns]":
+                    self.data[column] = pd.to_datetime(self.data[column]).apply(
+                        lambda x: utils._year(x)
+                    )
+                    self._nbr_col.append(column)
+
         return self._nbr_col
 
     @nbr_col.setter
@@ -152,7 +164,7 @@ class Data:
         for column in self.nbr_col:  # Columns of numbers only
             clean_df = self.data[n_duped_idx]
             clean_df = clean_df[column][clean_df[column].notna().values]
-            idx = utils.z_score(
+            idx = utils._z_score(
                 clean_df, clean_df[column].mean(), clean_df[column].std()
             )
             idx = clean_df[idx].index
@@ -171,11 +183,21 @@ class Data:
         """Push into self.bad_index the indexes.
         This second pass detects only idx where outliers may lie.
         """
+
+        # Tendency pass, 2 column explicable
+        idx_dict = utils._tendancy_detection(
+            utils._to_date_and_float(self.data[self.nbr_col])
+        )
+        for key, value in idx_dict.items():
+            for idx in value:
+                row = {"idx": idx, "column": key, "errtype": "Logic error"}
+                self.bad_index = self.bad_index.append(row, ignore_index=True)
+
         # Outlier pass, less explicable.
-        idx = self.outlier_lof()[0]
-        for index in idx:
-            row = {"idx": index, "column": "NA", "errtype": "Outlier "}
-            self.bad_index = self.bad_index.append(row, ignore_index=True)
+        # idx = self.outlier_lof()[0]
+        # for index in idx:
+        #    row = {"idx": index, "column": "NA", "errtype": "Outlier"}
+        #    self.bad_index = self.bad_index.append(row, ignore_index=True)
 
     def imputation_method(self, **params):
         params.setdefault("n_neighbors", 10)

@@ -9,21 +9,20 @@ from sklearn.neighbors import LocalOutlierFactor
 class Data:
     """Data class holding a column by column profile and index flagged as low quality data"""
 
-    def __init__(self, path):
+    def __init__(self, df, path=""):
         """
         Args:
             data (CSV, JSON, SQL): data set.
         """
-        if utils.check_extension(path) == "none":
-            raise TypeError("data should be of provided as .csv or .json or .sql file")
+        # if utils.check_extension(path) == "none":
+        #    raise TypeError("data should be of provided as .csv or .json or .sql file")
 
-        self.data = utils._to_DataFrame(path)
+        # self.data = utils._to_DataFrame(path)
+        self.data = df
         self._good_index = [range(self.data.shape[0])]
         self._bad_index = pd.DataFrame(columns=["idx", "column", "errtype"])
         self._nbr_col = []
         self._str_col = []
-        
-
 
     @property
     def good_index(self):
@@ -78,7 +77,7 @@ class Data:
         if not self._str_col:
             for column in self.data.columns:
                 col_type = utils.check_data_type(self.data[column])
-                if  col_type == type(str()):
+                if col_type == type(str()):
                     self._str_col.append(column)
                 elif col_type in [type(float()), type(int())]:
                     self._nbr_col.append(column)
@@ -98,7 +97,7 @@ class Data:
         if not self._nbr_col:
             for column in self.data.columns:
                 col_type = utils.check_data_type(self.data[column])
-                if  col_type == type(str()):
+                if col_type == type(str()):
                     self._str_col.append(column)
                 elif col_type in [type(float()), type(int())]:
                     self._nbr_col.append(column)
@@ -178,7 +177,6 @@ class Data:
             row = {"idx": index, "column": "NA", "errtype": "Outlier "}
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
-
     def imputation_method(self, **params):
         params.setdefault("n_neighbors", 10)
         params.setdefault("weights", "uniform")
@@ -192,7 +190,7 @@ class Data:
         numeric_df_imputation.columns = list_numeric_col_name
         return numeric_df_imputation
 
-    def outlier_lof(self, **params):
+    def outlier_lof(self, drop_id=True, **params):
         """outlier detection over rows, from numerical columns
         .. warning::
                 automatic imputation on the numerical columns
@@ -200,24 +198,30 @@ class Data:
             [type]: [description]
         """
         # set default params
-        params.setdefault("n_neighbors", 20)
-        params.setdefault("contamination", 0.001)
-        params.setdefault("metric", "correlation")
+        params.setdefault("n_neighbors", 5)
+        params.setdefault("contamination", 0.01)
+        params.setdefault("metric", "manhattan")
         params.setdefault("n_jobs", -1)
 
         # drop unique column
-        df_drop_col0 = self.data.drop(
-            labels=self.data.columns[0], axis=1
-        )  # drop unique column
+        if drop_id:
+            df_drop_col0 = self.data.drop(
+                labels=self.data.columns[0], axis=1
+            )  # drop unique column
+        else:
+            df_drop_col0 = self.data
 
-        # imputation
-        df_drop_col0 = self.imputation_method()
+        if (df_drop_col0.isnull()).sum().all() > 0:
+            # imputation
+            df_drop_col0 = self.imputation_method()
 
         # lof phase
+        print(df_drop_col0)
         clf = LocalOutlierFactor(**params)
         y_pred = clf.fit_predict(np.asarray(df_drop_col0))
         ind = self.data.loc[y_pred == -1].index  # index of outlier dected
         neg_lof_score = clf.negative_outlier_factor_
+        print(neg_lof_score[y_pred == -1])
         normalized_lof_score = np.abs(neg_lof_score[y_pred == -1]) / np.max(
             abs(neg_lof_score[y_pred == -1])
         )  # normalized lof score
@@ -230,8 +234,8 @@ class Data:
         return ind, normalized_lof_score, df_with_score
 
 
-
-data = Data('..\data\data_avec_erreurs_wasserstein.csv')
+#! please use our commun directory
+"""data = Data('..\data\data_avec_erreurs_wasserstein.csv')
 data.firstpass()
 data.secondpass()
-data.bad_index.to_csv('exemple.csv')
+data.bad_index.to_csv('exemple.csv')"""

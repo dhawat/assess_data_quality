@@ -123,9 +123,11 @@ def _is_duplicated(df):
         duplicated_row: the duplicated rows
         df_clean: the DataFrame without the duplicated rows
     """
-    df_new = df.drop(["Unnamed: 0"], axis=1)
+
+    df_new = df.drop([df.columns[0]], axis=1)
     duplicated_row = df[df_new.duplicated()]  # duplicated row
     df_clean = df[~df_new.duplicated()]  # without duplication row
+
     return df_clean, duplicated_row
 
 
@@ -303,21 +305,23 @@ def _string_to_nbr(df, keep_na=True):
     }
     return df, classes_dict
 
+
 def _year(x):
-    return x.year + x.month/12 + x.day/365
+    return x.year + x.month / 12 + x.day / 365
+
 
 def _to_date_and_float(df):
     for col in df.columns:
-        if df[col].dtype == 'object':
+        if df[col].dtype == "object":
             try:
                 df[col] = pd.to_datetime(df[col])
             except ValueError:
                 pass
     for col in df.columns:
-        if df[col].dtype == 'datetime64[ns]':
-            df[col] = df[col].apply(lambda x : _year(x))
-        elif df[col].dtype == 'int64':
-            df[col] = df[col].apply(lambda x : float(x))
+        if df[col].dtype == "datetime64[ns]":
+            df[col] = df[col].apply(lambda x: _year(x))
+        elif df[col].dtype == "int64":
+            df[col] = df[col].apply(lambda x: float(x))
         else:
             pass
     return df

@@ -6,81 +6,6 @@ import numpy as np
 from sklearn.neighbors import LocalOutlierFactor
 
 
-class Profile:
-    """A profile for a dataframe column."""
-
-    def __init__(self, Data, column):
-        self._emptiness = utils._is_none(Data.data, column)
-        self._size = Data.data[column].shape[0]
-        self._uniqueness = utils._is_unique(Data.data, column)
-        self._col_type = utils.check_data_type(Data.data[column])
-        if self._col_type == type(str()):
-            pass
-        if self._col_type in [type(int()), type(float())]:
-            self._min = Data.data[column].min()
-            self._max = Data.data[column].max()
-            self._mean = Data.data[column].mean()
-            self._std = Data.data[column].std()
-
-    @property
-    def emptiness(self):
-        """getter of private attribute _emptiness
-
-        Returns:
-            [float]: ratio of na inside column
-        """
-        return self._emptiness
-
-    @emptiness.setter
-    def emptiness(self, value):
-        """setter of private attribute _emptiness
-
-        Args:
-            value (float): ratio of na inside column
-        """
-        self._emptiness = value
-
-    @property
-    def size(self):
-        """getter of private attribute _size
-
-        Returns:
-            [int]: size of the column
-        """
-        return self._size
-
-    @size.setter
-    def size(self, value):
-        """setter of private attribute _size
-
-        Args:
-            value ([int]): size of the column
-        """  # To note : make truly private
-        self._size = value
-
-    @property
-    def uniqueness(self):
-        """getter of private attribute _uniqueness
-
-        Returns:
-            [float]: ratio of unique element inside column
-        """
-        return self._uniqueness
-
-    @uniqueness.setter
-    def uniqueness(self, value):
-        self._uniqueness = value
-
-    @property
-    def col_type(self):
-        """getter of private attribute _col_type
-
-        Returns:
-            [type]: returns type python object of the type of the column
-        """
-        return self._col_type
-
-
 class Data:
     """Data class holding a column by column profile and index flagged as low quality data"""
 
@@ -93,29 +18,12 @@ class Data:
             raise TypeError("data should be of provided as .csv or .json or .sql file")
 
         self.data = utils._to_DataFrame(path)
-        self._profile = None
-        self.set_profile()
         self._good_index = [range(self.data.shape[0])]
         self._bad_index = pd.DataFrame(columns=["idx", "column", "errtype"])
+        self._nbr_col = []
+        self._str_col = []
+        
 
-    @property
-    def profile(self):
-        """getter for private attribute _profile
-
-        Raises:
-            Exception: If profile is not yet initialize it raise an error.
-
-        Returns:
-            Object: Profile object
-        """
-        if self._profile is None:
-            raise Exception("profile is None")
-        return self._profile
-
-    def set_profile(self):
-        """profile setter, to use after initializing the instance."""
-        profile = {column: Profile(self, column) for column in self.data.columns}
-        self._profile = profile
 
     @property
     def good_index(self):
@@ -160,29 +68,45 @@ class Data:
             )
         self._good_index = list_idx
 
-    def get_str_col(self):
-        """return names of string columns of the dataFrame, raises an exception if profile is not set.
+    @property
+    def str_col(self):
+        """getter for private attribute _str_col
 
         Returns:
             [list]: list of string columns
         """
-        col_list = []
-        for column in self.data.columns:
-            if self.profile[column]._col_type == type(str()):
-                col_list.append(column)
-        return col_list
+        if not self._str_col:
+            for column in self.data.columns:
+                col_type = utils.check_data_type(self.data[column])
+                if  col_type == type(str()):
+                    self._str_col.append(column)
+                elif col_type in [type(float()), type(int())]:
+                    self._nbr_col.append(column)
+        return self._str_col
 
-    def get_nbr_col(self):
-        """return names of number columns of the dataFrame, raises an exception if profile is not set.
+    @str_col.setter
+    def str_col(self, value):
+        self._str_col = value
+
+    @property
+    def nbr_col(self):
+        """getter for private attribute _nbr_col
 
         Returns:
             [list]: list of number columns
         """
-        col_list = []
-        for column in self.data.columns:
-            if self.profile[column]._col_type in [type(int()), type(float())]:
-                col_list.append(column)
-        return col_list
+        if not self._nbr_col:
+            for column in self.data.columns:
+                col_type = utils.check_data_type(self.data[column])
+                if  col_type == type(str()):
+                    self._str_col.append(column)
+                elif col_type in [type(float()), type(int())]:
+                    self._nbr_col.append(column)
+        return self._nbr_col
+
+    @nbr_col.setter
+    def nbr_col(self, value):
+        self._nbr_col = value
 
     def push_bad_index(self, list_idx):  # Find a better method name
         """decrepated, not sure if will be used or not.
@@ -211,9 +135,9 @@ class Data:
 
         # Probabilistic pass
         # Columns of strings only
-        for column in self.get_str_col():
+        for column in self.str_col:
             if (
-                self.profile[column]._uniqueness <= 0.005
+                utils._is_unique(self.data, column) <= 0.005
             ):  # Filter column with too many different words
                 clean_df = self.data[n_duped_idx]
                 clean_df = clean_df[column][clean_df[column].notna().values]
@@ -226,22 +150,22 @@ class Data:
                     row = {"idx": index, "column": column, "errtype": "typo"}
                     self.bad_index = self.bad_index.append(row, ignore_index=True)
 
-        for column in self.get_nbr_col():  # Columns of numbers only
+        for column in self.nbr_col:  # Columns of numbers only
             clean_df = self.data[n_duped_idx]
             clean_df = clean_df[column][clean_df[column].notna().values]
-            idx = utils._z_score(
-                clean_df, self.profile[column]._mean, self.profile[column]._std
+            idx = utils.z_score(
+                clean_df, clean_df[column].mean(), clean_df[column].std()
             )
             idx = clean_df[idx].index
 
             for index in idx:
-                row = {"idx": index, "column": column, "errtype": "Extreme value"}
+                row = {"idx": index, "column": column, "errtype": "extreme value"}
                 self.bad_index = self.bad_index.append(row, ignore_index=True)
 
         # Completeness pass on each row
-        idx = utils._row_is_none(data.data)
+        idx = utils._row_is_none(self.data)
         for index in idx:
-            row = {"idx": index, "column": "All", "errtype": "Unsignificant "}
+            row = {"idx": index, "column": "All", "errtype": "too much nan"}
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
     def secondpass(self):
@@ -249,21 +173,17 @@ class Data:
         This second pass detects only idx where outliers may lie.
         """
         # Outlier pass, less explicable.
-
-        nbr_col = []
-        for column in self.get_nbr_col():
-            nbr_col.append(column)
-
         idx = self.outlier_lof()[0]
         for index in idx:
             row = {"idx": index, "column": "NA", "errtype": "Outlier "}
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
+
     def imputation_method(self, **params):
         params.setdefault("n_neighbors", 10)
         params.setdefault("weights", "uniform")
         self.data, _ = utils._is_duplicated(self.data)
-        list_numeric_col_name = self.get_nbr_col()  # name of numerical column
+        list_numeric_col_name = self.nbr_col  # name of numerical column
         numeric_df = self.data[list_numeric_col_name]  # numeric dataframe
         numeric_df = numeric_df.fillna(np.nan)  # fill none with np.nan
         imputer = KNNImputer(**params)  # initialize imputation
@@ -274,11 +194,8 @@ class Data:
 
     def outlier_lof(self, **params):
         """outlier detection over rows, from numerical columns
-
         .. warning::
                 automatic imputation on the numerical columns
-
-
         Returns:
             [type]: [description]
         """
@@ -289,12 +206,12 @@ class Data:
         params.setdefault("n_jobs", -1)
 
         # drop unique column
-        df_drop_col0 = self.drop(
+        df_drop_col0 = self.data.drop(
             labels=self.data.columns[0], axis=1
         )  # drop unique column
 
         # imputation
-        df_drop_col0 = self.data.imputation_method()
+        df_drop_col0 = self.imputation_method()
 
         # lof phase
         clf = LocalOutlierFactor(**params)
@@ -313,7 +230,8 @@ class Data:
         return ind, normalized_lof_score, df_with_score
 
 
-# data = Data('..\data_avec_erreurs_wasserstein.csv')
-# data.set_profile()
-# data.firstpass()
-# data.bad_index.to_csv('exemple.csv')
+
+data = Data('..\data\data_avec_erreurs_wasserstein.csv')
+data.firstpass()
+data.secondpass()
+data.bad_index.to_csv('exemple.csv')

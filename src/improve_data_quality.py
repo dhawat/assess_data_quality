@@ -196,6 +196,12 @@ class Data:
         #    row = {"idx": index, "column": "NA", "errtype": "Outlier"}
         #    self.bad_index = self.bad_index.append(row, ignore_index=True)
 
+        idxes, col_names = self.bad_logical_index()
+        for idex, cols in zip(idxes, col_names):
+            for idx, col in zip(idex, cols):
+                row = {"idx": idx, "column": [col[0], col[1]], "errtype": "Logic error"}
+                self.bad_index = self.bad_index.append(row, ignore_index=True)
+
     def imputation_method(self, **params):
         params.setdefault("n_neighbors", 10)
         params.setdefault("weights", "uniform")
@@ -321,9 +327,27 @@ class Data:
             print("non unique")
         return summery_tuple
 
+    def bad_logical_index(self):
+        df = self.data.iloc[self.good_index]
+        col_names = []
+        idxes = []
+        for col1 in self.str_col:
+            for col2 in self.str_col:
+                if col1 != col2 and utils._is_unique(df, col1) and utils._is_unique(df, col2) < 0.001:
+                    freq = df.groupby([col1, col2]).size()
+                    elements = df.loc[df[[col1, col2]].dropna().index]
+                    for elem in elements[col1].unique():
+                        #
+                        for e, index_serie in zip(freq[elem], freq[elem].index.tolist()):
+                            if e < 10:
+                                idxes.append(df[col1].index[df[col1] == index_serie].tolist() 
+                                + df[col2].index[df[col2] == index_serie].tolist())
+                                col_names.append([col1, col2])
+        return idxes, col_names
+
 
 #! please use our commun directory
-"""data = Data('..\data\data_avec_erreurs_wasserstein.csv')
-data.firstpass()
+data = Data('..\data\data_avec_erreurs_wasserstein.csv')
+#data.firstpass()
 data.secondpass()
-data.bad_index.to_csv('exemple.csv')"""
+#data.bad_index.to_csv('exemple.csv')

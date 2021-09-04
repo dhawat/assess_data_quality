@@ -250,7 +250,7 @@ class Data:
 
         return ind, normalized_lof_score, df_with_score
 
-    def col_combined_result(self, col1_name, col2_name):
+    def col_combined_result(self, col1_name, col2_name, first_pass=False):
         # todo add if condition for column where we do not detect error
         """Combine good result after first path of two columns, the output is a data frame combining good result from 2 column after first path with good index
 
@@ -264,8 +264,10 @@ class Data:
 
 
         """
-        self.data, _ = utils._is_duplicated(self.data)  # drop duplication
-        self.firstpass()
+
+        if first_pass:
+            self.firstpass()
+
         df_bad = self.bad_index
         # df of summery of bad bata found during forst pass
         bad_idx_col1 = list(

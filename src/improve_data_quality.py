@@ -287,6 +287,40 @@ class Data:
         good_cols = (self.data.drop(bad_idx_all)[[col1_name, col2_name]]).dropna()
         return good_cols
 
+    def dual_hist(self, col1_name, col2_name, unique_tresh=0.7, first_pass=False):
+        if first_pass:
+            self.firstpass()
+
+        """for col1_name in self.str_col:
+            for col2_name in self.str_col:
+                # todo extract big uniqueness ratio
+                if (
+                    col1_name != col2_name
+                    and (utils._is_unique(self.data, col1_name) < unique_tresh)
+                    and (utils._is_unique(self.data, col2_name) < unique_tresh)
+                ):
+                    df_clean = self.col_combined_result(
+                        col1_name=col1_name, col2_name=col2_name
+                    )
+                    df_combined = df_clean.apply(lambda row: tuple(row.values), axis=1)
+                    # ipdb.set_trace()
+                    summery_tuple = np.unique(df_combined, return_counts=True)
+                    ipdb.set_trace()"""
+        if (
+            col1_name != col2_name
+            and (utils._is_unique(self.data, col1_name) < unique_tresh)
+            and (utils._is_unique(self.data, col2_name) < unique_tresh)
+        ):
+            df_clean = self.col_combined_result(
+                col1_name=col1_name, col2_name=col2_name
+            )
+            df_combined = df_clean.apply(lambda row: tuple(row.values), axis=1)
+            # ipdb.set_trace()
+            summery_tuple = np.unique(df_combined, return_counts=True)
+        else:
+            print("non unique")
+        return summery_tuple
+
 
 #! please use our commun directory
 """data = Data('..\data\data_avec_erreurs_wasserstein.csv')

@@ -265,10 +265,9 @@ class Data:
 
         """
         self.data, _ = utils._is_duplicated(self.data)  # drop duplication
-        self.data.firstpass()
-        df_bad = (
-            self.data.bad_index
-        )  # df of summery of bad bata found during forst pass
+        self.firstpass()
+        df_bad = self.bad_index
+        # df of summery of bad bata found during forst pass
         bad_idx_col1 = list(
             df_bad[df_bad["column"] == "col1_name"]["idx"]
         )  # index of bad data in col1

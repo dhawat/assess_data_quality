@@ -9,17 +9,16 @@ from sklearn.neighbors import LocalOutlierFactor
 class Data:
     """Data class holding a column by column profile and index flagged as low quality data"""
 
-    def __init__(self, df, path=""):
+    def __init__(self, path=""):
         """
         Args:
             data (CSV, JSON, SQL): data set.
         """
-        # if utils.check_extension(path) == "none":
-        #    raise TypeError("data should be of provided as .csv or .json or .sql file")
+        if utils.check_extension(path) == "none":
+            raise TypeError("data should be of provided as .csv or .json or .sql file")
 
-        # self.data = utils._to_DataFrame(path)
-        self.data = df
-        self._good_index = [range(self.data.shape[0])]
+        self.data = utils._to_DataFrame(path)
+        self._good_index = list(range(self.data.shape[0]))
         self._bad_index = pd.DataFrame(columns=["idx", "column", "errtype"])
         self._nbr_col = []
         self._str_col = []
@@ -165,7 +164,7 @@ class Data:
             clean_df = self.data[n_duped_idx]
             clean_df = clean_df[column][clean_df[column].notna().values]
             idx = utils._z_score(
-                clean_df, clean_df[column].mean(), clean_df[column].std()
+                clean_df, clean_df.mean(), clean_df.std()
             )
             idx = clean_df[idx].index
 
@@ -255,7 +254,7 @@ class Data:
 
 
 #! please use our commun directory
-"""data = Data('..\data\data_avec_erreurs_wasserstein.csv')
+data = Data('..\data\data_avec_erreurs_wasserstein.csv')
 data.firstpass()
 data.secondpass()
-data.bad_index.to_csv('exemple.csv')"""
+data.bad_index.to_csv('exemple.csv')

@@ -28,7 +28,7 @@ def check_extension(data):
         return "json"
     if re.search("\.sql$", data, flags=re.IGNORECASE):
         return "sql"
-    if re.search("\.xlsx$", data, flag=re.IGNORECASE):
+    if re.search("\.xlsx$", data, flags=re.IGNORECASE):
         return "xlsx"
     return "none"
 

@@ -163,9 +163,7 @@ class Data:
         for column in self.nbr_col:  # Columns of numbers only
             clean_df = self.data[n_duped_idx]
             clean_df = clean_df[column][clean_df[column].notna().values]
-            idx = utils._z_score(
-                clean_df, clean_df.mean(), clean_df.std()
-            )
+            idx = utils._z_score(clean_df, clean_df.mean(), clean_df.std())
             idx = clean_df[idx].index
 
             for index in idx:
@@ -252,9 +250,45 @@ class Data:
 
         return ind, normalized_lof_score, df_with_score
 
+    def col_combined_result(self, col1_name, col2_name):
+        # todo add if condition for column where we do not detect error
+        """Combine good result after first path of two columns, the output is a data frame combining good result from 2 column after first path with good index
+
+
+        Args:
+            col1_name (str): name of the first column
+            col2_name (str): name of the second column
+
+        Returns:
+            [type]: Data frame combining good result from 2 column after first path
+
+
+        """
+        self.data, _ = utils._is_duplicated(self.data)  # drop duplication
+        self.data.firstpass()
+        df_bad = (
+            self.data.bad_index
+        )  # df of summery of bad bata found during forst pass
+        bad_idx_col1 = list(
+            df_bad[df_bad["column"] == "col1_name"]["idx"]
+        )  # index of bad data in col1
+        bad_idx_col2 = list(
+            df_bad[df_bad["column"] == "col2_name"]["idx"]
+        )  # index of bad data in col1
+        dup_idx = list(df_bad[df_bad["errtype"] == "duplication"]["idx"])
+        # combining bad index
+
+        bad_idx_all = (
+            dup_idx + bad_idx_col1 + list(set(bad_idx_col2) - set(bad_idx_col1))
+        )  # union of bad index
+        bad_idx_all.sort()
+
+        good_cols = (self.data.drop(bad_idx_all)[[col1_name, col2_name]]).dropna()
+        return good_cols
+
 
 #! please use our commun directory
-data = Data('..\data\data_avec_erreurs_wasserstein.csv')
+"""data = Data('..\data\data_avec_erreurs_wasserstein.csv')
 data.firstpass()
 data.secondpass()
-data.bad_index.to_csv('exemple.csv')
+data.bad_index.to_csv('exemple.csv')"""

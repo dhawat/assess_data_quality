@@ -4,7 +4,6 @@ import numpy as np
 
 from dateutil.parser import parse
 from difflib import SequenceMatcher
-from sklearn import preprocessing
 from sklearn.cluster import AffinityPropagation
 
 # from gensim.models import Word2Vec
@@ -15,33 +14,33 @@ df = df.set_index("d")  # to re-index with a column 'd'
 df = df.sort_index()  # to sort with respect to the index """
 
 
-def check_extension(data):
-    """check if the extension of data is within CSV, JSON or SQL
+def check_extension(path):
+    """check if the extension of the data set belongs to {csv, json, sql, xlsx}
     Args:
-        data (): data set
+        path (path): path of the set of data
     Returns:
         type of allowed extension or none.
     """
-    if re.search("\.csv$", data, flags=re.IGNORECASE):
+    if re.search("\.csv$", path, flags=re.IGNORECASE):
         return "csv"
-    if re.search("\.json$", data, flags=re.IGNORECASE):
+    if re.search("\.json$", path, flags=re.IGNORECASE):
         return "json"
-    if re.search("\.sql$", data, flags=re.IGNORECASE):
+    if re.search("\.sql$", path, flags=re.IGNORECASE):
         return "sql"
-    if re.search("\.xlsx$", data, flags=re.IGNORECASE):
+    if re.search("\.xlsx$", path, flags=re.IGNORECASE):
         return "xlsx"
     return "none"
 
 
-def _to_DataFrame(data):
+def _to_DataFrame(path):
     """read data and transform it to DataFrame
     Args:
-        data (csv, json, sql, xlsx): data
+        path (path): path to the corresponding directory of the data
     Returns:
-        Dataframe
+        df (pandas.DataFrame): DataFrame containing of the data
     """
 
-    ext = check_extension(data)
+    ext = check_extension(path)  # check if the format of the data is acceptable
     assert ext != "none"
     f_dict = {
         "csv": pd.read_csv,
@@ -49,14 +48,14 @@ def _to_DataFrame(data):
         "sql": pd.read_sql,
         "xlsx": pd.read_excel,
     }
-    df = f_dict[ext](data)
+    df = f_dict[ext](path)  # DataFrame containing the data
     return df
 
 
 def get_metadata(df):
-    """read a dataframe and generate relevant metadata such as columns types etc
+    """Read a dataframe and generate relevant metadata such as columns types etc
     Args:
-        df (DataFrame): data
+        df (pandas.DataFrame): DataFrame of data.
     Returns:
         dict: {name_of_column: metadata_associated}
     """
@@ -67,7 +66,8 @@ def get_metadata(df):
 
 
 def check_data_type(column):
-    """check type in a column which type is it using a voting method from all the non na data
+    !# what does this mean?
+    """check the type used in a column by voting method from all the non na data
     Args:
         column (pandas.core.series.Series): column from a dataframe
     Returns:

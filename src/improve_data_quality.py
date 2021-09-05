@@ -491,6 +491,58 @@ class Data:
                 "value2": "",
             }
             self.bad_index = self.bad_index.append(row, ignore_index=True)
+            
+
+    def bad_float_index(self, function_name = 'quantiles'):
+        """Same idea as in bad_logical_index function, execept it's between columns 
+        of string and columns of floats, using quantiles to determine interclasses extremes.
+        Args : 
+            function_name : quantiles or z-scores.
+        Returns:
+        [idxes, col_names]: [list of list of bad indexes and associated columns names]
+        """
+        df = self.data.iloc[self.good_index]
+        col_names = []
+        idxes = []
+        for col1 in self.str_col:
+            if self.uniq_col[col1] < 0.001:
+                for col2 in self.corr_col[col1]:
+                    if col2 in self.nbr_col:
+                        if self.uniq_col[col1] > 0.05:
+                            elements = df.loc[df[[col1, col2]].dropna().index]
+                            for elem in elements[col1].unique():
+                                ar_classe = elements[col2][elements[col1] == elem].unique()
+                                if len(ar_classe) > 0:
+                                    if function_name == 'quantiles':
+                                        indx_outliers = utils.outlier_dection(ar_classe)
+                                        indx_outliers = ar_classe.index[indx_outliers]
+                                    if function_name == 'z-scores':
+                                        indx_outliers = utils._z_score(ar_classe)
+                                    if len(indx_outliers) > 0:
+                                        val_outliers = ar_classe.loc[indx_outliers]
+                                        idxes.append(
+                                            elements[col2][col2.isin(val_outliers)].tolist()
+                                            )
+                                        col_names.append([col1, col2])
+                        else:
+                            if self.uniq_col[col1] < 0.001:
+                                freq = df.groupby([col1, col2]).size()
+                                elements = df.loc[df[[col1, col2]].dropna().index]
+                                for elem in elements[col1].unique():
+                                    for e, index_serie in zip(
+                                        freq[elem], freq[elem].index.tolist()
+                                    ):
+                                        if e < 10:
+                                            idxes.append(
+                                                elements[col2]
+                                                .index[
+                                                    (elements[col2] == index_serie)
+                                                    & (elements[col1] == elem)
+                                                ]
+                                                .tolist()
+                                                )
+                                            col_names.append([col1, col2])
+                    return idxes, col_names           
 
 
 #! please use our commun directory

@@ -450,3 +450,16 @@ def _tendancy_detection(df, thresh=0.999):
                         np.where(df[w1] > df[w2])[0]
                     )
     return dictionnaire_anomalie_tendance
+
+def outlier_detection(array_classe, q_1=0.25, q_3=0.75):
+        QQ_1 = np.quantile(array_classe, 0.05)
+        Q_1 = np.quantile(array_classe, q_1)
+        Q_3 = np.quantile(array_classe, q_3)
+        IQR = Q_3 - Q_1
+        upper_bound = Q_3 + (IQR * 1.25)
+        v_outlier = np.where(((array_classe <= QQ_1) 
+                                        | (array_classe >= upper_bound)))[0]
+        if len(v_outlier) > 0:
+            return v_outlier
+        else:
+            return []

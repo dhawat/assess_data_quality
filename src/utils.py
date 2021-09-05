@@ -271,6 +271,21 @@ def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
     return ind
 
 
+def _drop_non_unique(df, col_name, thresh_1=0.99, thresh_2=0.001, clean_dup=True):
+
+    if clean_dup:
+        df, _ = _is_duplicated(df)  # cleaning duplications in the dataframe
+    ratio_unique = _is_unique(df, col_name)
+    print(ratio_unique)
+    if ratio_unique > thresh_1:
+        bad_idx = df[col_name][df[col_name].duplicated(keep=False)].index
+    elif ratio_unique < thresh_2:
+        bad_idx = df[col_name][~df[col_name].duplicated(keep=False)].index
+    else:
+        bad_idx = []
+    return bad_idx
+
+
 def _col_is_none(df, thresh_col=0.99, clean_dup=False):
     """check column having mean number of nan > thresh
 

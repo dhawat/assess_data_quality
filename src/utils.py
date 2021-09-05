@@ -1,3 +1,4 @@
+from math import nan
 import pandas as pd
 import re
 import numpy as np
@@ -15,10 +16,14 @@ df = df.sort_index()  # to sort with respect to the index """
 
 
 def check_extension(path):
-    """check if the extension of the data set belongs to {csv, json, sql, xlsx}
+    """Check if the extension of the data set belongs to {csv, json, sql, xlsx}.
+
     Args:
-        path (path): path of the set of data
+
+        path (path): path of the set of data.
+
     Returns:
+
         type of allowed extension or none.
     """
     if re.search("\.csv$", path, flags=re.IGNORECASE):
@@ -33,11 +38,15 @@ def check_extension(path):
 
 
 def _to_DataFrame(path):
-    """read data and transform it to DataFrame
+    """Read data and transform it to DataFrame.
+
     Args:
-        path (path): path to the corresponding directory of the data
+
+        path (path): path to the corresponding directory of the data.
+
     Returns:
-        df (pandas.DataFrame): DataFrame containing of the data
+
+        df (pandas.DataFrame): DataFrame containing of the data.
     """
 
     ext = check_extension(path)  # check if the format of the data is acceptable
@@ -53,11 +62,15 @@ def _to_DataFrame(path):
 
 
 def get_metadata(df):
-    """Read a dataframe and generate relevant metadata such as columns types etc
+    """Read a dataframe and generate relevant metadata such as columns types etc.
+
     Args:
+
         df (pandas.DataFrame): DataFrame of data.
+
     Returns:
-        dict: {name_of_column: metadata_associated}
+
+        dict: {name_of_column: metadata_associated}.
     """
     metadata = []
     for column in df:
@@ -67,12 +80,17 @@ def get_metadata(df):
 
 def check_data_type(column):
     !# what does this mean?
-    """check the type used in a column by voting method from all the non na data
+    """check the type used in a column by voting method from all the non nan data.
+
     Args:
-        column (pandas.core.series.Series): column from a dataframe
+
+        column (pandas.core.series.Series): column from a dataframe.
+
     Returns:
+
         [type]: [description]
     """
+    !# return what
     types_dict = {}
     if column.dropna().values.size == 0:
         return type(None)
@@ -90,21 +108,27 @@ def check_data_type(column):
             pass
     if len(types_dict) != 0:
         return max(types_dict, key=types_dict.get)
+
     else:
         return
 
 
 def _is_date(string, fuzzy=False):
     """Check if a given string is a date, return the date if true and raise  ValueError if false.
+
     Args:
-        string (str): string to check
+
+        string (str): string to check.
+
         fuzzy (bool, optional): Enable a more lenient search in the string. Defaults to False.
 
     Returns:
-        string: datetime as a string
+
+        string: datetime as a string.
 
     Raises:
-        ValueError: raised when string is not likely to be a date
+
+        ValueError: raised when string is not likely to be a date.
     """
     try:
         pd.to_datetime(string)
@@ -115,12 +139,17 @@ def _is_date(string, fuzzy=False):
 
 
 def _is_duplicated(df):
-    """Find duplicated row and return dataframe without the duplication
+    """Find duplicated row and return dataframe without the duplication.
+
     Args:
-        df (pandas.DataFrame): data frame
+
+        df (pandas.DataFrame): data frame.
+
     Returns:
-        duplicated_row: the duplicated rows
-        df_clean: the DataFrame without the duplicated rows
+
+        duplicated_row: the duplicated rows.
+
+        df_clean: the DataFrame without the duplicated rows.
     """
 
     df_new = df.drop([df.columns[0]], axis=1)
@@ -131,40 +160,71 @@ def _is_duplicated(df):
 
 
 def _duplicated_idx(df):
+    """Find index of duplicated row in the DataFrame
+
+    Args:
+
+        df (pandas.DataFrame): DataFrame of input data
+
+    Returns:
+
+        list of index of duplicated row
+    """
     df_new = df.drop([df.columns[0]], axis=1)
     return df_new.duplicated()
 
-
+#! remove this function
 def _summery_duplication(df, col_name):
-    """summery of duplications in a specific column
+    """summery of duplications in a specific column.
+
     Args:
+
         df ([type]): Data frame
+
         col_name ([type]): column name
     """
     df.pivot_table(columns=[col_name], aggfunc="size")  # summery of duplication
 
 
-def _is_unique(df, col_name="", duplication=True):
-    """verify uniqueness over a specified column, and find the uniqueness coefficient
+def _is_unique(df, col_name=""):
+    """Uniqueness ratio of specified column of the DataFrame
+
     Args:
-        df (pandas.DataFrame): Data Frame.
-        col_name (str, optional): Column name. Defaults to "".
+
+        df pandas.DataFrame): DataFrame of input data.
+
+        col_name (str, optional): name of the column. Defaults to "".
+
     Returns:
-        ratio : 1 - (number of repeated data in a column)/card(the column)
-                if 1 means all values are unique
+
+        ratio : 1 - (number of repeated data in a column without nan)/card(the column without nan)
+
+    .. note::
+
+            A ratio 1 means all values are unique.
+            A ratio 0 means all values in the columns are repeated or empty column.
     """
-    if df[col_name].dropna().shape[0] == 0:
+    if col_name is not nan:
+        df = df[col_name]
+    else:
+        df = df
+    if df.dropna().shape[0] == 0:
         return 0
     else:
-        return df[col_name].dropna().nunique() / df[col_name].dropna().shape[0]
+        return df.dropna().nunique() / df.dropna().shape[0]
 
 
-def _is_none(df, col_name=""):
-    """find none ratio in a specific columns
+def _is_none(df, col_name):
+    """Find none ratio in a specific column.
+
     Args:
-        df ([type]): [description]
-        col_name (str, optional): [description]. Defaults to "".
+
+        df (pandas.DataFrame): DataFrame of input data.
+
+        col_name (str): name of the column. Defaults to "".
+
     Returns:
+
         ratio: none ration in the columns
                 1 means all the columns is none
                 0 means non none
@@ -175,23 +235,46 @@ def _is_none(df, col_name=""):
     return ratio
 
 
-def _z_score(col, mean, std, tresh=3):
-    """cutting distribution between mean-6*std and mean+6*std
+def _z_score(col, thresh=6, thresh_unique1=0.99, thresh_unique2=0.0001):
+    r"""Result of the Z score test defined by
+
+    .. math::
+
+        Z = \frac{x-\nu}{\sigma}
+
+    where :math:`x`is the observation data (the column DataFrame), :math:`\nu` is the mean of the sample and :math:`\sigma` is the standard deviation of the sample.
+    The Z score test is calculated for the input column DataFrame and return the index of elements lying outside the interval :math:`[\nu - 6{\sigma}, \nu + 6{\sigma}]`. The test is only applied if the input satisfy the condition that the uniqueness ratio (see :py:meth:`_is_unique`), lies between the input uniqueness thresholds,This prevent false positive.
+
+    .. seealso::
+
+        `Z score <https://en.wikipedia.org/wiki/Standard_score>`_
+
     Args:
-        df ([type]): [description]
-        col_name ([type]): [description]
-        mean ([type]): [description]
-        std ([type]): [description]
-        tresh (int, optional): [description]. Defaults to 6.
+        col (pandas.DataFrame): Input column DataFrame
+
+        thresh (int, optional): Z score cut threshold. Defaults to 6.
+
+        thresh_unique1 (float, optional): threshold to skip the test for DataFrame with high uniqueness. Defaults to 0.99.
+
+        thresh_unique2 (float, optional): threshold to skip the test for discret DataFrame i.e. high clustering sample. Defaults to 0.0001.
+
     Returns:
-        [type]: [description]
+
+        list of indices of row rejected by  the Z score test.
     """
-    upper_bound = mean + tresh * std
-    lower_bound = mean - tresh * std
-    idx = col[
-        ~((col > lower_bound) & (col < upper_bound))
-    ].index  # trancate values from the column
-    return idx
+    ratio_uniqueness = _is_unique(df=col)
+    if (ratio_uniqueness > thresh_unique1) or  (ratio_uniqueness < thresh_unique2):
+        return []
+    else :
+        mean = col.mean()
+        std = col.std()
+
+        upper_bound = mean + thresh * std
+        lower_bound = mean - thresh * std
+        idx = col[
+            ~((col > lower_bound) & (col < upper_bound))
+        ].index  # trancate values from the column
+        return idx
 
 
 # todo: Possibilité d'améliorer: Threshold for anomalie is fixed at Q_1 = round(np.percentile(unique_counts, 5)), could be improved. DBSCAN for example on the number of occurences on words.

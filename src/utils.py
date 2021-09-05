@@ -154,7 +154,7 @@ def _is_unique(df, col_name="", duplication=True):
     if duplication:
         df, _ = _is_duplicated(df)
 
-    return df[col_name].nunique() / df[col_name].shape[0]
+    return df[col_name].dropna().nunique() / df[col_name].dropna().shape[0]
 
 
 def _is_none(df, col_name=""):

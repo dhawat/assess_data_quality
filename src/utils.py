@@ -37,7 +37,7 @@ def check_extension(path):
     return "none"
 
 
-def _to_DataFrame(path):
+def _to_DataFrame(path, **kwargs):
     """Read data and transform it to DataFrame.
 
     Args:
@@ -57,7 +57,7 @@ def _to_DataFrame(path):
         "sql": pd.read_sql,
         "xlsx": pd.read_excel,
     }
-    df = f_dict[ext](path)  # DataFrame containing the data
+    df = f_dict[ext](path, **kwargs)  # DataFrame containing the data
     return df
 
 
@@ -236,7 +236,7 @@ def _is_none(df, col_name):
     return ratio
 
 
-def _z_score(col, thresh=6, thresh_unique1=0.99, thresh_unique2=0.0001):
+def _z_score(col, uniq_col, thresh_std=6, thresh_unique1=0.99, thresh_unique2=0.0001):
     r"""Result of the Z score test defined by
 
     .. math::
@@ -253,7 +253,7 @@ def _z_score(col, thresh=6, thresh_unique1=0.99, thresh_unique2=0.0001):
     Args:
         col (pandas.DataFrame): Input column DataFrame
 
-        thresh (int, optional): Z score cut threshold. Defaults to 6.
+        thresh_std (int, optional): Z score cut threshold. Defaults to 6.
 
         thresh_unique1 (float, optional): threshold to skip the test for DataFrame with high uniqueness. Defaults to 0.99.
 
@@ -263,15 +263,14 @@ def _z_score(col, thresh=6, thresh_unique1=0.99, thresh_unique2=0.0001):
 
         list of indices of row rejected by  the Z score test.
     """
-    ratio_uniqueness = _is_unique(df=col)
-    if (ratio_uniqueness > thresh_unique1) or (ratio_uniqueness < thresh_unique2):
+    if (uniq_col > thresh_unique1) or (uniq_col < thresh_unique2):
         return []
     else:
         mean = col.mean()
         std = col.std()
 
-        upper_bound = mean + thresh * std
-        lower_bound = mean - thresh * std
+        upper_bound = mean + thresh_std * std
+        lower_bound = mean - thresh_std * std
         idx = col[
             ~((col > lower_bound) & (col < upper_bound))
         ].index  # trancate values from the column
@@ -281,7 +280,7 @@ def _z_score(col, thresh=6, thresh_unique1=0.99, thresh_unique2=0.0001):
 # todo: Possibilité d'améliorer: Threshold for anomalie is fixed at Q_1 = round(np.percentile(unique_counts, 5)), could be improved. DBSCAN for example on the number of occurences on words.
 
 # todo: or the repeated words also could be detected by this method, for each word detected as outlier we can divide the score by  the number of repetition of the word
-def uncorrect_grammar(col, cluster, thresh):
+def incorrect_grammar(col, cluster, thresh):
     """Find bad index of elements of a column `col` belonging to the same cluster `cluster`. The bad index are those having number of occurrence less then thresh.
 
     .. seealso::
@@ -314,7 +313,7 @@ def uncorrect_grammar(col, cluster, thresh):
 
 # todo replace thresh by values from medi function
 # todo change name funcxtion
-def index_uncorrect_grammar(col, thresh=10):
+def index_incorrect_grammar(col, thresh=10):
     """List of uncorect words in `col`. The incorrect words are decided via `thresh` used by :py:meth:`incorrect_grammar`.
 
     Args:
@@ -331,26 +330,26 @@ def index_uncorrect_grammar(col, thresh=10):
 
             :py:meth:`incorrect_grammar`.
     """
-    list_uncorrect = []
+    list_incorrect = []
     words = np.unique(np.asarray(col))  # unique words in col
     lev_similarity = np.array(
         [[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words]
     )  # similarity matrix of `words`
 
     # fitting model
-    affprop = AffinityPropagation(affinity="precomputed", damping=0.5)
+    affprop = AffinityPropagation(affinity="precomputed", damping=0.5, random_state=None)
     affprop.fit(lev_similarity)
 
     if len(np.unique(affprop.labels_)) == 1:
-        return list_uncorrect
+        return list_incorrect
     else:
         for cluster_id in np.unique(affprop.labels_):
             cluster = np.unique(words[np.nonzero(affprop.labels_ == cluster_id)])
             if len(cluster) > 1:
-                list_uncorrect = list_uncorrect + uncorrect_grammar(
+                list_incorrect = list_incorrect + incorrect_grammar(
                     col, cluster, thresh
                 )
-    return list_uncorrect
+    return list_incorrect
 
 
 def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
@@ -490,7 +489,7 @@ def outlier_detection(array_classe, q_1=0.25, q_3=0.75):
         Q_3 = np.quantile(array_classe, q_3)
         IQR = Q_3 - Q_1
         upper_bound = Q_3 + (IQR * 1.25)
-        v_outlier = np.where(((array_classe <= QQ_1) 
+        v_outlier = np.where(((array_classe <= QQ_1)
                                         | (array_classe >= upper_bound)))[0]
         if len(v_outlier) > 0:
             return v_outlier

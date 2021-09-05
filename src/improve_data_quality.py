@@ -226,7 +226,7 @@ class Data:
         for index in idx:
             row = {"idx": index, "column": "NA", "errtype": "Outlier"}
             self.bad_index = self.bad_index.append(row, ignore_index=True)
-        
+
         idxes, col_names = self.bad_logical_index()
         for idex, cols in zip(idxes, col_names):
             for idx in idex:
@@ -238,7 +238,7 @@ class Data:
         params.setdefault("weights", "uniform")
         df, _ = utils._is_duplicated(self.data)
         if drop_id:
-            list_numeric_col_name = self.nbr_col[1:] # name of numerical column
+            list_numeric_col_name = self.nbr_col[1:]  # name of numerical column
         else:
             list_numeric_col_name = self.nbr_col
         numeric_df = df[list_numeric_col_name]  # numeric dataframe
@@ -267,7 +267,7 @@ class Data:
             df_drop_col0 = self.data.drop(
                 labels=self.data.columns[0], axis=1
             )  # drop unique column
-            df_drop_col0 = df_drop_col0[self.nbr_col[1:]] #Weird fix be careful
+            df_drop_col0 = df_drop_col0[self.nbr_col[1:]]  # Weird fix be careful
         else:
             df_drop_col0 = self.data[self.nbr_col]
 
@@ -431,7 +431,8 @@ class Data:
 
 
 #! please use our commun directory
+"""
 data = Data('..\data\data_avec_erreurs_wasserstein.csv')
 data.firstpass()
 data.secondpass()
-data.bad_index.to_csv('exemple.csv')
+data.bad_index.to_csv('exemple.csv')"""

@@ -146,6 +146,9 @@ class Data:
         """
         if not self._corr_col:
             self._corr_col = self.compute_corr_str()
+            for col in data.str_col:
+                if col not in self._corr_col:
+                    self._corr_col[col] = []
             return self._corr_col
         else:
             return self._corr_col
@@ -408,7 +411,11 @@ class Data:
         Returns:
             [dict]: [contains for each column a list of possibly empty correlated columns]
         """
-        df = self.data[self.str_col]
+        list_col = []
+        for col in self.str_col:
+            if utils._is_unique(self.data, col) <= 0.001:
+                list_col.append(col)
+        df = self.data[list_col]
 
         le = LabelEncoder()
         le.fit(df.stack(dropna=False).reset_index(drop=True))

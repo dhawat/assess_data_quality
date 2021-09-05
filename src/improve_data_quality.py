@@ -147,7 +147,7 @@ class Data:
         """
         if not self._corr_col:
             self._corr_col = self.compute_corr_str()
-            for col in data.str_col:
+            for col in self.str_col:
                 if col not in self._corr_col:
                     self._corr_col[col] = []
             return self._corr_col
@@ -195,14 +195,15 @@ class Data:
         n_duped_idx = ~utils._duplicated_idx(self.data)
 
         for index in n_duped_idx[~n_duped_idx].index.values.tolist():
-            self.add_to_bad_idx(index, col='ALL', col_type="duplication", VALUE_FLAG=False)
+            self.add_to_bad_idx(index, col='ALL', col_type="duplication",
+                                VALUE_FLAG=False)
 
 
         # Probabilistic pass
         # Columns of strings only
         for column in self.str_col:
             if (
-                utils._is_unique(self.data, column) <= 0.005
+                self._uniq_col[column] <= 0.005
             ):  # Filter column with too many different words
                 clean_df = self.data[n_duped_idx]
                 clean_df = clean_df[column][clean_df[column].notna().values]
@@ -212,7 +213,8 @@ class Data:
                 idx = clean_df.iloc[idx].index
 
                 for index in idx:
-                    self.add_to_bad_idx(index, col=column, col_type="typo", VALUE_FLAG=True)
+                    self.add_to_bad_idx(index, col=column, col_type="typo",
+                                        VALUE_FLAG=True)
 
         # Columns of numbers only
         for column in self.nbr_col:  
@@ -222,12 +224,14 @@ class Data:
             idx = clean_df[idx].index
 
             for index in idx:
-                self.add_to_bad_idx(index, col=column, col_type="extreme", VALUE_FLAG=True)
+                self.add_to_bad_idx(index, col=column, col_type="extreme",
+                                    VALUE_FLAG=True)
 
         # Completeness pass on each row
         idx = utils._row_is_none(self.data)
         for index in idx:
-            self.add_to_bad_idx(index, col='All', col_type="too much nan", VALUE_FLAG=False)
+            self.add_to_bad_idx(index, col='All', col_type="too much nan",
+                                VALUE_FLAG=False)
 
         # Eliminate the obvious errors from the good index
         for idx in self.bad_index["idx"]:
@@ -375,8 +379,8 @@ class Data:
                     ipdb.set_trace()"""
         if (
             col1_name != col2_name
-            and (utils._is_unique(self.data, col1_name) < unique_tresh)
-            and (utils._is_unique(self.data, col2_name) < unique_tresh)
+            and (self._uniq_col[col1_name] < unique_tresh)
+            and (self._uniq_col[col2_name] < unique_tresh)
         ):
             df_clean = self.col_combined_result(
                 col1_name=col1_name, col2_name=col2_name
@@ -404,8 +408,8 @@ class Data:
             for col2 in self.corr_col[col1]:
                 if (
                     col1 != col2
-                    and utils._is_unique(df, col1, False) < 0.001
-                    and utils._is_unique(df, col2, False) < 0.001
+                    and self._uniq_col[col1] < 0.001
+                    and self._uniq_col[col2] < 0.001
                 ):
                     freq = df.groupby([col1, col2]).size()
                     elements = df.loc[df[[col1, col2]].dropna().index]
@@ -438,7 +442,7 @@ class Data:
         """
         list_col = []
         for col in self.str_col:
-            if utils._is_unique(self.data, col) <= 0.001:
+            if self._uniq_col[col] <= 0.001:
                 list_col.append(col)
         df = self.data[list_col]
 

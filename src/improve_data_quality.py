@@ -320,6 +320,7 @@ class Data:
             df_clean = self.col_combined_result(
                 col1_name=col1_name, col2_name=col2_name
             )
+            df_combined = df_clean.groupby([col1_name, col2_name]).size
             df_combined = df_clean.apply(lambda row: tuple(row.values), axis=1)
             # ipdb.set_trace()
             summery_tuple = np.unique(df_combined, return_counts=True)
@@ -333,21 +334,29 @@ class Data:
         idxes = []
         for col1 in self.str_col:
             for col2 in self.str_col:
-                if col1 != col2 and utils._is_unique(df, col1) and utils._is_unique(df, col2) < 0.001:
+                if (
+                    col1 != col2
+                    and utils._is_unique(df, col1)
+                    and utils._is_unique(df, col2) < 0.001
+                ):
                     freq = df.groupby([col1, col2]).size()
                     elements = df.loc[df[[col1, col2]].dropna().index]
                     for elem in elements[col1].unique():
                         #
-                        for e, index_serie in zip(freq[elem], freq[elem].index.tolist()):
+                        for e, index_serie in zip(
+                            freq[elem], freq[elem].index.tolist()
+                        ):
                             if e < 10:
-                                idxes.append(df[col1].index[df[col1] == index_serie].tolist() 
-                                + df[col2].index[df[col2] == index_serie].tolist())
+                                idxes.append(
+                                    df[col1].index[df[col1] == index_serie].tolist()
+                                    + df[col2].index[df[col2] == index_serie].tolist()
+                                )
                                 col_names.append([col1, col2])
         return idxes, col_names
 
 
 #! please use our commun directory
-data = Data('..\data\data_avec_erreurs_wasserstein.csv')
+"""data = Data('..\data\data_avec_erreurs_wasserstein.csv')
 #data.firstpass()
-data.secondpass()
-#data.bad_index.to_csv('exemple.csv')
+data.secondpass()"""
+# data.bad_index.to_csv('exemple.csv')

@@ -152,7 +152,7 @@ def _is_unique(df, col_name=""):
                 if 1 means all values are unique
     """
     df_clean, _ = _is_duplicated(df)
-    return df_clean[col_name].nunique() / df_clean[col_name].shape[0]
+    return df_clean[col_name].dropna().nunique() / df_clean[col_name].dropna().shape[0]
 
 
 def _is_none(df, col_name=""):

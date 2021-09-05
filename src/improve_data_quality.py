@@ -171,8 +171,7 @@ class Data:
             [dict]: [dict containing {name_of_col: ratio_of_uniqueness}]
         """
         if not self._uniq_col:
-            for col in self.data.columns:
-                self._uniq_col{col: utils._is_unique(self.data, col)}
+            self._uniq_col = {col: utils._is_unique(self.data, col) for col in self.data.columns}
             return self._uniq_col
         else:
             return self._uniq_col
@@ -203,7 +202,7 @@ class Data:
         # Columns of strings only
         for column in self.str_col:
             if (
-                self._uniq_col[column] <= 0.005
+                self.uniq_col[column] <= 0.005
             ):  # Filter column with too many different words
                 clean_df = self.data[n_duped_idx]
                 clean_df = clean_df[column][clean_df[column].notna().values]
@@ -254,9 +253,9 @@ class Data:
                 self.add_to_bad_idx(idx, col=key, col_type="Logic error", VALUE_FLAG=True)
 
         # Outlier pass, less explicable.
-        idx = self.outlier_lof()[0]
-        for index in idx:
-            self.add_to_bad_idx(index, col="NA", col_type="Outlier", VALUE_FLAG=False)
+        #idx = self.outlier_lof()[0]
+        #for index in idx:
+        #    self.add_to_bad_idx(index, col="NA", col_type="Outlier", VALUE_FLAG=False)
         
         idxes, col_names = self.bad_logical_index()
         for idex, cols in zip(idxes, col_names):
@@ -379,8 +378,8 @@ class Data:
                     ipdb.set_trace()"""
         if (
             col1_name != col2_name
-            and (self._uniq_col[col1_name] < unique_tresh)
-            and (self._uniq_col[col2_name] < unique_tresh)
+            and (self.uniq_col[col1_name] < unique_tresh)
+            and (self.uniq_col[col2_name] < unique_tresh)
         ):
             df_clean = self.col_combined_result(
                 col1_name=col1_name, col2_name=col2_name
@@ -408,8 +407,8 @@ class Data:
             for col2 in self.corr_col[col1]:
                 if (
                     col1 != col2
-                    and self._uniq_col[col1] < 0.001
-                    and self._uniq_col[col2] < 0.001
+                    and self.uniq_col[col1] < 0.001
+                    and self.uniq_col[col2] < 0.001
                 ):
                     freq = df.groupby([col1, col2]).size()
                     elements = df.loc[df[[col1, col2]].dropna().index]
@@ -442,7 +441,7 @@ class Data:
         """
         list_col = []
         for col in self.str_col:
-            if self._uniq_col[col] <= 0.001:
+            if self.uniq_col[col] <= 0.001:
                 list_col.append(col)
         df = self.data[list_col]
 
@@ -479,7 +478,7 @@ class Data:
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
 #! please use our commun directory
-#data = Data('..\data\data_avec_erreurs_wasserstein.csv')
-#data.firstpass()
-#data.secondpass()
-#data.bad_index.to_csv('exemple.csv')
+data = Data('..\data\data_avec_erreurs_wasserstein.csv')
+data.firstpass()
+data.secondpass()
+data.bad_index.to_csv('exemple.csv')

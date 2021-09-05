@@ -10,7 +10,7 @@ from sklearn.preprocessing import LabelEncoder
 class Data:
     """Data class holding a column by column profile and index flagged as low quality data"""
 
-    def __init__(self, path=""):
+    def __init__(self, path="", drop_first_col=True, **kwargs):
         """
         Args:
             data (CSV, JSON, SQL): data set.
@@ -18,7 +18,9 @@ class Data:
         if utils.check_extension(path) == "none":
             raise TypeError("data should be of provided as .csv or .json or .sql file")
 
-        self.data = utils._to_DataFrame(path)
+        self.data = utils._to_DataFrame(path, kwargs)
+        if drop_first_col:
+            self.data = self.data.drop(self.data.columns[0], axis=1)
         self._good_index = list(range(self.data.shape[0]))
         self._bad_index = pd.DataFrame(columns=["idx", "column", "errtype", 'value1', 'value2'])
         self._nbr_col = []
@@ -197,7 +199,6 @@ class Data:
             self.add_to_bad_idx(index, col='ALL', col_type="duplication",
                                 VALUE_FLAG=False)
 
-
         # Probabilistic pass
         # Columns of strings only
         for column in self.str_col:
@@ -229,7 +230,7 @@ class Data:
         # Completeness pass on each row
         idx = utils._row_is_none(self.data)
         for index in idx:
-            self.add_to_bad_idx(index, col='All', col_type="too much nan",
+            self.add_to_bad_idx(index, col='All', col_type="empty",
                                 VALUE_FLAG=False)
 
         # Eliminate the obvious errors from the good index
@@ -262,14 +263,11 @@ class Data:
             for idx in idex:
                 self.add_to_bad_idx(idx, col=cols, col_type="Logic error", VALUE_FLAG=True)
 
-    def imputation_method(self, drop_id=True, **params):
+    def imputation_method(self, **params):
         params.setdefault("n_neighbors", 10)
         params.setdefault("weights", "uniform")
         df, _ = utils._is_duplicated(self.data)
-        if drop_id:
-            list_numeric_col_name = self.nbr_col[1:] # name of numerical column
-        else:
-            list_numeric_col_name = self.nbr_col
+        list_numeric_col_name = self.nbr_col
         numeric_df = df[list_numeric_col_name]  # numeric dataframe
         numeric_df = numeric_df.fillna(np.nan)  # fill none with np.nan
         imputer = KNNImputer(**params)  # initialize imputation
@@ -278,7 +276,7 @@ class Data:
         numeric_df_imputation.columns = list_numeric_col_name
         return numeric_df_imputation
 
-    def outlier_lof(self, drop_id=True, **params):
+    def outlier_lof(self, **params):
         """outlier detection over rows, from numerical columns
         .. warning::
                 automatic imputation on the numerical columns
@@ -291,18 +289,13 @@ class Data:
         params.setdefault("metric", "chebyshev")
         params.setdefault("n_jobs", -1)
 
-        # drop unique column
-        if drop_id:
-            df_drop_col0 = self.data.drop(
-                labels=self.data.columns[0], axis=1
-            )  # drop unique column
-            df_drop_col0 = df_drop_col0[self.nbr_col[1:]] #Weird fix be careful
-        else:
-            df_drop_col0 = self.data[self.nbr_col]
+ 
+
+        df_drop_col0 = self.data[self.nbr_col]
 
         if (df_drop_col0.isnull()).sum().any() > 0:
             # imputation
-            df_drop_col0 = self.imputation_method(drop_id)
+            df_drop_col0 = self.imputation_method(params)
 
         # lof phase
         clf = LocalOutlierFactor(**params)

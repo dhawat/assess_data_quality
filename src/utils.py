@@ -33,14 +33,13 @@ def check_extension(data):
     return "none"
 
 
-def _to_DataFrame(data):
+def _to_DataFrame(data, **kwargs):
     """read data and transform it to DataFrame
     Args:
         data (csv, json, sql, xlsx): data
     Returns:
         Dataframe
     """
-
     ext = check_extension(data)
     assert ext != "none"
     f_dict = {
@@ -49,7 +48,7 @@ def _to_DataFrame(data):
         "sql": pd.read_sql,
         "xlsx": pd.read_excel,
     }
-    df = f_dict[ext](data)
+    df = f_dict[ext](data, kwargs)
     return df
 
 

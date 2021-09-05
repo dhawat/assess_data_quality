@@ -79,8 +79,8 @@ def get_metadata(df):
 
 
 def check_data_type(column):
-    !# what does this mean?
-    """check the type used in a column by voting method from all the non nan data.
+
+    """Set a type for the column by using the maximun type of not nan element in the column.
 
     Args:
 
@@ -90,7 +90,7 @@ def check_data_type(column):
 
         [type]: [description]
     """
-    !# return what
+
     types_dict = {}
     if column.dropna().values.size == 0:
         return type(None)
@@ -172,6 +172,7 @@ def _duplicated_idx(df):
     """
     df_new = df.drop([df.columns[0]], axis=1)
     return df_new.duplicated()
+
 
 #! remove this function
 def _summery_duplication(df, col_name):
@@ -263,9 +264,9 @@ def _z_score(col, thresh=6, thresh_unique1=0.99, thresh_unique2=0.0001):
         list of indices of row rejected by  the Z score test.
     """
     ratio_uniqueness = _is_unique(df=col)
-    if (ratio_uniqueness > thresh_unique1) or  (ratio_uniqueness < thresh_unique2):
+    if (ratio_uniqueness > thresh_unique1) or (ratio_uniqueness < thresh_unique2):
         return []
-    else :
+    else:
         mean = col.mean()
         std = col.std()
 
@@ -280,34 +281,66 @@ def _z_score(col, thresh=6, thresh_unique1=0.99, thresh_unique2=0.0001):
 # todo: Possibilité d'améliorer: Threshold for anomalie is fixed at Q_1 = round(np.percentile(unique_counts, 5)), could be improved. DBSCAN for example on the number of occurences on words.
 
 # todo: or the repeated words also could be detected by this method, for each word detected as outlier we can divide the score by  the number of repetition of the word
-def uncorrect_grammar(df_names, cluster, min_occurence):
-    """index of element
+def uncorrect_grammar(col, cluster, thresh):
+    """Find bad index of elements of a column `col` belonging to the same cluster `cluster`. The bad index are those having number of occurrence less then thresh.
+
+    .. seealso::
+
+        :py:meth:`index_uncorrect_grammar`
+
     Args:
-        df_names ([type]): [description]
-        cluster ([type]): [description]
-        min_occurence (int): [min # of répétition of a label to be considered an error]
+
+        col (pandas.DataFrame): input column DataFrame.
+
+        cluster (numpy.1darray): cluster of words in col.
+
+        thresh (int): minimum of allowed number of repetition of a word in `cluster`to not consider it as bad word.
+
     Returns:
-        [type]: [description]
+
+        list of bad indices.
     """
-    words = np.asarray(df_names)
-    unique_words, unique_counts = np.unique(df_names, return_counts=True)
-    index_In_words = []
+    words = np.asarray(col)
+    unique_words, unique_counts = np.unique(col, return_counts=True)
+    bad_idx = []
     for w in cluster:
-        count = unique_counts[np.where(unique_words == w)[0]][0]
-        if count <= min_occurence:
-            index_In_words = index_In_words + np.ndarray.tolist(np.where(words == w)[0])
-    return index_In_words
+        count = unique_counts[np.where(unique_words == w)[0]][
+            0
+        ]  # cardinality of occurrences  of w in col
+        if count <= thresh:
+            bad_idx = bad_idx + np.ndarray.tolist(np.where(words == w)[0])  # bad index
+    return bad_idx
 
 
-def index_uncorrect_grammar(df_State):
-    df_State_unique = np.unique(df_State)
-    words = np.asarray(df_State_unique)  # So that indexing with a list will work
+# todo replace thresh by values from medi function
+# todo change name funcxtion
+def index_uncorrect_grammar(col, thresh=10):
+    """List of uncorect words in `col`. The incorrect words are decided via `thresh` used by :py:meth:`incorrect_grammar`.
+
+    Args:
+
+        col ([type]): input column DataFrame.
+
+        thresh(int, optional): minimum of allowed number of repetition of a word in `cluster`to not consider it as bad word, used by the function :py:meth:`incorrect_grammar`.
+
+    Returns:
+
+        list of incorrect words.
+
+    .. seealso::
+
+            :py:meth:`incorrect_grammar`.
+    """
+    list_uncorrect = []
+    words = np.unique(np.asarray(col))  # unique words in col
     lev_similarity = np.array(
         [[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words]
-    )
+    )  # similarity matrix of `words`
+
+    # fitting model
     affprop = AffinityPropagation(affinity="precomputed", damping=0.5)
     affprop.fit(lev_similarity)
-    list_uncorrect = []
+
     if len(np.unique(affprop.labels_)) == 1:
         return list_uncorrect
     else:
@@ -315,7 +348,7 @@ def index_uncorrect_grammar(df_State):
             cluster = np.unique(words[np.nonzero(affprop.labels_ == cluster_id)])
             if len(cluster) > 1:
                 list_uncorrect = list_uncorrect + uncorrect_grammar(
-                    df_State, cluster, 10
+                    col, cluster, thresh
                 )
     return list_uncorrect
 

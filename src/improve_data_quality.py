@@ -24,6 +24,7 @@ class Data:
         self._nbr_col = []
         self._str_col = []
         self._corr_col = {}
+        self._uniq_col = {}
 
     @property
     def good_index(self):
@@ -161,6 +162,30 @@ class Data:
             value ([dict]): dict of {col: [correlated_cols]}
         """
         self._corr_col = value
+    
+    @property
+    def uniq_col(self):
+        """getter for private attribute _uniq_col
+
+        Returns:
+            [dict]: [dict containing {name_of_col: ratio_of_uniqueness}]
+        """
+        if not self._uniq_col:
+            for col in self.data.columns:
+                self._uniq_col{col: utils._is_unique(self.data, col)}
+            return self._uniq_col
+        else:
+            return self._uniq_col
+    
+    @uniq_col.setter
+    def uniq_col(self, value):
+        """setter for private attribute _uniq_col
+
+        Args:
+            value ([dict]): [dict containing {name_of_col: ratio_of_uniqueness}]
+        """
+        self._uniq_col = value
+                
 
     def firstpass(self):
         """Push into self.bad_index the indexes and error types of data.
@@ -450,7 +475,7 @@ class Data:
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
 #! please use our commun directory
-data = Data('..\data\data_avec_erreurs_wasserstein.csv')
-data.firstpass()
-data.secondpass()
-data.bad_index.to_csv('exemple.csv')
+#data = Data('..\data\data_avec_erreurs_wasserstein.csv')
+#data.firstpass()
+#data.secondpass()
+#data.bad_index.to_csv('exemple.csv')

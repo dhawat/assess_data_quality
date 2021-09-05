@@ -95,14 +95,16 @@ def check_data_type(column):
 
 
 def _is_date(string, fuzzy=False):
-    """check if a given string is a date and return the date if true and raise a ValueError if false
+    """Check if a given string is a date, return the date if true and raise  ValueError if false.
     Args:
-        string (string): string to check
+        string (str): string to check
         fuzzy (bool, optional): Enable a more lenient search in the string. Defaults to False.
-    Raises:
-        ValueError: raised when string is not likely to be a date
+
     Returns:
         string: datetime as a string
+
+    Raises:
+        ValueError: raised when string is not likely to be a date
     """
     try:
         pd.to_datetime(string)

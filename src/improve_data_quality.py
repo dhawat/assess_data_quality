@@ -10,7 +10,7 @@ from sklearn.preprocessing import LabelEncoder
 class Data:
     """Data class holding a column by column profile and index flagged as low quality data"""
 
-    def __init__(self, path=""):
+    def __init__(self, path="", drop_first_col=True, **kwargs):
         """
         Args:
             data (CSV, JSON, SQL): data set.
@@ -18,12 +18,17 @@ class Data:
         if utils.check_extension(path) == "none":
             raise TypeError("data should be of provided as .csv or .json or .sql file")
 
-        self.data = utils._to_DataFrame(path)
+        self.data = utils._to_DataFrame(path, kwargs)
+        if drop_first_col:
+            self.data = self.data.drop(self.data.columns[0], axis=1)
         self._good_index = list(range(self.data.shape[0]))
-        self._bad_index = pd.DataFrame(columns=["idx", "column", "errtype"])
+        self._bad_index = pd.DataFrame(
+            columns=["idx", "column", "errtype", "value1", "value2"]
+        )
         self._nbr_col = []
         self._str_col = []
         self._corr_col = {}
+        self._uniq_col = {}
 
     @property
     def good_index(self):
@@ -118,6 +123,11 @@ class Data:
 
     @nbr_col.setter
     def nbr_col(self, value):
+        """setter method for setting _nbr_col private attribute
+
+        Args:
+            value ([list of strings]): [list of column names]
+        """
         self._nbr_col = value
 
     def push_bad_index(self, list_idx):  # Find a better method name
@@ -141,6 +151,9 @@ class Data:
         """
         if not self._corr_col:
             self._corr_col = self.compute_corr_str()
+            for col in self.str_col:
+                if col not in self._corr_col:
+                    self._corr_col[col] = []
             return self._corr_col
         else:
             return self._corr_col
@@ -154,6 +167,30 @@ class Data:
         """
         self._corr_col = value
 
+    @property
+    def uniq_col(self):
+        """getter for private attribute _uniq_col
+
+        Returns:
+            [dict]: [dict containing {name_of_col: ratio_of_uniqueness}]
+        """
+        if not self._uniq_col:
+            self._uniq_col = {
+                col: utils._is_unique(self.data, col) for col in self.data.columns
+            }
+            return self._uniq_col
+        else:
+            return self._uniq_col
+
+    @uniq_col.setter
+    def uniq_col(self, value):
+        """setter for private attribute _uniq_col
+
+        Args:
+            value ([dict]): [dict containing {name_of_col: ratio_of_uniqueness}]
+        """
+        self._uniq_col = value
+
     def firstpass(self):
         """Push into self.bad_index the indexes and error types of data.
         This first pass detects duplicated data, typo, extreme values and incompleteness by row.
@@ -162,16 +199,15 @@ class Data:
         n_duped_idx = ~utils._duplicated_idx(self.data)
 
         for index in n_duped_idx[~n_duped_idx].index.values.tolist():
-            self.bad_index = self.bad_index.append(
-                {"idx": index, "column": "All", "errtype": "duplication"},
-                ignore_index=True,
+            self.add_to_bad_idx(
+                index, col="ALL", col_type="duplication", VALUE_FLAG=False
             )
 
         # Probabilistic pass
         # Columns of strings only
         for column in self.str_col:
             if (
-                utils._is_unique(self.data, column) <= 0.005
+                self.uniq_col[column] <= 0.005
             ):  # Filter column with too many different words
                 clean_df = self.data[n_duped_idx]
                 clean_df = clean_df[column][clean_df[column].notna().values]
@@ -181,24 +217,26 @@ class Data:
                 idx = clean_df.iloc[idx].index
 
                 for index in idx:
-                    row = {"idx": index, "column": column, "errtype": "typo"}
-                    self.bad_index = self.bad_index.append(row, ignore_index=True)
+                    self.add_to_bad_idx(
+                        index, col=column, col_type="typo", VALUE_FLAG=True
+                    )
 
-        for column in self.nbr_col:  # Columns of numbers only
+        # Columns of numbers only
+        for column in self.nbr_col:
             clean_df = self.data[n_duped_idx]
             clean_df = clean_df[column][clean_df[column].notna().values]
             idx = utils._z_score(clean_df, clean_df.mean(), clean_df.std())
             idx = clean_df[idx].index
 
             for index in idx:
-                row = {"idx": index, "column": column, "errtype": "extreme value"}
-                self.bad_index = self.bad_index.append(row, ignore_index=True)
+                self.add_to_bad_idx(
+                    index, col=column, col_type="extreme", VALUE_FLAG=True
+                )
 
         # Completeness pass on each row
         idx = utils._row_is_none(self.data)
         for index in idx:
-            row = {"idx": index, "column": "All", "errtype": "too much nan"}
-            self.bad_index = self.bad_index.append(row, ignore_index=True)
+            self.add_to_bad_idx(index, col="All", col_type="empty", VALUE_FLAG=False)
 
         # Eliminate the obvious errors from the good index
         for idx in self.bad_index["idx"]:
@@ -218,29 +256,27 @@ class Data:
         )
         for key, value in idx_dict.items():
             for idx in value:
-                row = {"idx": idx, "column": key, "errtype": "Logic error"}
-                self.bad_index = self.bad_index.append(row, ignore_index=True)
+                self.add_to_bad_idx(
+                    idx, col=key, col_type="Logic error", VALUE_FLAG=True
+                )
 
         # Outlier pass, less explicable.
-        idx = self.outlier_lof()[0]
-        for index in idx:
-            row = {"idx": index, "column": "NA", "errtype": "Outlier"}
-            self.bad_index = self.bad_index.append(row, ignore_index=True)
+        # idx = self.outlier_lof()[0]
+        # for index in idx:
+        #    self.add_to_bad_idx(index, col="NA", col_type="Outlier", VALUE_FLAG=False)
 
         idxes, col_names = self.bad_logical_index()
         for idex, cols in zip(idxes, col_names):
             for idx in idex:
-                row = {"idx": idx, "column": cols, "errtype": "Logic error"}
-                self.bad_index = self.bad_index.append(row, ignore_index=True)
+                self.add_to_bad_idx(
+                    idx, col=cols, col_type="Logic error", VALUE_FLAG=True
+                )
 
-    def imputation_method(self, drop_id=True, **params):
+    def imputation_method(self, **params):
         params.setdefault("n_neighbors", 10)
         params.setdefault("weights", "uniform")
         df, _ = utils._is_duplicated(self.data)
-        if drop_id:
-            list_numeric_col_name = self.nbr_col[1:]  # name of numerical column
-        else:
-            list_numeric_col_name = self.nbr_col
+        list_numeric_col_name = self.nbr_col
         numeric_df = df[list_numeric_col_name]  # numeric dataframe
         numeric_df = numeric_df.fillna(np.nan)  # fill none with np.nan
         imputer = KNNImputer(**params)  # initialize imputation
@@ -249,7 +285,7 @@ class Data:
         numeric_df_imputation.columns = list_numeric_col_name
         return numeric_df_imputation
 
-    def outlier_lof(self, drop_id=True, **params):
+    def outlier_lof(self, **params):
         """outlier detection over rows, from numerical columns
         .. warning::
                 automatic imputation on the numerical columns
@@ -262,18 +298,11 @@ class Data:
         params.setdefault("metric", "chebyshev")
         params.setdefault("n_jobs", -1)
 
-        # drop unique column
-        if drop_id:
-            df_drop_col0 = self.data.drop(
-                labels=self.data.columns[0], axis=1
-            )  # drop unique column
-            df_drop_col0 = df_drop_col0[self.nbr_col[1:]]  # Weird fix be careful
-        else:
-            df_drop_col0 = self.data[self.nbr_col]
+        df_drop_col0 = self.data[self.nbr_col]
 
         if (df_drop_col0.isnull()).sum().any() > 0:
             # imputation
-            df_drop_col0 = self.imputation_method(drop_id)
+            df_drop_col0 = self.imputation_method(params)
 
         # lof phase
         clf = LocalOutlierFactor(**params)
@@ -349,8 +378,8 @@ class Data:
                     ipdb.set_trace()"""
         if (
             col1_name != col2_name
-            and (utils._is_unique(self.data, col1_name) < unique_tresh)
-            and (utils._is_unique(self.data, col2_name) < unique_tresh)
+            and (self.uniq_col[col1_name] < unique_tresh)
+            and (self.uniq_col[col2_name] < unique_tresh)
         ):
             df_clean = self.col_combined_result(
                 col1_name=col1_name, col2_name=col2_name
@@ -378,8 +407,8 @@ class Data:
             for col2 in self.corr_col[col1]:
                 if (
                     col1 != col2
-                    and utils._is_unique(df, col1, False) < 0.001
-                    and utils._is_unique(df, col2, False) < 0.001
+                    and self.uniq_col[col1] < 0.001
+                    and self.uniq_col[col2] < 0.001
                 ):
                     freq = df.groupby([col1, col2]).size()
                     elements = df.loc[df[[col1, col2]].dropna().index]
@@ -410,7 +439,11 @@ class Data:
         Returns:
             [dict]: [contains for each column a list of possibly empty correlated columns]
         """
-        df = self.data[self.str_col]
+        list_col = []
+        for col in self.str_col:
+            if self.uniq_col[col] <= 0.001:
+                list_col.append(col)
+        df = self.data[list_col]
 
         le = LabelEncoder()
         le.fit(df.stack(dropna=False).reset_index(drop=True))
@@ -428,6 +461,36 @@ class Data:
             corr_dict[col] = corr_col
 
         return corr_dict
+
+    def add_to_bad_idx(self, idx, col, col_type, VALUE_FLAG=True):
+        if VALUE_FLAG:
+            if type(col) == type(str()):
+                row = {
+                    "idx": idx,
+                    "column": col,
+                    "errtype": col_type,
+                    "value1": self.data[col].loc[idx],
+                    "value2": "",
+                }
+                self.bad_index = self.bad_index.append(row, ignore_index=True)
+            else:
+                row = {
+                    "idx": idx,
+                    "column": col,
+                    "errtype": col_type,
+                    "value1": self.data[col[0]].loc[idx],
+                    "value2": self.data[col[1]].loc[idx],
+                }
+                self.bad_index = self.bad_index.append(row, ignore_index=True)
+        else:
+            row = {
+                "idx": idx,
+                "column": col,
+                "errtype": col_type,
+                "value1": "",
+                "value2": "",
+            }
+            self.bad_index = self.bad_index.append(row, ignore_index=True)
 
 
 #! please use our commun directory

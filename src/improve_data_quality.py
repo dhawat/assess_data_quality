@@ -20,7 +20,7 @@ class Data:
 
         self.data = utils._to_DataFrame(path)
         self._good_index = list(range(self.data.shape[0]))
-        self._bad_index = pd.DataFrame(columns=["idx", "column", "errtype"])
+        self._bad_index = pd.DataFrame(columns=["idx", "column", "errtype", 'value1', 'value2'])
         self._nbr_col = []
         self._str_col = []
         self._corr_col = {}
@@ -167,10 +167,8 @@ class Data:
         n_duped_idx = ~utils._duplicated_idx(self.data)
 
         for index in n_duped_idx[~n_duped_idx].index.values.tolist():
-            self.bad_index = self.bad_index.append(
-                {"idx": index, "column": "All", "errtype": "duplication"},
-                ignore_index=True,
-            )
+            self.add_to_bad_idx(index, col='ALL', col_type="duplication", VALUE_FLAG=False)
+
 
         # Probabilistic pass
         # Columns of strings only
@@ -186,24 +184,22 @@ class Data:
                 idx = clean_df.iloc[idx].index
 
                 for index in idx:
-                    row = {"idx": index, "column": column, "errtype": "typo"}
-                    self.bad_index = self.bad_index.append(row, ignore_index=True)
+                    self.add_to_bad_idx(index, col=column, col_type="typo", VALUE_FLAG=True)
 
-        for column in self.nbr_col:  # Columns of numbers only
+        # Columns of numbers only
+        for column in self.nbr_col:  
             clean_df = self.data[n_duped_idx]
             clean_df = clean_df[column][clean_df[column].notna().values]
             idx = utils._z_score(clean_df, clean_df.mean(), clean_df.std())
             idx = clean_df[idx].index
 
             for index in idx:
-                row = {"idx": index, "column": column, "errtype": "extreme value"}
-                self.bad_index = self.bad_index.append(row, ignore_index=True)
+                self.add_to_bad_idx(index, col=column, col_type="extreme", VALUE_FLAG=True)
 
         # Completeness pass on each row
         idx = utils._row_is_none(self.data)
         for index in idx:
-            row = {"idx": index, "column": "All", "errtype": "too much nan"}
-            self.bad_index = self.bad_index.append(row, ignore_index=True)
+            self.add_to_bad_idx(index, col='All', col_type="too much nan", VALUE_FLAG=False)
 
         # Eliminate the obvious errors from the good index
         for idx in self.bad_index["idx"]:
@@ -223,20 +219,17 @@ class Data:
         )
         for key, value in idx_dict.items():
             for idx in value:
-                row = {"idx": idx, "column": key, "errtype": "Logic error"}
-                self.bad_index = self.bad_index.append(row, ignore_index=True)
+                self.add_to_bad_idx(idx, col=key, col_type="Logic error", VALUE_FLAG=True)
 
         # Outlier pass, less explicable.
         idx = self.outlier_lof()[0]
         for index in idx:
-            row = {"idx": index, "column": "NA", "errtype": "Outlier"}
-            self.bad_index = self.bad_index.append(row, ignore_index=True)
+            self.add_to_bad_idx(index, col="NA", col_type="Outlier", VALUE_FLAG=False)
         
         idxes, col_names = self.bad_logical_index()
         for idex, cols in zip(idxes, col_names):
             for idx in idex:
-                row = {"idx": idx, "column": cols, "errtype": "Logic error"}
-                self.bad_index = self.bad_index.append(row, ignore_index=True)
+                self.add_to_bad_idx(idx, col=cols, col_type="Logic error", VALUE_FLAG=True)
 
     def imputation_method(self, drop_id=True, **params):
         params.setdefault("n_neighbors", 10)
@@ -434,6 +427,20 @@ class Data:
 
         return corr_dict
 
+    def add_to_bad_idx(self, idx, col, col_type, VALUE_FLAG=True):
+        if VALUE_FLAG:
+            if type(col) == type(str()):
+                row = {"idx": idx, "column": col, "errtype": col_type, 'value1': self.data[col].loc[idx],
+                 'value2': ''}
+                self.bad_index = self.bad_index.append(row, ignore_index=True)
+            else:
+                row = {"idx": idx, "column": col, "errtype": col_type, 'value1': self.data[col[0]].loc[idx],
+                 'value2': self.data[col[1]].loc[idx]}
+                self.bad_index = self.bad_index.append(row, ignore_index=True)
+        else:
+            row = {"idx": idx, "column": col, "errtype": col_type, 'value1': '', 
+            'value2': ''}
+            self.bad_index = self.bad_index.append(row, ignore_index=True)
 
 #! please use our commun directory
 data = Data('..\data\data_avec_erreurs_wasserstein.csv')

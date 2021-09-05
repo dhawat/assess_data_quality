@@ -151,10 +151,10 @@ def _is_unique(df, col_name="", duplication=True):
         ratio : 1 - (number of repeated data in a column)/card(the column)
                 if 1 means all values are unique
     """
-    if duplication:
-        df, _ = _is_duplicated(df)
-
-    return df[col_name].dropna().nunique() / df[col_name].dropna().shape[0]
+    if df[col_name].dropna().shape[0] == 0:
+        return 0
+    else:
+        return df[col_name].dropna().nunique() / df[col_name].dropna().shape[0]
 
 
 def _is_none(df, col_name=""):

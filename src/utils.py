@@ -269,6 +269,29 @@ def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
     return ind
 
 
+def _col_is_none(df, thresh_col=0.99, clean_dup=False):
+    """check column having mean number of nan > thresh
+
+    Args:
+        df ([type]): [description]
+        thresh_col (float, optional): [description]. Defaults to 0.99.
+        clean_dup (bool, optional): [description]. Defaults to False.
+
+    Returns:
+        [type]: [description]
+    """
+
+    if clean_dup:
+        df, _ = _is_duplicated(df)  # cleaning duplications in the dataframe
+
+    mean_none_col = df.isnull().mean(axis=0)  # mean(none) in each column of df_c
+    name_col_drop = mean_none_col[
+        mean_none_col >= thresh_col
+    ].index  # list of names of the column with none mean>thresh_col
+
+    return name_col_drop
+
+
 def _string_to_nbr(df):
     """Convert a DataFrame (which may have multiple columns) of strings into a return df
     with vectors inside.

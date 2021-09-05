@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn.impute import KNNImputer
 import numpy as np
 from sklearn.neighbors import LocalOutlierFactor
+from sklearn.preprocessing import LabelEncoder
 
 
 class Data:
@@ -22,6 +23,7 @@ class Data:
         self._bad_index = pd.DataFrame(columns=["idx", "column", "errtype"])
         self._nbr_col = []
         self._str_col = []
+        self._corr_col = {}
 
     @property
     def good_index(self):
@@ -130,6 +132,28 @@ class Data:
             except:
                 pass
 
+    @property
+    def corr_col(self):
+        """getter for private attribute _corr_col
+
+        Returns:
+            [list]: dict of {col: [correlated_cols]}
+        """
+        if not self._corr_col:
+            self._corr_col = self.compute_corr_str()
+            return self._corr_col
+        else:
+            return self._corr_col
+    
+    @corr_col.setter
+    def corr_col(self, value):
+        """setter for privated attribute _corr_col
+
+        Args:
+            value ([dict]): dict of {col: [correlated_cols]}
+        """
+        self._corr_col = value
+
     def firstpass(self):
         """Push into self.bad_index the indexes and error types of data.
         This first pass detects duplicated data, typo, extreme values and incompleteness by row.
@@ -176,6 +200,13 @@ class Data:
             row = {"idx": index, "column": "All", "errtype": "too much nan"}
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
+        # Eliminate the obvious errors from the good index
+        for idx in self.bad_index['idx']:
+            try:
+                self.good_index.remove(idx)
+            except:
+                pass
+
     def secondpass(self):
         """Push into self.bad_index the indexes.
         This second pass detects only idx where outliers may lie.
@@ -191,15 +222,15 @@ class Data:
                 self.bad_index = self.bad_index.append(row, ignore_index=True)
 
         # Outlier pass, less explicable.
-        # idx = self.outlier_lof()[0]
-        # for index in idx:
-        #    row = {"idx": index, "column": "NA", "errtype": "Outlier"}
-        #    self.bad_index = self.bad_index.append(row, ignore_index=True)
+        idx = self.outlier_lof()[0]
+        for index in idx:
+            row = {"idx": index, "column": "NA", "errtype": "Outlier"}
+            self.bad_index = self.bad_index.append(row, ignore_index=True)
 
         idxes, col_names = self.bad_logical_index()
         for idex, cols in zip(idxes, col_names):
-            for idx, col in zip(idex, cols):
-                row = {"idx": idx, "column": [col[0], col[1]], "errtype": "Logic error"}
+            for idx in idex:
+                row = {"idx": idx, "column": cols, "errtype": "Logic error"}
                 self.bad_index = self.bad_index.append(row, ignore_index=True)
 
     def imputation_method(self, **params):
@@ -328,26 +359,60 @@ class Data:
         return summery_tuple
 
     def bad_logical_index(self):
+        """Operates on data attribute directly. For each column which contains strings and doesn't have a uniqueness ratio too high.
+        On theses columns compute the frequency between each unique data in columns.
+
+        Returns:
+            [idxes, col_names]: [list of list of bad indexes and associated columns names]
+        """
+        # TODO : Take good index from 2 columns only
         df = self.data.iloc[self.good_index]
         col_names = []
         idxes = []
         for col1 in self.str_col:
-            for col2 in self.str_col:
-                if col1 != col2 and utils._is_unique(df, col1) and utils._is_unique(df, col2) < 0.001:
+            print('col1 is {}'.format(col1))
+            for col2 in self.corr_col[col1]:
+                if col1 != col2 and utils._is_unique(df, col1, False) < 0.001 and utils._is_unique(df, col2, False) < 0.001:
                     freq = df.groupby([col1, col2]).size()
                     elements = df.loc[df[[col1, col2]].dropna().index]
                     for elem in elements[col1].unique():
-                        #
                         for e, index_serie in zip(freq[elem], freq[elem].index.tolist()):
                             if e < 10:
-                                idxes.append(df[col1].index[df[col1] == index_serie].tolist() 
-                                + df[col2].index[df[col2] == index_serie].tolist())
+                                idxes.append(elements[col2].index[(elements[col2] == index_serie) & (elements[col1] == elem)].tolist())
                                 col_names.append([col1, col2])
         return idxes, col_names
+    
+    def compute_corr_str(self, threshold=0.5):
+        """transform the strings column into categorical number and then compute the correlation matrix
+        between the now number dataframe. Return for the columns the columns which have more than threshold of
+        correlation.
 
+        Args:
+            threshold (float, optional): [minimum correlation for a column to be considered correlated]. Defaults to 0.5.
 
+        Returns:
+            [dict]: [contains for each column a list of possibly empty correlated columns]
+        """
+        df = self.data[self.str_col]
+
+        le = LabelEncoder()
+        le.fit(df.stack(dropna=False).reset_index(drop=True))
+        for col in df.columns:
+            df[col] = le.transform(df[col])
+
+        corr_dict = {}
+        df_corr = df.corr().abs() >= threshold
+        for col in df_corr.columns:
+            corr_col = df_corr.index[df_corr[col]].tolist()
+            try:
+                corr_col.remove(col)
+            except:
+                pass
+            corr_dict[col] = corr_col
+    
+        return corr_dict
 #! please use our commun directory
 data = Data('..\data\data_avec_erreurs_wasserstein.csv')
-#data.firstpass()
+data.firstpass()
 data.secondpass()
-#data.bad_index.to_csv('exemple.csv')
+data.bad_index.to_csv('exemple.csv')

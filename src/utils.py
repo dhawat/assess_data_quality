@@ -142,7 +142,7 @@ def _summery_duplication(df, col_name):
     df.pivot_table(columns=[col_name], aggfunc="size")  # summery of duplication
 
 
-def _is_unique(df, col_name=""):
+def _is_unique(df, col_name="", duplication=True):
     """verify uniqueness over a specified column, and find the uniqueness coefficient
     Args:
         df (pandas.DataFrame): Data Frame.
@@ -151,8 +151,10 @@ def _is_unique(df, col_name=""):
         ratio : 1 - (number of repeated data in a column)/card(the column)
                 if 1 means all values are unique
     """
-    df_clean, _ = _is_duplicated(df)
-    return df_clean[col_name].nunique() / df_clean[col_name].shape[0]
+    if duplication:
+        df, _ = _is_duplicated(df)
+    
+    return df[col_name].nunique() / df[col_name].shape[0]
 
 
 def _is_none(df, col_name=""):

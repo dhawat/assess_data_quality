@@ -226,19 +226,22 @@ class Data:
         for index in idx:
             row = {"idx": index, "column": "NA", "errtype": "Outlier"}
             self.bad_index = self.bad_index.append(row, ignore_index=True)
-
+        
         idxes, col_names = self.bad_logical_index()
         for idex, cols in zip(idxes, col_names):
             for idx in idex:
                 row = {"idx": idx, "column": cols, "errtype": "Logic error"}
                 self.bad_index = self.bad_index.append(row, ignore_index=True)
 
-    def imputation_method(self, **params):
+    def imputation_method(self, drop_id=True, **params):
         params.setdefault("n_neighbors", 10)
         params.setdefault("weights", "uniform")
-        self.data, _ = utils._is_duplicated(self.data)
-        list_numeric_col_name = self.nbr_col  # name of numerical column
-        numeric_df = self.data[list_numeric_col_name]  # numeric dataframe
+        df, _ = utils._is_duplicated(self.data)
+        if drop_id:
+            list_numeric_col_name = self.nbr_col[1:] # name of numerical column
+        else:
+            list_numeric_col_name = self.nbr_col
+        numeric_df = df[list_numeric_col_name]  # numeric dataframe
         numeric_df = numeric_df.fillna(np.nan)  # fill none with np.nan
         imputer = KNNImputer(**params)  # initialize imputation
         numeric_df_imputation = imputer.fit_transform(numeric_df)  # imputation if df
@@ -264,24 +267,25 @@ class Data:
             df_drop_col0 = self.data.drop(
                 labels=self.data.columns[0], axis=1
             )  # drop unique column
+            df_drop_col0 = df_drop_col0[self.nbr_col[1:]] #Weird fix be careful
         else:
-            df_drop_col0 = self.data
+            df_drop_col0 = self.data[self.nbr_col]
 
-        if (df_drop_col0.isnull()).sum().all() > 0:
+        if (df_drop_col0.isnull()).sum().any() > 0:
             # imputation
-            df_drop_col0 = self.imputation_method()
+            df_drop_col0 = self.imputation_method(drop_id)
 
         # lof phase
         clf = LocalOutlierFactor(**params)
         y_pred = clf.fit_predict(np.asarray(df_drop_col0))
-        ind = self.data.loc[y_pred == -1].index  # index of outlier dected
+        ind = df_drop_col0.loc[y_pred == -1].index  # index of outlier dected
         neg_lof_score = clf.negative_outlier_factor_
         normalized_lof_score = np.abs(neg_lof_score[y_pred == -1]) / np.max(
             abs(neg_lof_score[y_pred == -1])
         )  # normalized lof score
 
         # adding lof score column to the data frame
-        df_with_score = self.data
+        df_with_score = df_drop_col0
         df_with_score["lof"] = ""
         df_with_score["lof"].loc[ind] = normalized_lof_score
 
@@ -353,7 +357,6 @@ class Data:
             )
             df_combined = df_clean.groupby([col1_name, col2_name]).size
             df_combined = df_clean.apply(lambda row: tuple(row.values), axis=1)
-            # ipdb.set_trace()
             summery_tuple = np.unique(df_combined, return_counts=True)
         else:
             print("non unique")
@@ -428,7 +431,7 @@ class Data:
 
 
 #! please use our commun directory
-"""data = Data('..\data\data_avec_erreurs_wasserstein.csv')
-#data.firstpass()
-data.secondpass()"""
-# data.bad_index.to_csv('exemple.csv')
+data = Data('..\data\data_avec_erreurs_wasserstein.csv')
+data.firstpass()
+data.secondpass()
+data.bad_index.to_csv('exemple.csv')

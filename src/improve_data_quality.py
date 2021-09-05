@@ -118,6 +118,11 @@ class Data:
 
     @nbr_col.setter
     def nbr_col(self, value):
+        """setter method for setting _nbr_col private attribute
+
+        Args:
+            value ([list of strings]): [list of column names]
+        """
         self._nbr_col = value
 
     def push_bad_index(self, list_idx):  # Find a better method name

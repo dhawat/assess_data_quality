@@ -173,7 +173,7 @@ def _is_none(df, col_name=""):
     return ratio
 
 
-def _z_score(col, mean, std, tresh=3):
+def _z_score(col, mean, std, tresh=6):
     """cutting distribution between mean-6*std and mean+6*std
     Args:
         df ([type]): [description]

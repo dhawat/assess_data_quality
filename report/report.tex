@@ -24,9 +24,10 @@ The main objective of this research was to examine how can we use
 probability models and machine learning to improve indicators
 of data quality in a given dataset, with no domain specific knowledge.
 There was no particular regard to the domain of the dataset chosen, the main criteria for choice was the concept that bad data or outlier are rare data objects, i.e., those objects with rare combinations of feature values, compared to the majority of objects.
-We built list of Python algorithms to detect bad data present in any type of table of data. This algorithms are gathered in a Python class easy to use, and provided with detailed documentations, facilitating the comprehension and opening the door for further development of this class. The class contains test for many type of outlier (bad data) that could be found in a table of data such as: detection of repetition row, break of uniqueness rule, search for extreme values for columns with density distribution, non significant rows and columns, detection of spelling errors, outlier detection over rows, in each column and in each category of the columns with discreet distribution, detection of logical error between correlated columns.
+We built a package of Python algorithms to detect bad data present in any type of table of data. This algorithms are gathered in a Python class easy to use, and provided with detailed documentations, facilitating the comprehension and opening the door for further development of this class. The class contains test for many type of outlier (bad data) that could be found in a table of data such as: detection of repetition row, break of uniqueness rule, search for extreme values for columns with density distribution, non significant rows and columns, detection of spelling errors, and typographical error, outlier detection over rows, in each column and in each category of the columns with discreet distribution, detection of logical error between correlated columns.
 
-In this report we present our work
+This short survey is a report on the problem of data quality proposed by the company \href{ https://www.foyer.lu/en/homepage}{Foyer} during the challenges \href{https://challenge-maths.sciencesconf.org/}{\textit{mathematiques et entreprises}} organized by AMIES,  SFdS, SMF and SMAI.
+In section \ref{sec:Data quality} we define the metrics describing the quality of data present in a table of data, and the difficulty arising while trying to find bad data, or to estimate the quality of the table in general. Then in section \ref{sec:Starategy used to detect bad data} we details our strategy used to deal with bad data. This section present theoretical mathematical concept behind the tests present in our Python package. In section \ref{sec:Algorithm}, we present some of the principal code used in our package described in section ref{sec:Starategy used to detect bad data}. In section \ref{sec:Experiments} we present the results of the test of our code on the table of data provides by the company \href{ https://www.foyer.lu/en/homepage}{Foyer} to test the efficiency of our methods. Finally, in section \ref{sec:Discussions}, we present the limitations of our algorithm and we propose solutions to overcome this limitations, and develope further the package.
 
 
 
@@ -53,6 +54,13 @@ In this report we present our work
 
 % sectionAlgorithm (end)
 
+\section{Experiments} % (fold)
+\label{sec:Experiments}
+
+
+
+% sectionExperiments (end)
+
 \section{Discussions} % (fold)
 \label{sec:Discussions}
 
@@ -60,12 +68,19 @@ In this report we present our work
 
 % section Discussions (end)
 
+\section*{Acknowledgments} % (fold)
+\label{sec:Acknowledgments}
+
+
+
+% sectionAcknowledgments (end)
 
 \begin{thebibliography}{999}
 
-    \bibitem{Monte_carlo_book}
-    Christian P.Robert, George Casella:
-    \emph{Monte Carlo Statistical Methods, second edition.}
+    \bibitem{pan_cos_chen}
+    Guansong Pang, Longbing Cao and Ling Chen:
+    \emph{Outlier Detection in Complex Categorical Data
+        by Modelling the Feature Value Couplings.}
 
 
 \end{thebibliography}

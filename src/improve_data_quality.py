@@ -403,9 +403,9 @@ class Data:
 
         Args:
 
-            thres_uniqueness (float, optional): [description]. Defaults to 0.001.
+            thres_uniqueness (float, optional): uniquenesess thresh. Defaults to 0.001.
 
-            freq_error (int, optional): [description]. Defaults to 10.
+            freq_error (int, optional): threshold for frequency detected as error. Defaults to 10.
         """
         idxes, col_names = self.bad_logical_index(thres_uniqueness, freq_error)
         for idex, cols in zip(idxes, col_names):
@@ -415,8 +415,18 @@ class Data:
                 )
 
     def check_mixed_logic(
-        self, thres_unique_str=0.0002, thres_unique_nbr=0.04, thresh_std=7
+        self, thres_unique_str=0.0002, thres_unique_nbr=0.04, thresh_std=6
     ):
+        """Find index for logical error.
+
+        Args:
+
+            thres_unique_str (float, optional): uniqueness . Defaults to 0.0002.
+
+            thres_unique_nbr (float, optional): [description]. Defaults to 0.04.
+
+            thresh_std (int, optional): [description]. Defaults to 6.
+        """
         idxes, col_names = self.bad_float_index(
             thres_unique_str, thres_unique_nbr, thresh_std
         )

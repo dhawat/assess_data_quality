@@ -54,12 +54,9 @@ deviates from the ``norm'' for example if 99.99\% of the values of \texttt{colum
 \label{sub:Duplication test}
 
 
-
-% subsectionDuplication test (end)
-
-
 \subsection{Typographic test} % (fold)
 \label{sub:Typographic test}
+<<<<<<< HEAD
 Detecting typo errors in strings is a tricky matter that relies on many factors such as how do we define similarities between strings. 
 \subsubsection{Affinity propagation algorithm}
 The first method we explored is clustering the words using a similarity matrix, it is a direct approach of the problem, it consists on first computing a similarity matrix between all the strings of the database, and then clustering them using a clustering algorithm that would not require the number of clusters as a parameter. After experimenting with many distances, we opted for the method \texttt{ratio} of the class \texttt{SequenceMatcher} from the python module\texttt{difflib} which showed the best results, this method return a measure of the sequences similarity, where $T$ is the total number of elements in both sequences, and $M$ is the number of matches, the method returns $\cfrac{2*M}{T}$ the downside of the method would be that it is computationally expensive, although it is possible to use the function \texttt{real\_quick\_ratio\(\)} which returns an upper bound on \texttt{ratio()} 
@@ -69,11 +66,29 @@ The second method we proposed is based on a Markov clustering algorithm.
 The first step is to transform the data into a suitable format by doing feature extraction using \texttt{CountVectorizer} method from  \linebreak \texttt{sklearn.feature\_extraction.text} class, \cite{vector} which convert a collection of text documents to a matrix of token counts (\textit{i.e.} a token is an object that holds the place of something else that is usually larger or more complex.), Then we proceed and initialize an object of the \texttt{MarkovClustering} class \cite{MarkovClustering} and use it to perform a type of graph clustering using \textbf{Markov Chain theory} by first creating a \textbf{probability matrix of transition} then simulating a random walk by alternating between two operations \textbf{inflation} that would change the probability of transition to advantage strong neighbors and disadvantage weak ones and \textbf{expansion} that would connect different regions of the graph, it would repeat this process until the state of equilibrium is reached and the algorithm converges \cite{explainMCL}, after that we get the clustered data and apply the same technique as before to detect the misspelled words.\\
 The problem with this technique is that the accumulation of hidden layers makes it difficult to assess why it works extremely well in some cases and it does not in others.
 \subsection{Extreme values :diala} % (fold)
+=======
+
+% subsectionTypographic test (end)
+
+\subsection{Extreme values diala} % (fold)
 \label{sub:Extreme values}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{picture/normal.png}
+    \caption{Normal distribution.}
+    \label{fig:normal}
+\end{figure}
+Probabilistic and statistical models can be used for outlier detection, including normal distribution and Zipf distribution. Moreover, these models work well in one-dimensional and
+multidimensional data \cite{dai_yosh_pars}.
+Statistical process control is a procedure of quality control, and it is based on statistical methods.
+A normal distribution is a symmetric, continuous, bell-shaped distribution of a variable, displays a normal probability distribution as a model for a quality characteristics with the specification limits at three or six standard deviations $\sigma$ on either side of the mean $\mu$.
+For example, within one standard deviation of the mean will cover 68\% of the data, while within 3 standard deviations from the mean will cover 99.73\% and within 6 standard deviation standard deviation of the mean will cover more then 99,99\% of the distribution
+We use test of extreme values based on the above idea to find outliers present in a numerical column by finding its mean and standard deviation and rejecting values outside 6 standard deviation standard deviation of the mean.
+We refer to this values as extreme values. Note that this test is applied to non constant numerical columns non unique and not discrete (i.e. columns without clustering aspect). This conditions prevent doing the test on distributions far from being Gaussian.
 
 % subsection Extreme values (end)
 
-\subsection{Completeness: diala} % (fold)
+\subsection{Completeness diala} % (fold)
 \label{sub:Completeness}
 
 % subsectionCompleteness (end)
@@ -84,11 +99,53 @@ The idea behind this algorithm is to find ordering errors between two numerical 
 
 \subsection{Outlier detection with machine learning diala} % (fold)
 \label{sub:Outlier detection with machine learning}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{picture/lof.png}
+    \caption{Local Outlier Factor.}
+    \label{fig:lof}
+\end{figure}
+The local outlier factor, or LOF for short, is a technique that attempts to harness the idea of nearest neighbors for outlier detection.
+It is an unsupervised machine learning anomaly detection method.
+The local outlier factor is based on a concept of a local density, where locality is given by k nearest neighbors, whose distance is used to estimate the density.
+By comparing the local density of an object to the local densities of its neighbors, one can identify regions of similar density, and points that have a substantially lower density than their neighbors. These are considered to be outliers.
+The local density is estimated by the typical distance at which a point can be ``reached" from its neighbors.
+The definition of ``reachability distance" used in LOF is an additional measure to produce more stable results within clusters.
+Due to the local approach, LOF is able to identify outliers in a data set that would not be outliers in another area of the data set.
+For example, a point at a ``small" distance to a very dense cluster is an outlier, while a point within a sparse cluster might exhibit similar distances to its neighbors.
+The LOF test is available in our Python package by the class method \texttt{check\_outlier}.
+This test is applied on the numerical columns gathered.
+Or the table contains \texttt{NaN} in the numerical columns and the LOF test does not apply to data containing missing values, we were facing the problem of dealing with the missing element before being able to to detect outliers by the LOF.
+To overcome the problem of missing values data scientists use \textbf{imputation} methods.\\
 
+\noindent
+The imputation is process for fills missing data with synthetic values.
+Imputation preserves all cases by replacing missing data with an estimated value based on other available information.
+Once all missing values have been imputed, the data set can then be analysed using standard techniques for complete data.
+There are different approach for imputing missing values \cite{corr_lede}:
+\begin{enumerate}
+    \item Deletion: removes all instances with missing values.
+    \item Hot deck: missing data are filled with values from the same dataset.
+    \item Imputation based on missing attributes: computes a new value from measures of central tendency as median, mode, mean,
+          etc. The computed value is used for filling the missing data.
+    \item Imputation based on non-missing attributes: a classification or regression model is built from available data to fill the missing values.
+\end{enumerate}
+Or for some table all rows contains missing values or most of them so the deletion option could not be used in the case were we are doing imputation over the hole table and not a specific columns.
+From the last 3 methods we chose the imputation based on non-missing attributes using k-Nearest Neighbors provided by \href{https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html}{sklearn}.
+Missing values are imputed using the mean value from k-nearest neighbors found in the table. Two samples are close if the features that neither is missing are close.
 % subsection  Outlier detection with machine learning (end)
 \subsection{Frequency for logical errors diala} % (fold)
 \label{sub:Frequency for logical errors}
-
+For detecting outlier of type logical error in categorical columns we introduce a pattern-based methods, which search for outlying/normal patterns and employ pattern frequency as a direct outlierness measure to detect outliers.
+To simplify the idea for sufficiently 2 correlated columns, the idea is to find for each element of the first column the associated elements from the second columns and find the frequency of the couple and flag couples with sufficiently low frequency.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{picture/logic_err.png}
+    \caption{Groups from 2 correlated columns.}
+    \label{fig:logic_err}
+\end{figure}
+For example
+The test for detecting outlier of type logical error using the frequency is applied on couples of sufficiently correlated string columns, non unique, with categorical discrete aspect i.e. columns with clustering aspect.
 % subsection Frequency for logical errors (end)
 
 \subsection{Intra categorical extreme values mariem} % (fold)
@@ -100,8 +157,137 @@ The idea behind this algorithm is to find ordering errors between two numerical 
 
 \section{Algorithm medi} % (fold)
 \label{sec:Algorithm}
+Different error types and data types force us to use different methods and algorithm to judge data quality. In light of this we decided to split our algorithm into several standalone module capable of being called independently of one another.
+If the user wishes to simply use all the algorithm and with standard parameters we provided two methods for doing so. The first method is used to get rid of easier to detect errors such as duplicates and typos before (if wished) passing it's results to the second method which will be a more in depth check.
+Let us then follow our outlined methods and inspect the first method algorithms.
 
 
+\subsection{First method}
+\subsubsection{Duplicate errors algorithm}
+\subsubsection{Typographical error algorithm}
+
+\begin{algorithm}
+    \SetKwData{Left}{left}\SetKwData{This}{this}\SetKwData{Up}{up}
+    \SetKwFunction{Union}{Union}\SetKwFunction{FindCompress}{FindCompress}
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \Input{A column of a DataFrame, a minimum frequency threshold, A specified method to deal with clustering}
+    \Output{Index of the DataFrame containing typographical errors}
+    \BlankLine
+
+    list\_incorrect$\leftarrow$ [~]\;
+    words $\leftarrow$ get unique element from input column\;
+    \If{method is affinity propagation}
+    {
+        lev\_similarity $\leftarrow$ \lForEach{element $w1$ in word, element $w2$ in word}{SequenceMatcher(w1, w2)}
+        affprop $\leftarrow$ instance AffinityPropagation\;
+        affprop\_label $\leftarrow$ affprop.fit(lev\_similarity).labels \;
+        \eIf{affprop\_label is empty}
+        {
+            return list\_incorrect\;
+        }
+        {\For{cluster in affprop\_label}
+            {list\_incorrect $\leftarrow$ list\_incorrect + incorrect\_grammar(column, cluster, threshold)\;}
+        }
+        return list\_incorrect
+    }
+    \Else{
+        X $\leftarrow$ instance Vectorizer and transform words into it\;
+        dict\_cluster $\leftarrow$ get clusters from MarkovClustering(X)\;
+        \If{dict\_cluster is empty}
+        {return list\_incorrect}
+    }
+    \caption{Typographical checking\label{typo}}
+\end{algorithm}
+
+
+
+\subsubsection{Extreme value algorithm}
+
+\begin{algorithm}
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \Input{A column of a DataFrame, a minimum frequency threshold, The uniqueness ratio of the column, A standard deviation multiplie, 2 uniqueness thresholds}
+    \Output{Index of the DataFrame containing extreme values}
+    \BlankLine
+
+    \uIf{uniqueness $\geq$ threshold\_1 or uniqueness $\leq$ threshold\_2}{return [~] \;}
+    \Else{
+        mean $\leftarrow$ mean(column)\;
+        std $\leftarrow$ std(column)\;
+
+        upper\_bound $\leftarrow$ mean + threshold\_std * std\;
+        lower\_bound $\leftarrow$ mean - threshold\_std * std\;
+
+        idx $\leftarrow$ column where element is $\geq$ lower\_bound and $\leq$ upper\_bound\;
+        return idx\;
+    }
+    \caption{Extreme value checking\label{extreme}}
+\end{algorithm}
+
+
+
+\subsubsection{Row completeness algorithm}
+\begin{algorithm}
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \Input{A DataFrame, a minimum threshold of empty values for rows, a minimum threshold of empty values for rows when low information columns are removed, a minimum threshold of empty values for columns}
+    \Output{Index of the DataFrame containing rows with low completeness}
+    \BlankLine
+    mean\_none\_row1 $\leftarrow$ mean(NA in dataframe.rows)\;
+    index\_1 $\leftarrow$ index(rows $\geq$ thresh\_row\_1 NA)\;
+    \BlankLine
+    mean\_none\_col $\leftarrow$ mean(NA in dataframe.columns)\;
+    index\_col $\leftarrow$ index(columns $\geq$ thresh\_col NA)\;
+    \BlankLine
+    \For{idx in index\_col}{drop column[idx] of dataframe}
+    \BlankLine
+    mean\_none\_row2 $\leftarrow$ mean(NA in dataframe.rows)\;
+    index\_2 $\leftarrow$ index(rows $\geq$ thresh\_row\_2 NA)\;
+    \BlankLine
+    ind = index\_1 and index\_2
+    return ind
+    \caption{Row completeness checking\label{completeness}}
+\end{algorithm}
+
+
+
+\subsubsection{Tendency algorithm}
+\begin{algorithm}
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \Input{A DataFrame, a minimum threshold for an observed order between variable to become a rule to discriminate outliers upon.}
+    \Output{Index of the DataFrame containing rows which breaks the tendency}
+    \BlankLine
+
+    dict\_tendency $\leftarrow$ \{\}\;
+
+    \For{column1 in numerical\_columns(dataframe)}{
+        \For{column2 in numerical\_columns(dataframe)}{
+            dataframe $\leftarrow$ drop(dataframe(column1, column2), any rows with NA)\;
+            tendency $\leftarrow$ $\frac{size(dataframe(column1) \leq dataframe(column2))}{size(dataframe)}$\;
+            \BlankLine
+            \If{tendency $\geq$ tendency\_threshold}{
+                \If{size(dataframe(column1) $\geq$ dataframe(column2)) $\geq$ 1}{
+                    dict\_tendency[(column1, column2)] $\leftarrow$ index(dataframe(column1) $\geq$ dataframe(column2))\;
+                }
+            }
+        }
+    }
+    \caption{Tendency checking\label{tendency}}
+\end{algorithm}
+
+
+
+\subsubsection{Whole row outlier detection algorithm}
+\begin{algorithm}
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \Input{A DataFrame}
+    \Output{Index of the DataFrame containing rows which are deemed to be outliers using the lof method}
+    \BlankLine
+
+    \If{dataframe has NA}{
+        dataframe $\leftarrow$ KNNImputer(dataframe)
+    }
+
+    \caption{Whole row outlier checking\label{outlier}}
+\end{algorithm}
 
 % sectionAlgorithm (end)
 
@@ -136,6 +322,7 @@ The idea behind this algorithm is to find ordering errors between two numerical 
     \bibitem{amazon}
     Sebastian Schelter, Dustin Lange, Philipp Schmidt, Meltem Celikel, Felix Biessmann:
     \emph{Automating LargeScale Data Quality Verification}
+<<<<<<< HEAD
     \bibitem{Hawking}
     Simon HawkinsHongxing, HeGraham Williams, Rohan Baxte:
     \emph{Outlier Detection Using Replicator Neural Networks}
@@ -154,5 +341,18 @@ The idea behind this algorithm is to find ordering errors between two numerical 
 
     \bibitem{explainMCL}
     \url{https://medium.com/analytics-vidhya/demystifying-markov-clustering-aeb6cdabbfc7}
+=======
+
+    \bibitem{dai_yosh_pars}
+    Wei Dai, Kenji Yoshigoe and William Parsley
+    \emph{Improving Data Quality Through Deep Learning and Statistical Models}
+
+    \bibitem{corr_lede}
+    David Camilo Corrales, Agapito Ledezma and Juan Carlos Corrales
+    \emph{From Theory to Practice: A Data Quality Framework
+        for Classification Tasks}
+
+
+>>>>>>> 92301eefef305f77f77434a0f0a8352ebe2e7e2f
 \end{thebibliography}
 \end{document}

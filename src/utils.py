@@ -360,7 +360,7 @@ def index_incorrect_grammar(col, thresh=10, method='affinity_propagation', affin
         Model = MarkovClustering(X, **kwargs)
         dict_cluster = Model.fit().clusters()
     
-        if len(dict_cluster) == len(words):
+        if len(dict_cluster) == 1:
             return list_incorrect
         else:
             for val in dict_cluster.values():

@@ -294,18 +294,19 @@ class Data:
                 )
 
     def imputation_method(self, **params):
-        params.setdefault("n_neighbors", 10)
-        params.setdefault("weights", "uniform")
-        param_copy = params.copy() #TODO change the way we do this
-        for param in param_copy:
-            if param not in ['missing_values', 'n_neighbors', 'weights',
-                            'metric', 'copy', 'add_indicator']:
-                params.pop(param)
+        #params.setdefault("n_neighbors", 10)
+        #params.setdefault("weights", "uniform")
+        parameters = {} 
+        #TODO: Change the fix, it would previously take the parameter from **params and results
+        # In a failure because KNNimputer doesn't have an self.contamination attribute. 
+        parameters.setdefault("weights", "uniform")
+        parameters.setdefault("n_neighbors", 10)
         df, _ = utils._is_duplicated(self.data)
         list_numeric_col_name = self.nbr_col
         numeric_df = df[list_numeric_col_name]  # numeric dataframe
         numeric_df = numeric_df.fillna(np.nan)  # fill none with np.nan
-        imputer = KNNImputer(**params)  # initialize imputation
+        imputer = KNNImputer(**parameters)  # initialize imputation
+
         numeric_df_imputation = imputer.fit_transform(numeric_df)  # imputation if df
         numeric_df_imputation = pd.DataFrame(numeric_df_imputation)
         numeric_df_imputation.columns = list_numeric_col_name
@@ -568,5 +569,5 @@ class Data:
 
 data = Data('..\data\data_avec_erreurs_wasserstein.csv')
 #data.firstpass('completeness')
-data.secondpass('outlier')
+data.secondpass('logic')
 data.bad_index.to_csv('exemple.csv')

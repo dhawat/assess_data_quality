@@ -437,11 +437,15 @@ class Data:
                 )
 
     def imputation_method(self, **params):
-        # params.setdefault("n_neighbors", 10)
-        # params.setdefault("weights", "uniform")
+        """Imputation method used to fill missing using k nearest neighbors provided by sklearn. This method is used by :py:meth`outlier_lof`since it doesn't support missing values
+
+        Returns:
+            Data frame without missing values.
+        """
+
         parameters = {}
         # TODO: Change the fix, it would previously take the parameter from **params and results
-        # In a failure because KNNimputer doesn't have an self.contamination attribute.
+
         parameters.setdefault("weights", "uniform")
         parameters.setdefault("n_neighbors", 10)
         df, _ = utils._is_duplicated(self.data)
@@ -456,11 +460,15 @@ class Data:
         return numeric_df_imputation
 
     def outlier_lof(self, **params):
-        """outlier detection over rows, from numerical columns
+        """outlier detection over rows, from numerical columns using the local outlier factor algorithm
+
         .. warning::
-                automatic imputation on the numerical columns
+
+                it use automatic imputation on the numerical columns by alling the method :py:meth`imputation_method`.
+
         Returns:
-            [type]: [description]
+
+            indices of rows detected as outliers.
         """
         # set default params
         params.setdefault("n_neighbors", 20)
@@ -492,12 +500,18 @@ class Data:
 
     def col_combined_result(self, col1_name, col2_name, first_pass=False):
         # todo add if condition for column where we do not detect error
-        """Combine good result after first path of two columns, the output is a data frame combining good result from 2 column after first path with good index
+        """Combine good result after first path of two columns, the output is a data frame combining good result from 2 column after first path with good index/
         Args:
+
             col1_name (str): name of the first column
+
             col2_name (str): name of the second column
+
+            first_pass (bool, optional): precision whether doing the first pass or not. Default to False.
+
         Returns:
-            [type]: Data frame combining good result from 2 column after first path
+
+            Data frame combining good result from 2 column after first path.
         """
 
         if first_pass:
@@ -523,24 +537,19 @@ class Data:
         return good_cols
 
     def dual_hist(self, col1_name, col2_name, unique_tresh=0.7, first_pass=False):
+        """Not used yet
+
+        Args:
+            col1_name ([type]): [description]
+            col2_name ([type]): [description]
+            unique_tresh (float, optional): [description]. Defaults to 0.7.
+            first_pass (bool, optional): [description]. Defaults to False.
+
+        Returns:
+            [type]: [description]
+        """
         if first_pass:
             self.firstpass()
-
-        """for col1_name in self.str_col:
-            for col2_name in self.str_col:
-                # todo extract big uniqueness ratio
-                if (
-                    col1_name != col2_name
-                    and (utils._is_unique(self.data, col1_name) < unique_tresh)
-                    and (utils._is_unique(self.data, col2_name) < unique_tresh)
-                ):
-                    df_clean = self.col_combined_result(
-                        col1_name=col1_name, col2_name=col2_name
-                    )
-                    df_combined = df_clean.apply(lambda row: tuple(row.values), axis=1)
-                    # ipdb.set_trace()
-                    summery_tuple = np.unique(df_combined, return_counts=True)
-                    ipdb.set_trace()"""
         if (
             col1_name != col2_name
             and (self.uniq_col[col1_name] < unique_tresh)
@@ -559,7 +568,9 @@ class Data:
     def bad_logical_index(self, thres_uniqueness=0.001, freq_error=10):
         """Operates on data attribute directly. For each column which contains strings and doesn't have a uniqueness ratio too high.
         On theses columns compute the frequency between each unique data in columns.
+
         Returns:
+
             [idxes, col_names]: [list of list of bad indexes and associated columns names]
         """
         # TODO : Take good index from 2 columns only
@@ -595,10 +606,14 @@ class Data:
         """transform the strings column into categorical number and then compute the correlation matrix
         between the now number dataframe. Return for the columns the columns which have more than threshold of
         correlation.
+
         Args:
+
             threshold (float, optional): [minimum correlation for a column to be considered correlated]. Defaults to 0.5.
+
         Returns:
-            [dict]: [contains for each column a list of possibly empty correlated columns]
+
+            dictionary containing for each column a list of possibly empty correlated columns
         """
         list_col = []
         for col in self.str_col:
@@ -667,9 +682,12 @@ class Data:
     ):
         """Same idea as in bad_logical_index function, execept it's between columns
         of string and columns of floats, using quantiles to determine interclasses extremes.
+
         Args :
             function_name : quantiles or z-scores.
+
         Returns:
+
         [idxes, col_names]: [list of list of bad indexes and associated columns names]
         """
         df = self.data.iloc[self.good_index]
@@ -703,12 +721,3 @@ class Data:
 
     def save_result(self, path, **kwargs):
         self.bad_index.to_csv(path, **kwargs)
-
-
-#! please use our commun directory
-"""
-
-data = Data("..\data\data_avec_erreurs_wasserstein.csv")
-data.firstpass('completeness')
-#data.secondpass('mixed_logic')
-data.bad_index.to_csv("exemple.csv")"""

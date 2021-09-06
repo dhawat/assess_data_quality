@@ -501,7 +501,6 @@ class Data:
         col_names = []
         idxes = []
         for col1 in self.str_col:
-            print("col1 is {}".format(col1))
             for col2 in self.corr_col[col1]:
                 if (
                     col1 != col2

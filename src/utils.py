@@ -492,16 +492,17 @@ def _tendancy_detection(df, thresh=0.999):
             dictionnaire with the pair of columns and the anomaly index detected.
     """
     dictionnaire_anomalie_tendance = {}
-
+    
     for w1 in df:
         for w2 in df:
+            elements = df.loc[df[[w1, w2]].dropna().index]
             range_anomalie = 0
-            proportion = np.shape(np.where(df[w1] < df[w2])[0])[0] / len(df)
+            proportion = np.shape(np.where(elements[w1] < elements[w2])[0])[0] / len(df)
             if proportion > thresh:
-                range_anomalie = np.shape(np.where(df[w1] > df[w2])[0])[0]
+                range_anomalie = np.shape(np.where(elements[w1] > elements[w2])[0])[0]
                 if range_anomalie > 0:
                     dictionnaire_anomalie_tendance[(w1, w2)] = np.ndarray.tolist(
-                        np.where(df[w1] > df[w2])[0]
+                        np.where(elements[w1] > elements[w2])[0]
                     )
     return dictionnaire_anomalie_tendance
 

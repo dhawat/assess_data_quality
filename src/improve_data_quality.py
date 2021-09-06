@@ -512,7 +512,7 @@ class Data:
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
 
-    def bad_float_index(self, function_name = 'quantiles'):
+    def bad_float_index(self, function_name = 'z_scores'):
         """Same idea as in bad_logical_index function, execept it's between columns
         of string and columns of floats, using quantiles to determine interclasses extremes.
         Args :
@@ -524,23 +524,22 @@ class Data:
         col_names = []
         idxes = []
         for col1 in self.str_col:
-            print(col1)
-            if self.uniq_col[col1] < 0.001:
+            if self.uniq_col[col1] < 0.0002:
+                print(col1)
+                print(self.uniq_col[col1])
                 for col2 in self.nbr_col:
-                        if self.uniq_col[col1] > 0.05:
+                    if self.uniq_col[col1] < 0.9 and self.uniq_col[col2] < 0.9:
+                        if self.uniq_col[col2] > 0.04:
                             elements = df.loc[df[[col1, col2]].dropna().index]
                             for elem in elements[col1].unique():
-                                ar_classe = elements[col2][elements[col1] == elem].unique()
+                                ar_classe = elements[col2][elements[col1] == elem]
                                 if len(ar_classe) > 0:
-                                    if function_name == 'quantiles':
-                                        indx_outliers = utils.outlier_dection(ar_classe)
-                                        indx_outliers = ar_classe.index[indx_outliers]
-                                    if function_name == 'z-scores':
-                                        indx_outliers = utils._z_score(ar_classe, 0.2)
+                                    if function_name == 'z_scores':
+                                        indx_outliers = utils._z_score(ar_classe, 0.2, thresh_std=1.5)
                                     if len(indx_outliers) > 0:
                                         val_outliers = ar_classe.loc[indx_outliers]
                                         idxes.append(
-                                            elements[col2][col2.isin(val_outliers)].tolist()
+                                            elements[col2][elements[col2].isin(val_outliers)]
                                             )
                                         col_names.append([col1, col2])
                         else:
@@ -568,6 +567,7 @@ class Data:
 #! please use our commun directory
 
 data = Data('..\data\data_avec_erreurs_wasserstein.csv')
-#data.firstpass('completeness')
-data.secondpass('logic')
+#data.firstpass('completeness', 'typo')
+#data.secondpass('logic')
+data.bad_float_index()
 data.bad_index.to_csv('exemple.csv')

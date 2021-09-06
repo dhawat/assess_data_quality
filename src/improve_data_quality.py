@@ -293,11 +293,18 @@ class Data:
         """Find spelling
 
         Args:
-            tresh_unique (float, optional): [description]. Defaults to 0.005.
-            tresh_typo_frequency (int, optional): [description]. Defaults to 10.
-            method (str, optional): [description]. Defaults to "affinity_propagation".
-            affinity (str, optional): [description]. Defaults to "precomputed".
-            damping (float, optional): [description]. Defaults to 0.5.
+
+            tresh_unique (float, optional): uniqueness threshold. Defaults to 0.005.
+
+            tresh_typo_frequency (int, optional): frequency threshold. Defaults to 10.
+
+            method (str, optional): name of the chosen method. Defaults to "affinity_propagation".
+
+            affinity (str, optional): which affinity to use. At the moment ‘precomputed’ and euclidean are supported.
+            ‘euclidean’ uses the negative squared euclidean distance between points. Defaults to "precomputed".
+
+            damping (float, optional): Damping factor (between 0.5 and 1) is the extent to which the current value is maintained relative to incoming values (weighted 1 - damping). This in order to avoid numerical oscillations when updating these values (messages). Defaults to 0.5.
+
             random_state ([type], optional): [description]. Defaults to None.
         """
         n_duped_idx = ~utils._duplicated_idx(self.data)
@@ -327,6 +334,16 @@ class Data:
     def check_extreme_value(
         self, thresh_std=6, thresh_unique1=0.99, thresh_unique2=0.0001
     ):
+        """Find indices of extrem values using the z-score test
+
+        Args:
+
+            thresh_std (int, optional): coefficient of the standard deviation. Defaults to 6.
+
+            thresh_unique1 (float, optional): thresholding for rejecting test on uniqueness. Defaults to 0.99.
+
+            thresh_unique2 (float, optional): threshhold for rejecting discret. Defaults to 0.0001.
+        """
         n_duped_idx = ~utils._duplicated_idx(self.data)
 
         for column in self.nbr_col:
@@ -347,11 +364,25 @@ class Data:
                 )
 
     def check_completeness(self, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
+        """Find index of incomplete rows, i.e. rows containing too much nan.
+
+        Args:
+
+            thresh_row_1 (float, optional): threshold for row incompleteness. Defaults to 0.7.
+            thresh_row_2 (float, optional): threshold for row incompleteness combined with column incompleteness. Defaults to 0.5.
+            thresh_col (float, optional): threshold for column incompleteness. Defaults to 0.8.
+        """
         index = utils._row_is_none(self.data, thresh_row_1, thresh_row_2, thresh_col)
         for idx in index:
             self.add_to_bad_idx(idx, col="All", col_type="empty", VALUE_FLAG=False)
 
     def check_tendency(self, tresh_order=0.999):
+        """Detecting order between numerical columns
+
+        Args:
+
+            tresh_order (float, optional): threshold for accepting order relation hypothesis. Defaults to 0.999.
+        """
         idx_dict = utils._tendancy_detection(
             utils._to_date_and_float(self.data[self.nbr_col]), tresh_order
         )

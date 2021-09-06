@@ -460,7 +460,7 @@ As we can see in the first line we do have a duplication in index 307 and 306 wh
     \caption{Extract from the original dataset, here only a few column were taken for tidiness's sake.}
 \end{figure}
 
-The algorithm used for finding typographical errors \ref{typo} can be illustrated using the same method. 
+The algorithm used for finding typographical errors \ref{typo} can be illustrated using the same method.
 
 \begin{figure}[h]
     \centering
@@ -499,14 +499,15 @@ A general trend for the second method algorithm is that they give harder to inte
 
 \section{Discussions} % (fold)
 \label{sec:Discussions}
-
-
-
+We tested the algorithm on a data set provided by Foyer, after comparing the flagged errors with the known errors injected by the company, it showed a success rate of 36%, we made the choice of using very strict thresholds to avoid false positives to not flood the user with information, the major positive component is the fact that the algorithm runs relatively fast. We also proceeded to a quick test on one of the data sets of the company and the test were very encouraging as well. \
+The next step would be to control the number of false positives that we get, one way to proceed would be to improve the choice of the thresholds, also for the \texttt{check\_mixt\_logic()} to run a correlation test between columns in order to only consider the columns that are sufficiently correlated.
+in addition regarding the typo algorithm, we observed that if we run the Affinity Propagation algorithm twice, the first time on the whole data set of words and the second time on the proposed clusters, it highly improves the results and we end up getting a better clustering of the words, which makes it easier to detect spelling errors and suggest a correction to the user. \
+Another axis of research, that we did not have time to explore is about the classification of the missing values (nan's) in the data set , we wanted to implement a solution that would help sort between the null value  missing completely at random, missing at random and missing not at random types of missing values, detecting which kind of missing value is important in the imputation phase of pre-processing the data, therefore it would help in the imputation phase.
 % section Discussions (end)
 
 \section*{Acknowledgments} % (fold)
 \label{sec:Acknowledgments}
-
+We would like to thank AMIES for this beautiful opportunity and Foyer for providing us with the technical support and supervising (special thanks to Alexandre Hotton).
 
 
 % sectionAcknowledgments (end)

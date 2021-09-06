@@ -49,16 +49,16 @@ Thus, it is necessary to combine deterministic approaches along with statistical
 deviates from the ``norm'' for example if 99.99\% of the values of \texttt{column\_a} are higher than the values of \texttt{column\_b} it would mean that the remaining 0.01\% might be errors, which lead us to the section where we present the different strategies that we adopted to assess data quality.
 \section{Starategy used to detect bad data}
 \label{sec:Starategy used to detect bad data}
-The tests provided in our Python package, are
 
 
 \subsection{Duplication test diala} % (fold)
 \label{sub:Duplication test}
-The first test in our package is the detection of duplications between the rows.  As duplicated rows are bad data and can add bias to all the other tests, so the test of duplication is the first deterministic test applied on the data and all the other tests are related to it, so that we drop all the duplications of rows in the data before doing any other test. This test is provided by the method \texttt{check\_duplication} of the class \texttt{Data} and give in output the list of positions of the duplicated rows in the data.
+The first test in our package is the detection of duplications between the rows.  As duplicated rows are bad data and can add bias to all the other tests, so the test of duplication is the first deterministic test applied on the data and all the other tests are related to it, so that we drop all the duplications of rows in the data before doing any other test. This test is provided by the method \texttt{check\_duplication} of the class \texttt{Data} and give in output the list of positions of the duplicated rows in the data. The pseudo code for this method is algorithm \ref{duplicate}.
+
 % subsectionDuplication test (end)
 
 
-\subsection{Typographic test :Mariem} % (fold)
+\subsection{Typographic test} % (fold)
 \label{sub:Typographic test}
 Detecting typo errors in strings is a tricky matter that relies on many factors such as how do we define similarities between strings, or how to encode strings in numerical values in an isometric way, the first method we investigated is called Affinity propagation technique.
 \subsubsection{Affinity propagation algorithm}
@@ -67,7 +67,9 @@ but this will impact the effectiveness of the method. Once we computed the simil
 The second method we proposed is based on a Markov clustering algorithm.
 \subsubsection{Markov clustering}
 The first step is to transform the data into a suitable format by doing feature extraction using \texttt{CountVectorizer} method from the \texttt{sklearn} class which is \texttt{feature\_extraction.text} \cite{vector} which convert a collection of text documents to a matrix of token counts (\textit{i.e.} a token is an object that holds the place of something else that is usually larger or more complex.), Then we proceed and initialize an object of the \texttt{MarkovClustering} class \cite{MarkovClustering} and use it to perform a type of graph clustering using \textbf{Markov Chain theory} by first creating a \textbf{probability matrix of transition} then simulating a random walk by alternating between two operations \textbf{inflation} that would change the probability of transition to advantage strong neighbors and disadvantage weak ones and \textbf{expansion} that would connect different regions of the graph, it would repeat this process until the state of equilibrium is reached and the algorithm converges \cite{explainMCL}, after that we get the clustered data and apply the same technique as before to detect the misspelled words.\\
-The problem with this technique is that the accumulation of hidden layers makes it difficult to assess why it works extremely well in some cases and it does not in others.
+The problem with this technique is that the accumulation of hidden layers makes it difficult to assess why it works extremely well in some cases and it does not in others.\\
+
+The algorithm for checking typographical error is present by class method \texttt{check\_typo} and the pseudo code is in algorithm \ref{typo}.
 % subsectionTypographic test (end)
 
 \subsection{Extreme values diala} % (fold)
@@ -85,17 +87,18 @@ A normal distribution is a symmetric, continuous, bell-shaped distribution of a 
 For example, within one standard deviation of the mean will cover 68\% of the data, while within 3 standard deviations from the mean will cover 99.73\% and within 6 standard deviation standard deviation of the mean will cover more then 99,99\% of the distribution
 We use test of extreme values based on the above idea to find outliers present in a numerical column by finding its mean and standard deviation and rejecting values outside 6 standard deviation standard deviation of the mean.
 We refer to this values as extreme values. Note that this test is applied to non constant numerical columns non unique and not discrete (i.e. columns without clustering aspect). This conditions prevent doing the test on distributions far from being Gaussian.
-
+The algorithm for checking extreme values is present by class method \texttt{check\_extreme\_value}  and present by the pseudo code \ref{extreme}.
 % subsection Extreme values (end)
 
-\subsection{Completeness diala} % (fold)
+\subsection{Completeness} % (fold)
 \label{sub:Completeness}
-
+The completeness of data is also an important concept to check. We construct an algorithm to flag rows with high ratio of missing values and we associate as error of type completeness error. This algorithm are present by the class method \texttt{check\_completeness} by the pseudo code \ref{completeness}.
 % subsectionCompleteness (end)
 
-\subsection{Logical order relation: mariem} % (fold)
+\subsection{Logical order relation} % (fold)
 \label{sub:Logical order relation}
 The idea behind this algorithm is to find ordering errors between two numerical columns by detecting if there is an inherent order between them and flagging the elements that does not respect it. For example all the values of the column \texttt{BIRTH\_YEAR} should be lower than there corresponding value in the column \texttt{DEATH\_YEAR} if not then it is an error. We proceed to a what we would call a tendency test between pairs of all numerical columns, let \texttt{column\_a} and \texttt{column\_b} be two numerical columns, we compute the ratio between the number of elements in \texttt{column\_a} that are lower to their corresponding value in \texttt{column\_b} (row-wise comparison) and the length of the columns. We start by dropping the missing values first to avoid any problems. if the ratio is high (let's say 99.99\% the threshold is a parameter that needs to be fixed to avoid too much false positives) that would mean that there is a hidden tendency between those two columns and that the values that does not respect that order might be outliers.
+This algorithm is present by the class method \texttt{check\_tendency} by the pseudo code \ref{tendency}.
 % subsection Logical order relation (end)
 
 \subsection{Outlier detection with machine learning diala} % (fold)
@@ -135,7 +138,7 @@ Or for some table all rows contains missing values or most of them so the deleti
 From the last 3 methods we chose the imputation based on non-missing attributes using k-Nearest Neighbors provided by \href{https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html}{sklearn}.
 Missing values are imputed using the mean value from k-nearest neighbors found in the table. Two samples are close if the features that neither is missing are close.
 % subsection  Outlier detection with machine learning (end)
-\subsection{Frequency for logical errors diala} % (fold)
+\subsection{Frequency for logical errors} % (fold)
 \label{sub:Frequency for logical errors}
 As we already mentioned the step of detecting rows outlier of type logical error was done via the algorithm LOF preceded by an imputation method \ref{sub:Outlier detection with machine learning}.
 Although finding the logical errors in a table (rows) is a difficult task in outlier detection, specifying there positions (rows, columns) is the most difficult task.
@@ -155,13 +158,14 @@ By examining the frequencies of the the couple associated to \texttt{Backoe Loed
 The same is applied for couple of categorical correlated
 The test for detecting outlier of type logical error using the frequency is applied on couples of sufficiently correlated string columns, non unique, with categorical discrete aspect i.e. columns with clustering aspect.
 As we already mentioned this algorithm we be held only on sufficiently correlated clustered columns, it is preceded by finding the matrix of correlations between sufficiently clustered  categorical columns.
-This algorithm is present by the class method \texttt{bad\_logical\_index}.
+This algorithm is present by the class method \texttt{bad\_logical\_index} and by pseudo code \ref{str_logic}.
 % subsection Frequency for logical errors (end)
 
-\subsection{Intra categorical extreme values mariem} % (fold)
+\subsection{Intra categorical extreme values} % (fold)
 \label{sub:Intra categorical extreme values}
 We proceed as in \ref{sub:Frequency for logical errors} applying a pattern-based method between categorical columns and numerical ones, to look for extreme values within a specific class of a category (\textit{e.g.} the distribution of the price of a specific in class of the column \texttt{CAR}.). In order to do that we start by selecting categorical columns that contain very few classes (their ratio of uniqueness would be lower than a fixed threshold), and for a category column and a given numerical column, we partition the values of the numerical column using the classes of the categorical one we get $m$ subsets, $m$ being the number of classes in the categorical column: $\{c_1: n_{1, c_1}, n_{2, c_1}, \ldots, n_{i, c_1}\}, \ldots, \{c_m: n_{j+1, c_m}, \ldots,  n_{l, c_m}\}$ with $c_1, \ldots, c_m$ the classes of the categorical column and $(n_i)_{i \leq l}$ the values of the numerical one. Then we proceed to an extreme value test on each subset.
 It is very important to distinguish between continuous numerical columns and the discrete ones because the testing procedure will not be the same, for the continuous numerical column we would use a \texttt{z-score} test and for the discrete ones we use the frequency of occurrences as in \ref{sub:Frequency for logical errors}.
+This algorithm is present by the class method \texttt{check\_mixt\_logic} by the pseudo code \ref{mixed_logic}.
 % subsection Intra categorical extreme values (end)
 
 % section  Starategy used to detect bad data (end)
@@ -306,7 +310,10 @@ Let us then follow our outlined methods and inspect the first method algorithms.
     \caption{Tendency checking\label{tendency}}
 \end{algorithm}
 
+\subsection{Second method} % (fold)
+\label{sub:Second method}
 
+% subsectionSecond method (end)
 
 \subsubsection{Whole row outlier detection algorithm}
 \begin{algorithm}[H]

@@ -263,10 +263,11 @@ class Data:
 
     def check_duplication(self):
         n_duped_idx = ~utils._duplicated_idx(self.data)
-
-        for index in n_duped_idx[~n_duped_idx].index.values.tolist():
+        n_true_idx = ~utils._duplicated_idx(self.data) & utils._duplicated_idx(self.data, False)
+        for index, true_index in zip(n_duped_idx[~n_duped_idx].index.values.tolist(),
+                         n_true_idx[n_true_idx].index.values.tolist()):
             self.add_to_bad_idx(
-                index, col="ALL", col_type="duplication", VALUE_FLAG=False
+                [index, true_index], col="ALL", col_type="duplication", VALUE_FLAG=False
             )
 
     def check_typo(self, tresh_unique=0.005, tresh_typo_frequency=10, method='affinity_propagation', affinity="precomputed", damping=0.5, random_state=None, **kwargs):
@@ -556,13 +557,22 @@ class Data:
                 }
                 self.bad_index = self.bad_index.append(row, ignore_index=True)
         else:
-            row = {
-                "idx": idx,
-                "column": col,
-                "errtype": col_type,
-                "value1": "",
-                "value2": "",
-            }
+            if type(idx) == type(int()):
+                row = {
+                    "idx": idx,
+                    "column": col,
+                    "errtype": col_type,
+                    "value1": "",
+                    "value2": "",
+                }
+            else:
+                row = {
+                    "idx": idx[0],
+                    "column": col,
+                    "errtype": col_type,
+                    "value1": idx[0],
+                    "value2": idx[1],
+                }
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
     def bad_float_index(self, thres_unique_str=0.0002, thres_unique_nbr=0.04, thresh_std=7):
@@ -608,6 +618,6 @@ class Data:
 #! please use our commun directory
 
 data = Data("..\data\data_avec_erreurs_wasserstein.csv")
-#data.firstpass('typo')
+data.firstpass('completeness')
 #data.secondpass('mixed_logic')
 data.bad_index.to_csv("exemple.csv")

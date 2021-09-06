@@ -153,27 +153,26 @@ def _is_duplicated(df):
 
         df_clean: the DataFrame without the duplicated rows.
     """
-
-    df_new = df.drop([df.columns[0]], axis=1)
-    duplicated_row = df[df_new.duplicated()]  # duplicated row
-    df_clean = df[~df_new.duplicated()]  # without duplication row
+    duplicated_row = df[df.duplicated()]  # duplicated row
+    df_clean = df[~df.duplicated()]  # without duplication row
 
     return df_clean, duplicated_row
 
 
-def _duplicated_idx(df):
+def _duplicated_idx(df, keep='first'):
     """Find index of duplicated row in the DataFrame
 
     Args:
 
         df (pandas.DataFrame): DataFrame of input data
+        
+        return_all(boolean) : If true returns all the occurence, if false doesn't return the first occurence.
 
     Returns:
 
         list of index of duplicated row
     """
-    df_new = df.drop([df.columns[0]], axis=1)
-    return df_new.duplicated()
+    return df.duplicated(keep=keep)
 
 
 #! remove this function

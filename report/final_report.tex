@@ -192,8 +192,9 @@ This algorithm is present by the class method \texttt{check\_mixt\_logic} by the
 \section{Algorithm} % (fold)
 \label{sec:Algorithm}
 Different error types and data types force us to use different methods and algorithm to judge data quality. In light of this we decided to split our algorithm into several standalone module capable of being called independently of one another.
-If the user wishes to simply use all the algorithm and with standard parameters we provided two methods for doing so. The first method is used to get rid of easier to detect errors such as duplicates and typos before (if wished) passing it's results to the second method which will be a more in depth check.
-Let us then follow our outlined methods and inspect the first method algorithms.
+If the user wishes to simply use all the algorithm and with standard parameters we provided two methods for doing so. The first method is used to get rid of easier to detect errors such as duplicates and typos before (if wished) passing it's results to the second method which will be a more in depth check. The first method is also fully identifiable as it is a major consideration for the company to be able to check afterward if the error is true and where it is.\\
+On top of that we provided a class in which the user can load the data in and pre-process it if needed. We wanted the code to be able to be used by someone with basic knowledge and have room if needed to fine tune each parameter independently if they have a deeper knowledge of the subject.\\
+Let us then follow our outlined methods and inspect the first method algorithms and then the second method.
 
 
 \subsection{First method}
@@ -436,7 +437,63 @@ Let us then follow our outlined methods and inspect the first method algorithms.
 \section{Experiments} % (fold)
 \label{sec:Experiments}
 
+At the start of the challenge our correspondant in Foyer shared with us a dataset comprised of 100000 columns and 54 columns. This dataset represented a real life example of sales of agricultural machinery. The types of column that we had were composed of numerical quantitative columns e.g price, numerical category  e.g Model Id but also verbal columns such as the state in which the sale took place.
+Not all the columns were in a type directly usable such as saledate which were in a non classical format. \\
 
+In this section we will discuss the type of errors caught by our algorithms, their strengths and shortcomings.
+In the first method we used \ref{duplicate} for finding duplicate, this method returns both the 'true' index and one of the duplicated index for comparison.
+\subsection{First method}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.8]{picture/exp_duplicated.png}
+    \label{fig:exp_duplicate}
+    \caption{Extract from the returned table of error featuring duplication errors.}
+\end{figure}
+
+As we can see in the first line we do have a duplication in index 307 and 306 which indeed represent a duplicate in the original data. If we look at the origin data we get \ref{fig:exp_duplicate_db}. In terms of speed of execution is it both scalable and accurate, in the order of a second for 5 millions entries.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{picture/exp_duplicated_db.png}
+    \label{fig:exp_duplicate_db}
+    \caption{Extract from the original dataset, here only a few column were taken for tidiness's sake.}
+\end{figure}
+
+The algorithm used for finding typographical errors \ref{typo} can be illustrated using the same method. 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.8]{picture/exp_typo.png}
+    \label{fig:exp_typo}
+    \caption{Extract from the returned table of error featuring typographical errors.}
+\end{figure}
+The figure \ref{fig:exp_typo} shows that in the column 'UsageBand' multiple instances of the values 'HIGH' and 'high' were detected as errors. Indeed after confirmation with our correspondant it is an induced error. The correct spelling is 'High', both with the affinity propagation and markov clustering we get this types of results. However, when the database gets bigger and more words starts to appear in a cluster, the base affinity propagation clustering fails to scale up both in terms of speed and performance because of the weak pairwise metric associated to the affinity propagation algorithm. The markov chain clustering methods on the other hand can be used even in high columns or row counts while still being tractable but give less desirable results in lower column counts. \\
+
+For correcting numerical values while still being able to clearly tell in which column the error is we used the \ref{extreme} algorithm.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.8]{picture/exp_extreme.png}
+    \label{fig:exp_extreme}
+    \caption{Extract from the returned table of error featuring extreme values errors.}
+\end{figure}
+
+On numerical column it flags as outliers extreme values using a z\_score method. On columns such as 'YearMade' (of the machinery) it correctly flags absurd years such as negative years and far into the future years. Being a methods which flags when the value is well outside the mean it sometimes fails when considering columns which are made up of a continuous variable such as 'SalePrice' but who has a latent variable such as 'Model Id'. \\ Another type of column which might be a problem with \ref{extreme} is when the data is numerical but purely qualitative such as 'datasource'. It is comprised of numbers but only two of them representing which office aggregated the data. For this type of error we implemented a check inside \ref{extreme} to abort if the ratio of uniqueness of the column is too low.\\
+As for the speed and scalability of the method, on nearly 900000 cells it was in the order of a few seconds. On a larger dataset tested in collaboration of foyer it was similarly fast.
+
+For the algorithm \ref{completeness} we can check \ref{fig:exp_completeness}, in it it shows multiple exact same track type tractor-dozer down to the model id having on this subset of column less information.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{picture/exp_completeness_db.png}
+    \label{fig:exp_completeness}
+    \caption{Extract from the returned table of error featuring low row completeness errors.}
+\end{figure}
+On the other column there is also less information. Is is not stricto sensu an error but in our view it doesn't bring enough information to be useful.
+
+\subsection{Second method}
+A general trend for the second method algorithm is that they give harder to interpret results. Not all because of inability to target individual error cells but because trey rely on covariance and tendency between columns and as such need a deeper knowledge of the subject at hand to check if the reported error is indeed a true one.
 
 % sectionExperiments (end)
 

@@ -155,7 +155,6 @@ By examining the frequencies of the the couple associated to \texttt{Backoe Loed
 The same is applied for couple of categorical correlated
 The test for detecting outlier of type logical error using the frequency is applied on couples of sufficiently correlated string columns, non unique, with categorical discrete aspect i.e. columns with clustering aspect.
 As we already mentioned this algorithm we be held only on sufficiently correlated clustered columns, it is preceded by finding the matrix of correlations between sufficiently clustered  categorical columns.
-This algorithm is present by the class method \texttt{bad\_logical\_index}.
 % subsection Frequency for logical errors (end)
 
 \subsection{Intra categorical extreme values mariem} % (fold)
@@ -166,7 +165,7 @@ It is very important to distinguish between continuous numerical columns and the
 
 % section  Starategy used to detect bad data (end)
 
-\section{Algorithm} % (fold)
+\section{Algorithm medi} % (fold)
 \label{sec:Algorithm}
 Different error types and data types force us to use different methods and algorithm to judge data quality. In light of this we decided to split our algorithm into several standalone module capable of being called independently of one another.
 If the user wishes to simply use all the algorithm and with standard parameters we provided two methods for doing so. The first method is used to get rid of easier to detect errors such as duplicates and typos before (if wished) passing it's results to the second method which will be a more in depth check.
@@ -174,7 +173,7 @@ Let us then follow our outlined methods and inspect the first method algorithms.
 
 
 \subsection{First method}
-
+\subsubsection{Duplicate errors algorithm}
 \subsubsection{Typographical error algorithm}
 
 \begin{algorithm}[H]
@@ -212,32 +211,11 @@ Let us then follow our outlined methods and inspect the first method algorithms.
 
 
 
-\subsubsection{Duplicate errors algorithm}
-
-\begin{algorithm}[H]
-    \SetKwData{Left}{left}\SetKwData{This}{this}\SetKwData{Up}{up}
-    \SetKwFunction{Union}{Union}\SetKwFunction{FindCompress}{FindCompress}
-    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
-    \Input{A DataFrame}
-    \Output{Index of the DataFrame duplicated, index of first duplicate}
-    \BlankLine
-    boolean\_idx $\leftarrow$ duplicated(dataframe, omit\_first)\;
-    boolean\_first $\leftarrow$ duplicated(dataframe, all)\;
-
-    index\_true $\leftarrow$ boolean\_idx(boolean\_idx) and boolean\_first(boolean\_first)\;
-
-    return index(boolea\_idx == True), index\_true
-    \caption{Duplication checking\label{duplicate}}
-\end{algorithm}
-
-
-
 \subsubsection{Extreme value algorithm}
 
-
 \begin{algorithm}[H]
     \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
-    \Input{A column of a DataFrame, a minimum frequency threshold, the uniqueness ratio of the column, a standard deviation multiplier, 2 uniqueness thresholds}
+    \Input{A column of a DataFrame, a minimum frequency threshold, The uniqueness ratio of the column, A standard deviation multiplie, 2 uniqueness thresholds}
     \Output{Index of the DataFrame containing extreme values}
     \BlankLine
 
@@ -274,8 +252,8 @@ Let us then follow our outlined methods and inspect the first method algorithms.
     mean\_none\_row2 $\leftarrow$ mean(NA in dataframe.rows)\;
     index\_2 $\leftarrow$ index(rows $\geq$ thresh\_row\_2 NA)\;
     \BlankLine
-    idx = index\_1 and index\_2\;
-    return idx
+    ind = index\_1 and index\_2
+    return ind
     \caption{Row completeness checking\label{completeness}}
 \end{algorithm}
 
@@ -285,7 +263,7 @@ Let us then follow our outlined methods and inspect the first method algorithms.
 \begin{algorithm}[H]
     \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
     \Input{A DataFrame, a minimum threshold for an observed order between variable to become a rule to discriminate outliers upon.}
-    \Output{Index and column of the DataFrame containing rows which breaks the tendency}
+    \Output{Index of the DataFrame containing rows which breaks the tendency}
     \BlankLine
 
     dict\_tendency $\leftarrow$ \{\}\;
@@ -302,7 +280,6 @@ Let us then follow our outlined methods and inspect the first method algorithms.
             }
         }
     }
-    return dict\_tendency
     \caption{Tendency checking\label{tendency}}
 \end{algorithm}
 
@@ -316,94 +293,11 @@ Let us then follow our outlined methods and inspect the first method algorithms.
     \BlankLine
 
     \If{dataframe has NA}{
-        dataframe $\leftarrow$ KNNImputer(dataframe)\;
+        dataframe $\leftarrow$ KNNImputer(dataframe)
     }
-    \BlankLine
-    clf $\leftarrow$ instancize LocalOutlierFactor\;
-    prediction $\leftarrow$ clf.fit\_predict(dataframe)\;
-    idx $\leftarrow$ index(prediction == outlier)\;
-    \BlankLine
-    return idx
+
     \caption{Whole row outlier checking\label{outlier}}
 \end{algorithm}
-
-\subsubsection{Text categorical logic algorithm}
-
-\begin{algorithm}[H]
-    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
-    \Input{A DataFrame, a threshold for of the uniqueness for columns, a threshold for the number of time a categorical error happens}
-    \Output{Index of the DataFrame and two columns in which a categorical error is made}
-    \BlankLine
-
-    dataframe $\leftarrow$ dataframe(index not rejected by first method)\;
-
-    col\_names $\leftarrow$ [~]\;
-    idxes $\leftarrow$ [~]\;
-    \For{column1 in verbal\_column(dataframe)}{
-        \For{column2 in verbal\_correlated\_columns(dataframe, column1)}{
-            \If{column1 not == column2 and uniqueness(column1) $\leq$ thres\_uniqueness and uniqueness(column2) $\leq$ thres\_uniqueness}{
-                occurences $\leftarrow$ get\_contingency\_table(dataframe(column1), dataframe(column2))\;
-                elements $\leftarrow$ dataframe((column1, column2) not NA)\;
-                \For{elem in unique(elements(column1))}{
-                    \For{(e, value) in (occurences(elem), index(occurences(elem))}{
-                        \If{e $\leq$ thres\_error}{
-                            idxes $\leftarrow$ idxes $+$ elements(column2 where index = elements(column2) == value and elements(column1) == elem)\;
-                            col\_names $\leftarrow$ col\_names $+$ (column1, column2)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    return idxes, col\_names
-    \caption{Text categorical logic error checking\label{str_logic}}
-\end{algorithm}
-
-
-
-
-\subsubsection{Mixed number text categorical logic algorithm}
-
-\begin{algorithm}[H]
-    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
-    \Input{A DataFrame, a threshold for of the uniqueness for verbal columns, a threshold for numerical columns, a standard deviation multiplier}
-    \Output{Index of the DataFrame and two columns in which a categorical error is made}
-    \BlankLine
-
-    dataframe $\leftarrow$ dataframe(index not rejected by first method)\;
-
-    col\_names $\leftarrow$ [~]\;
-    idxes $\leftarrow$ [~]\;
-    list\_seen $\leftarrow$ [~]\;
-
-    \For{column1 in verba\_columns(dataframe)}{
-        \If{uniqueness(column1) $\leq$ threshold\_verbal}{
-            \For{column2 in numerica\_columns(dataframe)}{
-                \If{(column1, column2) not in list\_seen and uniqueness(column2) $\geq$ thresol\_numerical}{
-                    elements $\leftarrow$ dataframe((column1, column2) not NA)\;
-                    \For{elem in unique(elements(column1))}{
-                        array\_values $\leftarrow$ elements(column2 where elements(column1) == elem)\;
-                        \If{array\_values not empty}{
-                            index\_outliers $\leftarrow$ Algorithm\_2(array\_values, 0.1, thresh\_std)\;
-                            \If{index\_outliers not empty}{
-                                value\_outliers $\leftarrow$ array\_values(index\_outliers)\;
-                                idxes $\leftarrow$ idxes $+$ index(element(column2 where element(column2) == value\_outliers))\;
-                                col\_names $\leftarrow$ col\_names $+$ (column1, column2)\;
-                            }
-                        }
-                    }
-                    list\_seen $\leftarrow$ list\_seen + (column1, column2)
-                }
-            }
-        }
-    }
-
-    return idxes, col\_names
-
-    \caption{Mixed number text categorical logic error checking\label{mixed_logic}}
-\end{algorithm}
-
 
 % sectionAlgorithm (end)
 

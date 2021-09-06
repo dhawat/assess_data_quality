@@ -269,7 +269,7 @@ class Data:
                 index, col="ALL", col_type="duplication", VALUE_FLAG=False
             )
 
-    def check_typo(self, tresh_unique=0.005, tresh_typo_frequency=10):
+    def check_typo(self, tresh_unique=0.005, tresh_typo_frequency=10, method='affinity_propagation'):
         n_duped_idx = ~utils._duplicated_idx(self.data)
 
         for column in self.str_col:
@@ -279,7 +279,7 @@ class Data:
                 clean_df = self.data[n_duped_idx]
                 clean_df = clean_df[column][clean_df[column].notna().values]
                 idx = utils.index_incorrect_grammar(
-                    clean_df, tresh_typo_frequency
+                    clean_df, tresh_typo_frequency, method
                 )  # get the non duped indexes and not na from a column
                 idx = clean_df.iloc[idx].index
 
@@ -607,6 +607,7 @@ class Data:
 #! please use our commun directory
 
 data = Data("..\data\data_avec_erreurs_wasserstein.csv")
-# data.firstpass('completeness', 'typo')
-data.secondpass('mixed_logic')
+#data.firstpass('typo')
+data.check_typo(method='markov_clustering')
+#data.secondpass('mixed_logic')
 data.bad_index.to_csv("exemple.csv")

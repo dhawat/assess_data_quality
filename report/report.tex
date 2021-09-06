@@ -52,7 +52,7 @@ deviates from the ``norm'' for example if 99.99\% of the values of \texttt{colum
 The tests provided in our Python package, are
 
 
-\subsection{Duplication test} % (fold)
+\subsection{Duplication test diala} % (fold)
 \label{sub:Duplication test}
 The first test in our package is the detection of duplications between the rows.  As duplicated rows are bad data and can add bias to all the other tests, so the test of duplication is the first deterministic test applied on the data and all the other tests are related to it, so that we drop all the duplications of rows in the data before doing any other test. This test is provided by the method \texttt{check\_duplication} of the class \texttt{Data} and give in output the list of positions of the duplicated rows in the data.
 % subsectionDuplication test (end)
@@ -63,7 +63,7 @@ The first test in our package is the detection of duplications between the rows.
 
 % subsectionTypographic test (end)
 
-\subsection{Extreme values} % (fold)
+\subsection{Extreme values diala} % (fold)
 \label{sub:Extreme values}
 \begin{figure}[H]
     \centering
@@ -72,7 +72,7 @@ The first test in our package is the detection of duplications between the rows.
     \label{fig:normal}
 \end{figure}
 Probabilistic and statistical models can be used for outlier detection, including normal distribution and Zipf distribution. Moreover, these models work well in one-dimensional and
-multidimensional data \ref{dai_yosh_pars}.
+multidimensional data \cite{dai_yosh_pars}.
 Statistical process control is a procedure of quality control, and it is based on statistical methods.
 A normal distribution is a symmetric, continuous, bell-shaped distribution of a variable, displays a normal probability distribution as a model for a quality characteristics with the specification limits at three or six standard deviations $\sigma$ on either side of the mean $\mu$.
 For example, within one standard deviation of the mean will cover 68\% of the data, while within 3 standard deviations from the mean will cover 99.73\% and within 6 standard deviation standard deviation of the mean will cover more then 99,99\% of the distribution
@@ -81,7 +81,7 @@ We refer to this values as extreme values. Note that this test is applied to non
 
 % subsection Extreme values (end)
 
-\subsection{Completeness} % (fold)
+\subsection{Completeness diala} % (fold)
 \label{sub:Completeness}
 
 % subsectionCompleteness (end)
@@ -95,7 +95,7 @@ We refer to this values as extreme values. Note that this test is applied to non
 \label{sub:Outlier detection with machine learning}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\linewidth]{picture/lof.png}
+    \includegraphics[width=0.6\linewidth]{picture/lof.png}
     \caption{Local Outlier Factor.}
     \label{fig:lof}
 \end{figure}
@@ -110,8 +110,13 @@ For example, a point at a ``small" distance to a very dense cluster is an outlie
 The LOF test is available in our Python package by the class method \texttt{check\_outlier}.
 This test is applied on the numerical columns gathered.
 Or the table contains \texttt{NaN} in the numerical columns and the LOF test does not apply to data containing missing values, we were facing the problem of dealing with the missing element before being able to to detect outliers by the LOF.
-To overcome the problem of missing values data scientists use \textbf{imputation} methods.
-There are different approach for imputing missing values:
+To overcome the problem of missing values data scientists use \textbf{imputation} methods.\\
+
+\noindent
+The imputation is process for fills missing data with synthetic values.
+Imputation preserves all cases by replacing missing data with an estimated value based on other available information.
+Once all missing values have been imputed, the data set can then be analysed using standard techniques for complete data.
+There are different approach for imputing missing values \cite{corr_lede}:
 \begin{enumerate}
     \item Deletion: removes all instances with missing values.
     \item Hot deck: missing data are filled with values from the same dataset.
@@ -125,7 +130,16 @@ Missing values are imputed using the mean value from k-nearest neighbors found i
 % subsection  Outlier detection with machine learning (end)
 \subsection{Frequency for logical errors diala} % (fold)
 \label{sub:Frequency for logical errors}
-
+For detecting outlier of type logical error in categorical columns we introduce a pattern-based methods, which search for outlying/normal patterns and employ pattern frequency as a direct outlierness measure to detect outliers.
+To simplify the idea for sufficiently 2 correlated columns, the idea is to find for each element of the first column the associated elements from the second columns and find the frequency of the couple and flag couples with sufficiently low frequency.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\linewidth]{picture/logic_err.png}
+    \caption{Groups from 2 correlated columns.}
+    \label{fig:logic_err}
+\end{figure}
+For example
+The test for detecting outlier of type logical error using the frequency is applied on couples of sufficiently correlated string columns, non unique, with categorical discrete aspect i.e. columns with clustering aspect.
 % subsection Frequency for logical errors (end)
 
 \subsection{Intra categorical extreme values mariem} % (fold)
@@ -177,6 +191,11 @@ Missing values are imputed using the mean value from k-nearest neighbors found i
     \bibitem{dai_yosh_pars}
     Wei Dai, Kenji Yoshigoe and William Parsley
     \emph{Improving Data Quality Through Deep Learning and Statistical Models}
+
+    \bibitem{corr_lede}
+    David Camilo Corrales, Agapito Ledezma and Juan Carlos Corrales
+    \emph{From Theory to Practice: A Data Quality Framework
+        for Classification Tasks}
 
 
 \end{thebibliography}

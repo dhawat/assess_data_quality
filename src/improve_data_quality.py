@@ -1,5 +1,5 @@
+from typing import KeysView
 import utils as utils
-import ipdb
 import pandas as pd
 from sklearn.impute import KNNImputer
 import numpy as np
@@ -26,7 +26,7 @@ class Data:
                 "data should be of provided as .csv or .json or .sql or .xlsx file"
             )
 
-        self.data = utils._to_DataFrame(path, kwargs)
+        self.data = utils._to_DataFrame(path, **kwargs)
         if drop_first_col:
             self.data = self.data.drop(self.data.columns[0], axis=1)
         self._good_index = list(range(self.data.shape[0]))
@@ -41,7 +41,6 @@ class Data:
     @property
     def good_index(self):
         """getter for private attribute _good_index
-
         Returns:
             list: list of good indexes to use for ML training purposes
         """
@@ -50,7 +49,6 @@ class Data:
     @property
     def bad_index(self):
         """getter for private attribute for _bad_index
-
         Returns:
             dataFrame: dataFrame containing error indexes and if applicable column and an explaination of the error
         """
@@ -59,7 +57,6 @@ class Data:
     @bad_index.setter
     def bad_index(self, list_idx):
         """setter if private attribute bad_index
-
         Args:
             list_idx (dataFrame): used as bad_index = bad_index.append(df)
         """
@@ -68,10 +65,8 @@ class Data:
     @good_index.setter
     def good_index(self, list_idx):
         """setter for private attribute _good_index
-
         Args:
             list_idx (list): list of good index to replace the previous one
-
         Raises:
             ValueError: if length is greater than the initial dataFrame raises Valueerror
         """
@@ -84,7 +79,6 @@ class Data:
     @property
     def str_col(self):
         """getter for private attribute _str_col
-
         Returns:
             [list]: list of string columns
         """
@@ -110,7 +104,6 @@ class Data:
     @property
     def nbr_col(self):
         """getter for private attribute _nbr_col
-
         Returns:
             [list]: list of number columns
         """
@@ -132,7 +125,6 @@ class Data:
     @nbr_col.setter
     def nbr_col(self, value):
         """setter method for setting _nbr_col private attribute
-
         Args:
             value ([list of strings]): [list of column names]
         """
@@ -140,7 +132,6 @@ class Data:
 
     def push_bad_index(self, list_idx):  # Find a better method name
         """decrepated, not sure if will be used or not.
-
         Args:
             list_idx ([type]): [description]
         """
@@ -153,7 +144,6 @@ class Data:
     @property
     def corr_col(self):
         """getter for private attribute _corr_col
-
         Returns:
             [list]: dict of {col: [correlated_cols]}
         """
@@ -169,7 +159,6 @@ class Data:
     @corr_col.setter
     def corr_col(self, value):
         """setter for privated attribute _corr_col
-
         Args:
             value ([dict]): dict of {col: [correlated_cols]}
         """
@@ -178,7 +167,6 @@ class Data:
     @property
     def uniq_col(self):
         """getter for private attribute _uniq_col
-
         Returns:
             [dict]: [dict containing {name_of_col: ratio_of_uniqueness}]
         """
@@ -193,58 +181,30 @@ class Data:
     @uniq_col.setter
     def uniq_col(self, value):
         """setter for private attribute _uniq_col
-
         Args:
             value ([dict]): [dict containing {name_of_col: ratio_of_uniqueness}]
         """
         self._uniq_col = value
 
-    def firstpass(self):
+    def firstpass(self, *methods):
         """Push into self.bad_index the indexes and error types of data.
         This first pass detects duplicated data, typo, extreme values and incompleteness by row.
         """
-        # Deterministic pass
-        n_duped_idx = ~utils._duplicated_idx(self.data)
 
-        for index in n_duped_idx[~n_duped_idx].index.values.tolist():
-            self.add_to_bad_idx(
-                index, col="ALL", col_type="duplication", VALUE_FLAG=False
-            )
+        f_dict = {
+            "duplication": self.check_duplication,
+            "typo": self.check_typo,
+            "extreme_value": self.check_extreme_value,
+            "completeness": self.check_completeness,
+        }
 
-        # Probabilistic pass
-        # Columns of strings only
-        for column in self.str_col:
-            if (
-                self.uniq_col[column] <= 0.005
-            ):  # Filter column with too many different words
-                clean_df = self.data[n_duped_idx]
-                clean_df = clean_df[column][clean_df[column].notna().values]
-                idx = utils.index_uncorrect_grammar(
-                    clean_df
-                )  # get the non duped indexes and not na from a column
-                idx = clean_df.iloc[idx].index
-
-                for index in idx:
-                    self.add_to_bad_idx(
-                        index, col=column, col_type="typo", VALUE_FLAG=True
-                    )
-
-        # Columns of numbers only
-        for column in self.nbr_col:
-            clean_df = self.data[n_duped_idx]
-            clean_df = clean_df[column][clean_df[column].notna().values]
-            idx = utils._z_score(clean_df)
-            idx = clean_df[idx].index
-
-            for index in idx:
-                self.add_to_bad_idx(
-                    index, col=column, col_type="extreme", VALUE_FLAG=True
-                )
-
-        # Completeness pass on each row
-        idx = utils._row_is_none(self.data)
-        for index in idx:
-            self.add_to_bad_idx(index, col="All", col_type="empty", VALUE_FLAG=False)
+        for method in methods:
+            f_dict[method]()
+        if not methods:
+            self.check_duplication()
+            self.check_typo()
+            self.check_extreme_value()
+            self.check_completeness()
 
         # Eliminate the obvious errors from the good index
         for idx in self.bad_index["idx"]:
@@ -253,14 +213,79 @@ class Data:
             except:
                 pass
 
-    def secondpass(self):
-        """Push into self.bad_index the indexes.
-        This second pass detects only idx where outliers may lie.
-        """
+    def secondpass(self, *methods):
+        """ """
 
-        # Tendency pass, 2 column explicable
+        f_dict = {
+            "tendency": self.check_tendency,
+            "outlier": self.check_outlier,
+            "logic": self.check_logic,
+        }
+
+        for method in methods:
+            f_dict[method]()
+        if not methods:
+            self.check_tendency()
+            self.check_outlier()
+            self.check_logic()
+
+    def check_duplication(self):
+        n_duped_idx = ~utils._duplicated_idx(self.data)
+
+        for index in n_duped_idx[~n_duped_idx].index.values.tolist():
+            self.add_to_bad_idx(
+                index, col="ALL", col_type="duplication", VALUE_FLAG=False
+            )
+
+    def check_typo(self, tresh_unique=0.005, tresh_typo_frequency=10):
+        n_duped_idx = ~utils._duplicated_idx(self.data)
+
+        for column in self.str_col:
+            if (
+                self.uniq_col[column] <= tresh_unique
+            ):  # Filter column with too many different words
+                clean_df = self.data[n_duped_idx]
+                clean_df = clean_df[column][clean_df[column].notna().values]
+                idx = utils.index_incorrect_grammar(
+                    clean_df, tresh_typo_frequency
+                )  # get the non duped indexes and not na from a column
+                idx = clean_df.iloc[idx].index
+
+                for index in idx:
+                    self.add_to_bad_idx(
+                        index, col=column, col_type="typo", VALUE_FLAG=True
+                    )
+
+    def check_extreme_value(
+        self, thresh_std=6, thresh_unique1=0.99, thresh_unique2=0.0001
+    ):
+        n_duped_idx = ~utils._duplicated_idx(self.data)
+
+        for column in self.nbr_col:
+            clean_df = self.data[n_duped_idx]
+            clean_df = clean_df[column][clean_df[column].notna().values]
+            idx = utils._z_score(
+                clean_df,
+                self.uniq_col[column],
+                thresh_std,
+                thresh_unique1,
+                thresh_unique2,
+            )
+            idx = clean_df[idx].index
+
+            for index in idx:
+                self.add_to_bad_idx(
+                    index, col=column, col_type="extreme", VALUE_FLAG=True
+                )
+
+    def check_completeness(self, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
+        index = utils._row_is_none(self.data, thresh_row_1, thresh_row_2, thresh_col)
+        for idx in index:
+            self.add_to_bad_idx(idx, col="All", col_type="empty", VALUE_FLAG=False)
+
+    def check_tendency(self, tresh_order=0.999):
         idx_dict = utils._tendancy_detection(
-            utils._to_date_and_float(self.data[self.nbr_col])
+            utils._to_date_and_float(self.data[self.nbr_col]), tresh_order
         )
         for key, value in idx_dict.items():
             for idx in value:
@@ -268,12 +293,13 @@ class Data:
                     idx, col=key, col_type="Logic error", VALUE_FLAG=True
                 )
 
-        # Outlier pass, less explicable.
-        # idx = self.outlier_lof()[0]
-        # for index in idx:
-        #    self.add_to_bad_idx(index, col="NA", col_type="Outlier", VALUE_FLAG=False)
+    def check_outlier(self, **params):
+        idx = self.outlier_lof(**params)[0]
+        for index in idx:
+            self.add_to_bad_idx(index, col="NA", col_type="Outlier", VALUE_FLAG=False)
 
-        idxes, col_names = self.bad_logical_index()
+    def check_logic(self, thres_uniqueness=0.001, freq_error=10):
+        idxes, col_names = self.bad_logical_index(thres_uniqueness, freq_error)
         for idex, cols in zip(idxes, col_names):
             for idx in idex:
                 self.add_to_bad_idx(
@@ -281,13 +307,19 @@ class Data:
                 )
 
     def imputation_method(self, **params):
-        params.setdefault("n_neighbors", 10)
-        params.setdefault("weights", "uniform")
+        # params.setdefault("n_neighbors", 10)
+        # params.setdefault("weights", "uniform")
+        parameters = {}
+        # TODO: Change the fix, it would previously take the parameter from **params and results
+        # In a failure because KNNimputer doesn't have an self.contamination attribute.
+        parameters.setdefault("weights", "uniform")
+        parameters.setdefault("n_neighbors", 10)
         df, _ = utils._is_duplicated(self.data)
         list_numeric_col_name = self.nbr_col
         numeric_df = df[list_numeric_col_name]  # numeric dataframe
         numeric_df = numeric_df.fillna(np.nan)  # fill none with np.nan
-        imputer = KNNImputer(**params)  # initialize imputation
+        imputer = KNNImputer(**parameters)  # initialize imputation
+
         numeric_df_imputation = imputer.fit_transform(numeric_df)  # imputation if df
         numeric_df_imputation = pd.DataFrame(numeric_df_imputation)
         numeric_df_imputation.columns = list_numeric_col_name
@@ -310,7 +342,7 @@ class Data:
 
         if (df_drop_col0.isnull()).sum().any() > 0:
             # imputation
-            df_drop_col0 = self.imputation_method(params)
+            df_drop_col0 = self.imputation_method(**params)
 
         # lof phase
         clf = LocalOutlierFactor(**params)
@@ -331,16 +363,11 @@ class Data:
     def col_combined_result(self, col1_name, col2_name, first_pass=False):
         # todo add if condition for column where we do not detect error
         """Combine good result after first path of two columns, the output is a data frame combining good result from 2 column after first path with good index
-
-
         Args:
             col1_name (str): name of the first column
             col2_name (str): name of the second column
-
         Returns:
             [type]: Data frame combining good result from 2 column after first path
-
-
         """
 
         if first_pass:
@@ -399,10 +426,9 @@ class Data:
             print("non unique")
         return summery_tuple
 
-    def bad_logical_index(self):
+    def bad_logical_index(self, thres_uniqueness=0.001, freq_error=10):
         """Operates on data attribute directly. For each column which contains strings and doesn't have a uniqueness ratio too high.
         On theses columns compute the frequency between each unique data in columns.
-
         Returns:
             [idxes, col_names]: [list of list of bad indexes and associated columns names]
         """
@@ -415,8 +441,8 @@ class Data:
             for col2 in self.corr_col[col1]:
                 if (
                     col1 != col2
-                    and self.uniq_col[col1] < 0.001
-                    and self.uniq_col[col2] < 0.001
+                    and self.uniq_col[col1] < thres_uniqueness
+                    and self.uniq_col[col2] < thres_uniqueness
                 ):
                     freq = df.groupby([col1, col2]).size()
                     elements = df.loc[df[[col1, col2]].dropna().index]
@@ -424,7 +450,7 @@ class Data:
                         for e, index_serie in zip(
                             freq[elem], freq[elem].index.tolist()
                         ):
-                            if e < 10:
+                            if e < freq_error:
                                 idxes.append(
                                     elements[col2]
                                     .index[
@@ -440,10 +466,8 @@ class Data:
         """transform the strings column into categorical number and then compute the correlation matrix
         between the now number dataframe. Return for the columns the columns which have more than threshold of
         correlation.
-
         Args:
             threshold (float, optional): [minimum correlation for a column to be considered correlated]. Defaults to 0.5.
-
         Returns:
             [dict]: [contains for each column a list of possibly empty correlated columns]
         """
@@ -500,10 +524,68 @@ class Data:
             }
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
+    def bad_float_index(self, function_name="z_scores"):
+        """Same idea as in bad_logical_index function, execept it's between columns
+        of string and columns of floats, using quantiles to determine interclasses extremes.
+        Args :
+            function_name : quantiles or z-scores.
+        Returns:
+        [idxes, col_names]: [list of list of bad indexes and associated columns names]
+        """
+        df = self.data.iloc[self.good_index]
+        col_names = []
+        idxes = []
+        for col1 in self.str_col:
+            if self.uniq_col[col1] < 0.0002:
+                print(col1)
+                print(self.uniq_col[col1])
+                for col2 in self.nbr_col:
+                    if self.uniq_col[col1] < 0.9 and self.uniq_col[col2] < 0.9:
+                        if self.uniq_col[col2] > 0.04:
+                            elements = df.loc[df[[col1, col2]].dropna().index]
+                            for elem in elements[col1].unique():
+                                ar_classe = elements[col2][elements[col1] == elem]
+                                if len(ar_classe) > 0:
+                                    if function_name == "z_scores":
+                                        indx_outliers = utils._z_score(
+                                            ar_classe, 0.2, thresh_std=1.5
+                                        )
+                                    if len(indx_outliers) > 0:
+                                        val_outliers = ar_classe.loc[indx_outliers]
+                                        idxes.append(
+                                            elements[col2][
+                                                elements[col2].isin(val_outliers)
+                                            ]
+                                        )
+                                        col_names.append([col1, col2])
+                        else:
+                            if self.uniq_col[col1] < 0.001:
+                                freq = df.groupby([col1, col2]).size()
+                                elements = df.loc[df[[col1, col2]].dropna().index]
+                                for elem in elements[col1].unique():
+                                    for e, index_serie in zip(
+                                        freq[elem], freq[elem].index.tolist()
+                                    ):
+                                        if e < 10:
+                                            idxes.append(
+                                                elements[col2]
+                                                .index[
+                                                    (elements[col2] == index_serie)
+                                                    & (elements[col1] == elem)
+                                                ]
+                                                .tolist()
+                                            )
+                                            col_names.append([col1, col2])
+        return idxes, col_names
+
+    def save_result(self, path, **kwargs):
+        self.bad_index.to_csv(path, **kwargs)
+
 
 #! please use our commun directory
-"""
-data = Data('..\data\data_avec_erreurs_wasserstein.csv')
-data.firstpass()
-data.secondpass()
-data.bad_index.to_csv('exemple.csv')"""
+
+data = Data("..\data\data_avec_erreurs_wasserstein.csv")
+# data.firstpass('completeness', 'typo')
+# data.secondpass('logic')
+data.bad_float_index()
+data.bad_index.to_csv("exemple.csv")

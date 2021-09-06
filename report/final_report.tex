@@ -7,6 +7,9 @@
 \usepackage[allcolors=blue]{hyperref}
 \usepackage{cleveref}
 \usepackage{dirtytalk}
+\usepackage{graphicx}
+\usepackage{float} %fixe image position
+\usepackage[ruled,vlined]{algorithm2e}
 
 \newcommand\dhawat[1]{\textcolor{red}{DH: #1}}
 \newcommand\mabaach[1]{\textcolor{magenta}{MA: #1}}
@@ -46,29 +49,17 @@ Thus, it is necessary to combine deterministic approaches along with statistical
 deviates from the ``norm'' for example if 99.99\% of the values of \texttt{column\_a} are higher than the values of \texttt{column\_b} it would mean that the remaining 0.01\% might be errors, which lead us to the section where we present the different strategies that we adopted to assess data quality.
 \section{Starategy used to detect bad data}
 \label{sec:Starategy used to detect bad data}
-
+The tests provided in our Python package, are
 
 
 \subsection{Duplication test diala} % (fold)
 \label{sub:Duplication test}
+The first test in our package is the detection of duplications between the rows.  As duplicated rows are bad data and can add bias to all the other tests, so the test of duplication is the first deterministic test applied on the data and all the other tests are related to it, so that we drop all the duplications of rows in the data before doing any other test. This test is provided by the method \texttt{check\_duplication} of the class \texttt{Data} and give in output the list of positions of the duplicated rows in the data.
+% subsectionDuplication test (end)
 
 
-\subsection{Typographic test} % (fold)
+\subsection{Typographic test :Mariem} % (fold)
 \label{sub:Typographic test}
-<<<<<<< HEAD
-<<<<<<< HEAD
-Detecting typo errors in strings is a tricky matter that relies on many factors such as how do we define similarities between strings. 
-\subsubsection{Affinity propagation algorithm}
-The first method we explored is clustering the words using a similarity matrix, it is a direct approach of the problem, it consists on first computing a similarity matrix between all the strings of the database, and then clustering them using a clustering algorithm that would not require the number of clusters as a parameter. After experimenting with many distances, we opted for the method \texttt{ratio} of the class \texttt{SequenceMatcher} from the python module\texttt{difflib} which showed the best results, this method return a measure of the sequences similarity, where $T$ is the total number of elements in both sequences, and $M$ is the number of matches, the method returns $\cfrac{2*M}{T}$ the downside of the method would be that it is computationally expensive, although it is possible to use the function \texttt{real\_quick\_ratio\(\)} which returns an upper bound on \texttt{ratio()} 
-but this will impact the effectiveness of the method. Once we computed the similarity matrix, we use a method \texttt{AffinityPropagation} of the class \texttt{cluster} of the library \texttt{sklearn} \cite{sklearn}, which is to cluster the data, which is unsupervised machine learning algorithm that does not require the user to specify the number of clusters, based on the concept of ``message passing'' between data points, they can be seeing as a network where all data send messages to all other points. The subject of these messages are the willingness of the points being exemplars. Exemplars are points that explain the other data points ‘best’ and are the most significant of their cluster \cite{richi}. After the clustering, we would get count the number of occurences in each element of the cluster and decide that all elements that appear below a fixed threshold to be misspelling errors. The problem with the technique relies on the fact that it is hard to pick the ``right'' distance between the strings, one possibility would be to run the algorithm in each cluster after computing the similarity matrix of the cluster doing a second pass of the algorithm, empirical tests shows that it seems to work better, but further investigation are necessary.
-The second method we proposed is based on a Markov clustering algorithm.
-\subsubsection{Markov clustering}
-The first step is to transform the data into a suitable format by doing feature extraction using \texttt{CountVectorizer} method from  \linebreak \texttt{sklearn.feature\_extraction.text} class, \cite{vector} which convert a collection of text documents to a matrix of token counts (\textit{i.e.} a token is an object that holds the place of something else that is usually larger or more complex.), Then we proceed and initialize an object of the \texttt{MarkovClustering} class \cite{MarkovClustering} and use it to perform a type of graph clustering using \textbf{Markov Chain theory} by first creating a \textbf{probability matrix of transition} then simulating a random walk by alternating between two operations \textbf{inflation} that would change the probability of transition to advantage strong neighbors and disadvantage weak ones and \textbf{expansion} that would connect different regions of the graph, it would repeat this process until the state of equilibrium is reached and the algorithm converges \cite{explainMCL}, after that we get the clustered data and apply the same technique as before to detect the misspelled words.\\
-The problem with this technique is that the accumulation of hidden layers makes it difficult to assess why it works extremely well in some cases and it does not in others.
-\subsection{Extreme values :diala} % (fold)
-=======
-
-=======
 Detecting typo errors in strings is a tricky matter that relies on many factors such as how do we define similarities between strings, or how to encode strings in numerical values in an isometric way, the first method we investigated is called Affinity propagation technique.
 \subsubsection{Affinity propagation algorithm}
 The first method we explored is clustering the words using a similarity matrix, it is a direct approach of the problem, it consists on first computing a similarity matrix between all the strings of the database, and then clustering them using a clustering algorithm that would not require the number of clusters as a parameter. After experimenting with many distances, we opted for the method \texttt{ratio()} of the class \texttt{SequenceMatcher} from the python module\texttt{difflib} which showed the best results, this method return a measure of the sequences similarity, where $T$ is the total number of elements in both sequences, and $M$ is the number of matches, the method returns $\frac{2*M}{T}$ the downside of the method would be that it is computationally expensive, although it is possible to use the function \texttt{real\_quick\_ratio()} which returns an upper bound on \texttt{ratio()}
@@ -77,7 +68,6 @@ The second method we proposed is based on a Markov clustering algorithm.
 \subsubsection{Markov clustering}
 The first step is to transform the data into a suitable format by doing feature extraction using \texttt{CountVectorizer} method from the \texttt{sklearn} class which is \texttt{feature\_extraction.text} \cite{vector} which convert a collection of text documents to a matrix of token counts (\textit{i.e.} a token is an object that holds the place of something else that is usually larger or more complex.), Then we proceed and initialize an object of the \texttt{MarkovClustering} class \cite{MarkovClustering} and use it to perform a type of graph clustering using \textbf{Markov Chain theory} by first creating a \textbf{probability matrix of transition} then simulating a random walk by alternating between two operations \textbf{inflation} that would change the probability of transition to advantage strong neighbors and disadvantage weak ones and \textbf{expansion} that would connect different regions of the graph, it would repeat this process until the state of equilibrium is reached and the algorithm converges \cite{explainMCL}, after that we get the clustered data and apply the same technique as before to detect the misspelled words.\\
 The problem with this technique is that the accumulation of hidden layers makes it difficult to assess why it works extremely well in some cases and it does not in others.
->>>>>>> 1ab9d33075503ba03f5154c28769c0f190de65bc
 % subsectionTypographic test (end)
 
 \subsection{Extreme values diala} % (fold)
@@ -103,16 +93,10 @@ We refer to this values as extreme values. Note that this test is applied to non
 
 % subsectionCompleteness (end)
 
-<<<<<<< HEAD
-\subsection{Total order relation: mariem} % (fold)
-\label{sub:Total order relation}
-The idea behind this algorithm is to find ordering errors between two numerical columns by detecting if there is an inherent order between them and flagging elements that does not respect it. For example all the values of the column \texttt{BIRTH\_YEAR} should be lower than there corresponding value in the column \texttt{DEATH\_YEAR}. We proceed to a tendency test between all numerical columns, let \texttt{column\_a} and \texttt{column\_b} be two numerical columns, we compute the ratio between the number of elements in \texttt{column\_a} that are lower to there corresponding in \texttt{column\_b} (row-wise comparison) and the length of the columns. We start by dropping the missing values first to avoid any problems. if the ratio is high that would mean that there is a hidden tendency between those two columns and that the values that does not respect that order might be outliers
-=======
 \subsection{Logical order relation: mariem} % (fold)
 \label{sub:Logical order relation}
 The idea behind this algorithm is to find ordering errors between two numerical columns by detecting if there is an inherent order between them and flagging the elements that does not respect it. For example all the values of the column \texttt{BIRTH\_YEAR} should be lower than there corresponding value in the column \texttt{DEATH\_YEAR} if not then it is an error. We proceed to a what we would call a tendency test between pairs of all numerical columns, let \texttt{column\_a} and \texttt{column\_b} be two numerical columns, we compute the ratio between the number of elements in \texttt{column\_a} that are lower to their corresponding value in \texttt{column\_b} (row-wise comparison) and the length of the columns. We start by dropping the missing values first to avoid any problems. if the ratio is high (let's say 99.99\% the threshold is a parameter that needs to be fixed to avoid too much false positives) that would mean that there is a hidden tendency between those two columns and that the values that does not respect that order might be outliers.
 % subsection Logical order relation (end)
->>>>>>> 1ab9d33075503ba03f5154c28769c0f190de65bc
 
 \subsection{Outlier detection with machine learning diala} % (fold)
 \label{sub:Outlier detection with machine learning}
@@ -452,28 +436,8 @@ Let us then follow our outlined methods and inspect the first method algorithms.
         by Modelling the Feature Value Couplings.}
 
     \bibitem{amazon}
-    Sebastian Schelter, Dustin Lange, Philipp Schmidt, Meltem Celikel, Felix Biessmann:
+    Sebastian Schelter, Dustin Lange, Philipp Schmidt, Meltem Celikel, Felix Biessmann
     \emph{Automating LargeScale Data Quality Verification}
-<<<<<<< HEAD
-    \bibitem{Hawking}
-    Simon HawkinsHongxing, HeGraham Williams, Rohan Baxte:
-    \emph{Outlier Detection Using Replicator Neural Networks}
-    \bibitem{richi}
-    Ritchie Vink:
-    \emph{Algorithm Breakdown: Affinity Propagation}
-    \url{https://www.ritchievink.com/blog/2018/05/18/algorithm-breakdown-affinity-propagation/}
-    \bibitem{sklearn}
-    \url{https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AffinityPropagation.html}
-
-    \bibitem{vector}
-    \url{https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html}
-
-    \bibitem{MarkovClustering}
-    \bibitem{https://gist.github.com/urigoren/1f76567f3af56ed8c33f076537768a60}
-
-    \bibitem{explainMCL}
-    \url{https://medium.com/analytics-vidhya/demystifying-markov-clustering-aeb6cdabbfc7}
-=======
 
     \bibitem{dai_yosh_pars}
     Wei Dai, Kenji Yoshigoe and William Parsley
@@ -493,6 +457,5 @@ Let us then follow our outlined methods and inspect the first method algorithms.
     \emph{Algorithm Breakdown: Affinity Propagation}
 
 
->>>>>>> 92301eefef305f77f77434a0f0a8352ebe2e7e2f
 \end{thebibliography}
 \end{document}

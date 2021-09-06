@@ -250,7 +250,7 @@ class Data:
             "tendency": self.check_tendency,
             "outlier": self.check_outlier,
             "logic": self.check_logic,
-            'mixed_logic': self.check_mixed_logic
+            "mixed_logic": self.check_mixed_logic,
         }
 
         for method in methods:
@@ -263,14 +263,27 @@ class Data:
 
     def check_duplication(self):
         n_duped_idx = ~utils._duplicated_idx(self.data)
-        n_true_idx = ~utils._duplicated_idx(self.data) & utils._duplicated_idx(self.data, False)
-        for index, true_index in zip(n_duped_idx[~n_duped_idx].index.values.tolist(),
-                         n_true_idx[n_true_idx].index.values.tolist()):
+        n_true_idx = ~utils._duplicated_idx(self.data) & utils._duplicated_idx(
+            self.data, False
+        )
+        for index, true_index in zip(
+            n_duped_idx[~n_duped_idx].index.values.tolist(),
+            n_true_idx[n_true_idx].index.values.tolist(),
+        ):
             self.add_to_bad_idx(
                 [index, true_index], col="ALL", col_type="duplication", VALUE_FLAG=False
             )
 
-    def check_typo(self, tresh_unique=0.005, tresh_typo_frequency=10, method='affinity_propagation', affinity="precomputed", damping=0.5, random_state=None, **kwargs):
+    def check_typo(
+        self,
+        tresh_unique=0.005,
+        tresh_typo_frequency=10,
+        method="affinity_propagation",
+        affinity="precomputed",
+        damping=0.5,
+        random_state=None,
+        **kwargs
+    ):
         n_duped_idx = ~utils._duplicated_idx(self.data)
 
         for column in self.str_col:
@@ -280,8 +293,13 @@ class Data:
                 clean_df = self.data[n_duped_idx]
                 clean_df = clean_df[column][clean_df[column].notna().values]
                 idx = utils.index_incorrect_grammar(
-                    clean_df, tresh_typo_frequency, method, affinity,
-                    damping, random_state, **kwargs
+                    clean_df,
+                    tresh_typo_frequency,
+                    method,
+                    affinity,
+                    damping,
+                    random_state,
+                    **kwargs
                 )  # get the non duped indexes and not na from a column
                 idx = clean_df.iloc[idx].index
 
@@ -339,9 +357,13 @@ class Data:
                 self.add_to_bad_idx(
                     idx, col=cols, col_type="Logic error", VALUE_FLAG=True
                 )
-                
-    def check_mixed_logic(self, thres_unique_str=0.0002, thres_unique_nbr=0.04, thresh_std=7):
-        idxes, col_names = self.bad_float_index(thres_unique_str, thres_unique_nbr, thresh_std)
+
+    def check_mixed_logic(
+        self, thres_unique_str=0.0002, thres_unique_nbr=0.04, thresh_std=7
+    ):
+        idxes, col_names = self.bad_float_index(
+            thres_unique_str, thres_unique_nbr, thresh_std
+        )
         for idex, cols in zip(idxes, col_names):
             for idx in idex:
                 self.add_to_bad_idx(
@@ -575,7 +597,9 @@ class Data:
                 }
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
-    def bad_float_index(self, thres_unique_str=0.0002, thres_unique_nbr=0.04, thresh_std=7):
+    def bad_float_index(
+        self, thres_unique_str=0.0002, thres_unique_nbr=0.04, thresh_std=7
+    ):
         """Same idea as in bad_logical_index function, execept it's between columns
         of string and columns of floats, using quantiles to determine interclasses extremes.
         Args :
@@ -590,7 +614,7 @@ class Data:
         for col1 in self.str_col:
             if self.uniq_col[col1] < thres_unique_str:
                 for col2 in self.nbr_col:
-                    if ((col1, col2) not in list_vue):
+                    if (col1, col2) not in list_vue:
                         if self.uniq_col[col1] < 0.9 and self.uniq_col[col2] < 0.9:
                             if self.uniq_col[col2] > thres_unique_nbr:
                                 elements = df.loc[df[[col1, col2]].dropna().index]
@@ -598,7 +622,8 @@ class Data:
                                     ar_classe = elements[col2][elements[col1] == elem]
                                     if len(ar_classe) > 0:
                                         indx_outliers = utils._z_score(
-                                            ar_classe, 0.2, thresh_std) # 0,2 value is here to keep consistency when calling z_score and is for uniq_col
+                                            ar_classe, 0.2, thresh_std
+                                        )  # 0,2 value is here to keep consistency when calling z_score and is for uniq_col
                                         if len(indx_outliers) > 0:
                                             val_outliers = ar_classe.loc[indx_outliers]
                                             idxes.append(
@@ -608,7 +633,7 @@ class Data:
                                             )
                                             col_names.append([col1, col2])
                             list_vue.append((col1, col2))
-                            
+
         return idxes, col_names
 
     def save_result(self, path, **kwargs):
@@ -616,8 +641,9 @@ class Data:
 
 
 #! please use our commun directory
+"""
 
 data = Data("..\data\data_avec_erreurs_wasserstein.csv")
 data.firstpass('completeness')
 #data.secondpass('mixed_logic')
-data.bad_index.to_csv("exemple.csv")
+data.bad_index.to_csv("exemple.csv")"""

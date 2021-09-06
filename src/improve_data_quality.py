@@ -250,6 +250,7 @@ class Data:
             "tendency": self.check_tendency,
             "outlier": self.check_outlier,
             "logic": self.check_logic,
+            'mixed_logic': self.check_mixed_logic
         }
 
         for method in methods:
@@ -258,6 +259,7 @@ class Data:
             self.check_tendency()
             self.check_outlier()
             self.check_logic()
+            self.check_mixed_logic()
 
     def check_duplication(self):
         n_duped_idx = ~utils._duplicated_idx(self.data)
@@ -330,6 +332,14 @@ class Data:
 
     def check_logic(self, thres_uniqueness=0.001, freq_error=10):
         idxes, col_names = self.bad_logical_index(thres_uniqueness, freq_error)
+        for idex, cols in zip(idxes, col_names):
+            for idx in idex:
+                self.add_to_bad_idx(
+                    idx, col=cols, col_type="Logic error", VALUE_FLAG=True
+                )
+                
+    def check_mixed_logic(self, thres_unique_str=0.0002, thres_unique_nbr=0.04, thresh_std=7):
+        idxes, col_names = self.bad_float_index(thres_unique_str, thres_unique_nbr, thresh_std)
         for idex, cols in zip(idxes, col_names):
             for idx in idex:
                 self.add_to_bad_idx(
@@ -554,7 +564,7 @@ class Data:
             }
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
-    def bad_float_index(self, function_name="z_scores"):
+    def bad_float_index(self, thres_unique_str=0.0002, thres_unique_nbr=0.04, thresh_std=7):
         """Same idea as in bad_logical_index function, execept it's between columns
         of string and columns of floats, using quantiles to determine interclasses extremes.
         Args :
@@ -565,47 +575,29 @@ class Data:
         df = self.data.iloc[self.good_index]
         col_names = []
         idxes = []
+        list_vue = []
         for col1 in self.str_col:
-            if self.uniq_col[col1] < 0.0002:
-                print(col1)
-                print(self.uniq_col[col1])
+            if self.uniq_col[col1] < thres_unique_str:
                 for col2 in self.nbr_col:
-                    if self.uniq_col[col1] < 0.9 and self.uniq_col[col2] < 0.9:
-                        if self.uniq_col[col2] > 0.04:
-                            elements = df.loc[df[[col1, col2]].dropna().index]
-                            for elem in elements[col1].unique():
-                                ar_classe = elements[col2][elements[col1] == elem]
-                                if len(ar_classe) > 0:
-                                    if function_name == "z_scores":
-                                        indx_outliers = utils._z_score(
-                                            ar_classe, 0.2, thresh_std=1.5
-                                        )
-                                    if len(indx_outliers) > 0:
-                                        val_outliers = ar_classe.loc[indx_outliers]
-                                        idxes.append(
-                                            elements[col2][
-                                                elements[col2].isin(val_outliers)
-                                            ]
-                                        )
-                                        col_names.append([col1, col2])
-                        else:
-                            if self.uniq_col[col1] < 0.001:
-                                freq = df.groupby([col1, col2]).size()
+                    if ((col1, col2) not in list_vue):
+                        if self.uniq_col[col1] < 0.9 and self.uniq_col[col2] < 0.9:
+                            if self.uniq_col[col2] > thres_unique_nbr:
                                 elements = df.loc[df[[col1, col2]].dropna().index]
                                 for elem in elements[col1].unique():
-                                    for e, index_serie in zip(
-                                        freq[elem], freq[elem].index.tolist()
-                                    ):
-                                        if e < 10:
+                                    ar_classe = elements[col2][elements[col1] == elem]
+                                    if len(ar_classe) > 0:
+                                        indx_outliers = utils._z_score(
+                                            ar_classe, 0.2, thresh_std) # 0,2 value is here to keep consistency when calling z_score and is for uniq_col
+                                        if len(indx_outliers) > 0:
+                                            val_outliers = ar_classe.loc[indx_outliers]
                                             idxes.append(
-                                                elements[col2]
-                                                .index[
-                                                    (elements[col2] == index_serie)
-                                                    & (elements[col1] == elem)
-                                                ]
-                                                .tolist()
+                                                elements[col2][
+                                                    elements[col2].isin(val_outliers)
+                                                ].index
                                             )
                                             col_names.append([col1, col2])
+                            list_vue.append((col1, col2))
+                            
         return idxes, col_names
 
     def save_result(self, path, **kwargs):
@@ -616,6 +608,5 @@ class Data:
 
 data = Data("..\data\data_avec_erreurs_wasserstein.csv")
 # data.firstpass('completeness', 'typo')
-# data.secondpass('logic')
-data.bad_float_index()
+data.secondpass('mixed_logic')
 data.bad_index.to_csv("exemple.csv")

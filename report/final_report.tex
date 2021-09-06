@@ -11,12 +11,31 @@
 \usepackage{float} %fixe image position
 \usepackage[ruled,vlined]{algorithm2e}
 
+\title{\Large Report for AMIES challenge: Automatic data quality assessment}
+
+\author{Abaach Mariem, Boussaa Mehdi, Hawat Diala}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\makeatletter
+\let\runauthor\@author
+\let\runtitle\@title
+\makeatother
+
+
+\date{}
+
 \newcommand\dhawat[1]{\textcolor{red}{DH: #1}}
 \newcommand\mabaach[1]{\textcolor{magenta}{MA: #1}}
 \newcommand\mboussaa[1]{\textcolor{blue}{MB: #1}}
 
 
 \begin{document}
+\maketitle
+
+\begin{abstract}
+    Data is what guides today's decision making process, everyone relies on it, it is at the center of modern institutions, but according to the saying : GIGO (Garbage In Garbage Out), bad data may have detrimental consequences on the company that used it.  It is then of crucial order that the Data be of best quality possible, however, the process of cleaning the data usually relies on deterministic rules, which makes it hard, tedious and time consuming. Thus AMIES along with the company Foyer proposed a challenge about the automation of the process. This problem required us to first assess what we meant by ``good data quality'' which led to a definition of data quality and to propose algorithms that need as little as possible of human intervention.
+\end{abstract}
+
 \section{Intoduction} % (fold)
 \label{sec:Intoduction}
 With any form of decision making, the quality of the decision is only as good as the data analysed, and so there is a need to ensure that the highest quality data is available for analysis. While having good levels of data quality improves analysis accuracy, having bad data quality can have a serious impact on the enterprise.

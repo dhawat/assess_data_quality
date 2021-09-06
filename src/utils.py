@@ -6,6 +6,8 @@ import numpy as np
 from dateutil.parser import parse
 from difflib import SequenceMatcher
 from sklearn.cluster import AffinityPropagation
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from markov_clustering import MarkovClustering
 
 # from gensim.models import Word2Vec
 #! add insignifante column test for non in column
@@ -313,7 +315,7 @@ def incorrect_grammar(col, cluster, thresh):
 
 # todo replace thresh by values from medi function
 # todo change name funcxtion
-def index_incorrect_grammar(col, thresh=10):
+def index_incorrect_grammar(col, thresh=10, method='affinity_propagation'):
     """List of uncorect words in `col`. The incorrect words are decided via `thresh` used by :py:meth:`incorrect_grammar`.
 
     Args:
@@ -321,10 +323,11 @@ def index_incorrect_grammar(col, thresh=10):
         col ([type]): input column DataFrame.
 
         thresh(int, optional): minimum of allowed number of repetition of a word in `cluster`to not consider it as bad word, used by the function :py:meth:`incorrect_grammar`.
+        method(str, optional): set wether the function use affinity propagation from sklearn or use markov clustering to cluster the words inside col.
 
     Returns:
 
-        list of incorrect words.
+        list of location of incorrect words.
 
     .. seealso::
 
@@ -332,24 +335,41 @@ def index_incorrect_grammar(col, thresh=10):
     """
     list_incorrect = []
     words = np.unique(np.asarray(col))  # unique words in col
-    lev_similarity = np.array(
-        [[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words]
-    )  # similarity matrix of `words`
+    if method == 'affinity_propagation':
+        lev_similarity = np.array(
+            [[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words]
+        )  # similarity matrix of `words`
 
-    # fitting model
-    affprop = AffinityPropagation(affinity="precomputed", damping=0.5, random_state=None)
-    affprop.fit(lev_similarity)
+        # fitting model
+        affprop = AffinityPropagation(affinity="precomputed", damping=0.5, random_state=None)
+        affprop.fit(lev_similarity)
 
-    if len(np.unique(affprop.labels_)) == 1:
+        if len(np.unique(affprop.labels_)) == 1:
+            return list_incorrect
+        else:
+            for cluster_id in np.unique(affprop.labels_):
+                cluster = np.unique(words[np.nonzero(affprop.labels_ == cluster_id)])
+                if len(cluster) > 1:
+                    list_incorrect = list_incorrect + incorrect_grammar(
+                        col, cluster, thresh
+                    )
         return list_incorrect
-    else:
-        for cluster_id in np.unique(affprop.labels_):
-            cluster = np.unique(words[np.nonzero(affprop.labels_ == cluster_id)])
-            if len(cluster) > 1:
-                list_incorrect = list_incorrect + incorrect_grammar(
-                    col, cluster, thresh
-                )
-    return list_incorrect
+    elif method == 'markov_clustering':
+        X = CountVectorizer().fit_transform(words)
+        X = TfidfTransformer(use_idf=False).fit_transform(X)
+        Model = MarkovClustering(X)
+        dict_cluster = Model.fit().clusters()
+    
+        if len(dict_cluster) == len(words):
+            return list_incorrect
+        else:
+            for val in dict_cluster.values():
+                cluster = np.unique(words[list(val)])
+                if len(cluster) > 1:
+                    list_incorrect = list_incorrect + incorrect_grammar(
+                            col, cluster, thresh
+                        )
+            return list_incorrect
 
 
 def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):

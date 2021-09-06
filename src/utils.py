@@ -323,10 +323,11 @@ def index_incorrect_grammar(col, thresh=10, method='affinity_propagation'):
         col ([type]): input column DataFrame.
 
         thresh(int, optional): minimum of allowed number of repetition of a word in `cluster`to not consider it as bad word, used by the function :py:meth:`incorrect_grammar`.
+        method(str, optional): set wether the function use affinity propagation from sklearn or use markov clustering to cluster the words inside col.
 
     Returns:
 
-        list of incorrect words.
+        list of location of incorrect words.
 
     .. seealso::
 

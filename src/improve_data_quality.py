@@ -8,15 +8,23 @@ from sklearn.preprocessing import LabelEncoder
 
 
 class Data:
-    """Data class holding a column by column profile and index flagged as low quality data"""
+    """Implementation of many test for detecting bad data in a dataframe, and return the index of bad data there type and the column if possible"""
 
-    def __init__(self, path="", drop_first_col=True, **kwargs):
+    def __init__(self, path, drop_first_col=True, **kwargs):
         """
         Args:
-            data (CSV, JSON, SQL): data set.
+            path (path): path to the data file.
+
+            drop_first_col (bool, optional): If true drop first column which most of the time is unique and so there it is not interresting to use it for finding bad data. Defaults to True.
+
+            kwargs(dic): dictionary of additional argument passed to
+        Raises:
+            TypeError: if the format of the data does not belong to {.csv, .json, .sql, .xlsx}
         """
         if utils.check_extension(path) == "none":
-            raise TypeError("data should be of provided as .csv or .json or .sql file")
+            raise TypeError(
+                "data should be of provided as .csv or .json or .sql or .xlsx file"
+            )
 
         self.data = utils._to_DataFrame(path, kwargs)
         if drop_first_col:
@@ -225,7 +233,7 @@ class Data:
         for column in self.nbr_col:
             clean_df = self.data[n_duped_idx]
             clean_df = clean_df[column][clean_df[column].notna().values]
-            idx = utils._z_score(clean_df, clean_df.mean(), clean_df.std())
+            idx = utils._z_score(clean_df)
             idx = clean_df[idx].index
 
             for index in idx:
@@ -491,58 +499,6 @@ class Data:
                 "value2": "",
             }
             self.bad_index = self.bad_index.append(row, ignore_index=True)
-            
-
-    def bad_float_index(self, function_name = 'quantiles'):
-        """Same idea as in bad_logical_index function, execept it's between columns 
-        of string and columns of floats, using quantiles to determine interclasses extremes.
-        Args : 
-            function_name : quantiles or z-scores.
-        Returns:
-        [idxes, col_names]: [list of list of bad indexes and associated columns names]
-        """
-        df = self.data.iloc[self.good_index]
-        col_names = []
-        idxes = []
-        for col1 in self.str_col:
-            if self.uniq_col[col1] < 0.001:
-                for col2 in self.corr_col[col1]:
-                    if col2 in self.nbr_col:
-                        if self.uniq_col[col1] > 0.05:
-                            elements = df.loc[df[[col1, col2]].dropna().index]
-                            for elem in elements[col1].unique():
-                                ar_classe = elements[col2][elements[col1] == elem].unique()
-                                if len(ar_classe) > 0:
-                                    if function_name == 'quantiles':
-                                        indx_outliers = utils.outlier_dection(ar_classe)
-                                        indx_outliers = ar_classe.index[indx_outliers]
-                                    if function_name == 'z-scores':
-                                        indx_outliers = utils._z_score(ar_classe)
-                                    if len(indx_outliers) > 0:
-                                        val_outliers = ar_classe.loc[indx_outliers]
-                                        idxes.append(
-                                            elements[col2][col2.isin(val_outliers)].tolist()
-                                            )
-                                        col_names.append([col1, col2])
-                        else:
-                            if self.uniq_col[col1] < 0.001:
-                                freq = df.groupby([col1, col2]).size()
-                                elements = df.loc[df[[col1, col2]].dropna().index]
-                                for elem in elements[col1].unique():
-                                    for e, index_serie in zip(
-                                        freq[elem], freq[elem].index.tolist()
-                                    ):
-                                        if e < 10:
-                                            idxes.append(
-                                                elements[col2]
-                                                .index[
-                                                    (elements[col2] == index_serie)
-                                                    & (elements[col1] == elem)
-                                                ]
-                                                .tolist()
-                                                )
-                                            col_names.append([col1, col2])
-                    return idxes, col_names           
 
 
 #! please use our commun directory

@@ -393,11 +393,20 @@ class Data:
                 )
 
     def check_outlier(self, **params):
+        """Outlier row detection by LOF algorithm, preceeded by imputation method"""
         idx = self.outlier_lof(**params)[0]
         for index in idx:
             self.add_to_bad_idx(index, col="NA", col_type="Outlier", VALUE_FLAG=False)
 
     def check_logic(self, thres_uniqueness=0.001, freq_error=10):
+        """logic error on the numerical columns using frequency method
+
+        Args:
+
+            thres_uniqueness (float, optional): [description]. Defaults to 0.001.
+
+            freq_error (int, optional): [description]. Defaults to 10.
+        """
         idxes, col_names = self.bad_logical_index(thres_uniqueness, freq_error)
         for idex, cols in zip(idxes, col_names):
             for idx in idex:

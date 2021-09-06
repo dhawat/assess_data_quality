@@ -4,6 +4,8 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{xcolor}
+\usepackage[allcolors=blue]{hyperref}
+\usepackage{cleveref}
 
 \newcommand\dhawat[1]{\textcolor{red}{DH: #1}}
 \newcommand\mabaach[1]{\textcolor{magenta}{MA: #1}}
@@ -13,34 +15,58 @@
 \begin{document}
 \section{Intoduction} % (fold)
 \label{sec:Intoduction}
-\dhawat{With any form of decision making, the quality of the decision is only as good as the data analysed, and so there is a need to ensure that the highest quality data is available for analysis. While having good levels of data quality improves analysis accuracy, having bad data quality can have a serious impact on the enterprise. }
+With any form of decision making, the quality of the decision is only as good as the data analysed, and so there is a need to ensure that the highest quality data is available for analysis. While having good levels of data quality improves analysis accuracy, having bad data quality can have a serious impact on the enterprise.
+Poor data quality has a substantial impact, such as financial loss.  \href{https://www.ibm.com/blogs/journey-to-ai/}{IBM} estimate the loss of 3.1 trillion dollars annually  in USA due to poor data quality which is twice \href{https://data.worldbank.org/indicator/NY.GDP.MKTP.CD}{Canada’s GDP} in the very same year. Productivity loss, \href{https://www.forrester.com/report/Build-Trusted-Data-With-Data-Quality/RES83344}{Forrester} came up with a study that 40\% spend 1/3 of their time validating and fixing data quality issues. All of that lead to a low trust data.
+Traditional data quality control methods are based on users’ experience or previously established business rules, and this
+limits performance in addition to being a very time consuming process and low accuracy.
+
+The main objective of this research was to examine how can we use
+probability models and machine learning to improve indicators
+of data quality in a given dataset, with no domain specific knowledge.
+There was no particular regard to the domain of the dataset chosen, the main criteria for choice was the concept that bad data or outlier are rare data objects, i.e., those objects with rare combinations of feature values, compared to the majority of objects.
+We built list of Python algorithms to detect bad data present in any type of table of data. This algorithms are gathered in a Python class easy to use, and provided with detailed documentations, facilitating the comprehension and opening the door for further development of this class. The class contains test for many type of outlier (bad data) that could be found in a table of data such as: detection of repetition row, break of uniqueness rule, search for extreme values for columns with density distribution, non significant rows and columns, detection of spelling errors, outlier detection over rows, in each column and in each category of the columns with discreet distribution, detection of logical error between correlated columns.
+
+In this report we present our work
+
 
 
 % sectionIntoduction (end)
 
+\section{Data quality} % (fold)
+\label{sec:Data quality}
 
-\section{supervised machine learning}
-\dhawat{In machine learning the supervised learning problem is formally defined as follows.
-    We aim to predict a target variable $y \in \mathbb{R}$ in regression tasks (or y categorical in classification tasks) given a set of input feature $X \in \mathbb{R}^p$.
-    In the training examples, that are used for model building, both X and y are known.
-    In the new examples, on which the predictive model is applied, X is known, but y is not known at the time of prediction.
-    According to the Bayesian Decision Theory a classification can
-    be described by the prior probabilities of the classes $\mathbb{P}(y)$ and the class conditional density functions $\mathbb{P}(X/y)$, for all classes $y=1,...,c,$ where $c$ is the number of classes.
-    The classification decision is made according to the posterior probabilities of the classes, which for class y can be represented as}
-$$\mathbb{P}(y/X) = \frac{\mathbb{P}(y)\mathbb{P}(X/y)}{\mathbb{P}(X)},$$
-where $\mathbb{P}(X)= \sum_{y=1}^c \mathbb{P}(y)\mathbb{P}(X/y)$.
-\dhawat{Here equal costs of misclassification are assumed.
-    The type of the target variable space depends on the task.
-    In classification the target variable takes categorical values (class labels), while in regression the target variable takes continuous values.}
-%---------------
-%----------------
-\section{Online learning and offline learning}
-\dhawat{We can distinguish two learning modes: offline learning and online learning.
-    In offline learning the whole training data must be available at the time of model training.
-    Only when training is completed the model can be used for predicting. In contrast, online algorithms process data sequentially. They produce a model and put it in operation without having the complete training data set available at the beginning.
-    The model is continuously updated during operation as more training data arrives.
-    Less restrictive than online algorithms are incremental algorithms that process input examples one-by-one (or batch-by-batch) and update the decision model after receiving each example.
-    Incremental algorithms may have random access to previous examples or representative/selected examples.
-    In such a case these algorithms are called incremental algorithms with partial memory.
-    Typically, in incremental algorithms, for any new presentation of data, the update operation of the model is based on the previous one.}
+
+
+% section  Data quality (end)
+
+\section{Starategy used to detect bad data} % (fold)
+\label{sec:Starategy used to detect bad data}
+
+
+
+% section  Starategy used to detect bad data (end)
+
+\section{Algorithm} % (fold)
+\label{sec:Algorithm}
+
+
+
+% sectionAlgorithm (end)
+
+\section{Discussions} % (fold)
+\label{sec:Discussions}
+
+
+
+% section Discussions (end)
+
+
+\begin{thebibliography}{999}
+
+    \bibitem{Monte_carlo_book}
+    Christian P.Robert, George Casella:
+    \emph{Monte Carlo Statistical Methods, second edition.}
+
+
+\end{thebibliography}
 \end{document}

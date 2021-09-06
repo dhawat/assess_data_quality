@@ -13,12 +13,15 @@ class Data:
     def __init__(self, path, drop_first_col=True, **kwargs):
         """
         Args:
+
             path (path): path to the data file.
 
             drop_first_col (bool, optional): If true drop first column which most of the time is unique and so there it is not interresting to use it for finding bad data. Defaults to True.
 
-            kwargs(dic): dictionary of additional argument passed to
+            kwargs(dic): dictionary of additional argument passed to the read method of the data. See :py:meth:`utils._to_DataFrame`
+
         Raises:
+
             TypeError: if the format of the data does not belong to {.csv, .json, .sql, .xlsx}
         """
         if utils.check_extension(path) == "none":
@@ -26,49 +29,61 @@ class Data:
                 "data should be of provided as .csv or .json or .sql or .xlsx file"
             )
 
-        self.data = utils._to_DataFrame(path, **kwargs)
+        self.data = utils._to_DataFrame(path, **kwargs)  # DataFrame of the data
+
+        # drop first column
         if drop_first_col:
             self.data = self.data.drop(self.data.columns[0], axis=1)
         self._good_index = list(range(self.data.shape[0]))
         self._bad_index = pd.DataFrame(
             columns=["idx", "column", "errtype", "value1", "value2"]
         )
-        self._nbr_col = []
-        self._str_col = []
-        self._corr_col = {}
-        self._uniq_col = {}
+        self._nbr_col = []  # numeric columns in data
+        self._str_col = []  # string columns in data
+        self._corr_col = {}  # matrix of correlation between column
+        self._uniq_col = {}  # ration of uniqueness of each column
 
     @property
     def good_index(self):
         """getter for private attribute _good_index
+
         Returns:
+
             list: list of good indexes to use for ML training purposes
         """
         return self._good_index
 
     @property
     def bad_index(self):
-        """getter for private attribute for _bad_index
+        """getter for private attribute for _bad_index.
+
         Returns:
-            dataFrame: dataFrame containing error indexes and if applicable column and an explaination of the error
+
+            dataFrame: dataFrame containing error indexes and if applicable column and an explanation of the error
         """
         return self._bad_index
 
     @bad_index.setter
     def bad_index(self, list_idx):
-        """setter if private attribute bad_index
+        """setter if private attribute bad_index.
+
         Args:
-            list_idx (dataFrame): used as bad_index = bad_index.append(df)
+
+            list_idx (dataFrame): used as bad_index = bad_index.append(df).
         """
         self._bad_index = list_idx
 
     @good_index.setter
     def good_index(self, list_idx):
-        """setter for private attribute _good_index
+        """setter for private attribute _good_index.
+
         Args:
-            list_idx (list): list of good index to replace the previous one
+
+            list_idx (list): list of good index to replace the previous one.
+
         Raises:
-            ValueError: if length is greater than the initial dataFrame raises Valueerror
+
+            ValueError: if length is greater than the initial dataFrame raises Valueerror.
         """
         if len(list_idx) > self.data.shape[0]:
             raise ValueError(
@@ -78,9 +93,11 @@ class Data:
 
     @property
     def str_col(self):
-        """getter for private attribute _str_col
+        """getter for private attribute :py:meth:`_str_col`.
+
         Returns:
-            [list]: list of string columns
+
+            [list]: list of string columns.
         """
         if not self._str_col:
             for column in self.data.columns:
@@ -103,9 +120,11 @@ class Data:
 
     @property
     def nbr_col(self):
-        """getter for private attribute _nbr_col
+        """getter for private attribute :py:meth:`_nbr_col`.
+
         Returns:
-            [list]: list of number columns
+
+            [list]: list of number columns.
         """
         if not self._nbr_col:
             for column in self.data.columns:
@@ -124,12 +143,15 @@ class Data:
 
     @nbr_col.setter
     def nbr_col(self, value):
-        """setter method for setting _nbr_col private attribute
+        """setter method for setting :py:meth:`_nbr_col` private attribute.
+
         Args:
-            value ([list of strings]): [list of column names]
+
+            value ([list of strings]): [list of column names].
         """
         self._nbr_col = value
 
+    # todo check if used
     def push_bad_index(self, list_idx):  # Find a better method name
         """decrepated, not sure if will be used or not.
         Args:
@@ -143,9 +165,11 @@ class Data:
 
     @property
     def corr_col(self):
-        """getter for private attribute _corr_col
+        """getter for private attribute py:meth:`_corr_col`.
+
         Returns:
-            [list]: dict of {col: [correlated_cols]}
+
+            [list]: dict of {col: [correlated_cols]}.
         """
         if not self._corr_col:
             self._corr_col = self.compute_corr_str()
@@ -158,16 +182,20 @@ class Data:
 
     @corr_col.setter
     def corr_col(self, value):
-        """setter for privated attribute _corr_col
+        """setter for private attribute :py:meth:`_corr_col`.
+
         Args:
+
             value ([dict]): dict of {col: [correlated_cols]}
         """
         self._corr_col = value
 
     @property
     def uniq_col(self):
-        """getter for private attribute _uniq_col
+        """getter for private attribute :py:meth:`_uniq_col`.
+
         Returns:
+
             [dict]: [dict containing {name_of_col: ratio_of_uniqueness}]
         """
         if not self._uniq_col:
@@ -180,8 +208,10 @@ class Data:
 
     @uniq_col.setter
     def uniq_col(self, value):
-        """setter for private attribute _uniq_col
+        """setter for private attribute :py:meth:`_uniq_col`.
+
         Args:
+
             value ([dict]): [dict containing {name_of_col: ratio_of_uniqueness}]
         """
         self._uniq_col = value

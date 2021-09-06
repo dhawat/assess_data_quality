@@ -315,7 +315,7 @@ def incorrect_grammar(col, cluster, thresh):
 
 # todo replace thresh by values from medi function
 # todo change name funcxtion
-def index_incorrect_grammar(col, thresh=10, method='affinity_propagation'):
+def index_incorrect_grammar(col, thresh=10, method='affinity_propagation', affinity="precomputed", damping=0.5, random_state=None, **kwargs):
     """List of uncorect words in `col`. The incorrect words are decided via `thresh` used by :py:meth:`incorrect_grammar`.
 
     Args:
@@ -323,6 +323,7 @@ def index_incorrect_grammar(col, thresh=10, method='affinity_propagation'):
         col ([type]): input column DataFrame.
 
         thresh(int, optional): minimum of allowed number of repetition of a word in `cluster`to not consider it as bad word, used by the function :py:meth:`incorrect_grammar`.
+        
         method(str, optional): set wether the function use affinity propagation from sklearn or use markov clustering to cluster the words inside col.
 
     Returns:
@@ -341,7 +342,7 @@ def index_incorrect_grammar(col, thresh=10, method='affinity_propagation'):
         )  # similarity matrix of `words`
 
         # fitting model
-        affprop = AffinityPropagation(affinity="precomputed", damping=0.5, random_state=None)
+        affprop = AffinityPropagation(affinity=affinity, damping=damping, random_state=random_state, **kwargs)
         affprop.fit(lev_similarity)
 
         if len(np.unique(affprop.labels_)) == 1:
@@ -357,7 +358,7 @@ def index_incorrect_grammar(col, thresh=10, method='affinity_propagation'):
     elif method == 'markov_clustering':
         X = CountVectorizer().fit_transform(words)
         X = TfidfTransformer(use_idf=False).fit_transform(X)
-        Model = MarkovClustering(X)
+        Model = MarkovClustering(X, **kwargs)
         dict_cluster = Model.fit().clusters()
     
         if len(dict_cluster) == len(words):
@@ -370,6 +371,8 @@ def index_incorrect_grammar(col, thresh=10, method='affinity_propagation'):
                             col, cluster, thresh
                         )
             return list_incorrect
+    else:
+        raise ValueError('Method name must be either affinity_propagation or markov_clustering')
 
 
 def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):

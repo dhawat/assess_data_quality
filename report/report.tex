@@ -9,6 +9,7 @@
 \usepackage{dirtytalk}
 \usepackage{graphicx}
 \usepackage{float} %fixe image position
+\usepackage[ruled,vlined]{algorithm2e}
 
 \newcommand\dhawat[1]{\textcolor{red}{DH: #1}}
 \newcommand\mabaach[1]{\textcolor{magenta}{MA: #1}}
@@ -151,8 +152,137 @@ The test for detecting outlier of type logical error using the frequency is appl
 
 \section{Algorithm medi} % (fold)
 \label{sec:Algorithm}
+Different error types and data types force us to use different methods and algorithm to judge data quality. In light of this we decided to split our algorithm into several standalone module capable of being called independently of one another.
+If the user wishes to simply use all the algorithm and with standard parameters we provided two methods for doing so. The first method is used to get rid of easier to detect errors such as duplicates and typos before (if wished) passing it's results to the second method which will be a more in depth check.
+Let us then follow our outlined methods and inspect the first method algorithms.
 
 
+\subsection{First method}
+\subsubsection{Duplicate errors algorithm}
+\subsubsection{Typographical error algorithm}
+
+\begin{algorithm}
+    \SetKwData{Left}{left}\SetKwData{This}{this}\SetKwData{Up}{up}
+    \SetKwFunction{Union}{Union}\SetKwFunction{FindCompress}{FindCompress}
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \Input{A column of a DataFrame, a minimum frequency threshold, A specified method to deal with clustering}
+    \Output{Index of the DataFrame containing typographical errors}
+    \BlankLine
+
+    list\_incorrect$\leftarrow$ [~]\;
+    words $\leftarrow$ get unique element from input column\;
+    \If{method is affinity propagation}
+    {
+        lev\_similarity $\leftarrow$ \lForEach{element $w1$ in word, element $w2$ in word}{SequenceMatcher(w1, w2)}
+        affprop $\leftarrow$ instance AffinityPropagation\;
+        affprop\_label $\leftarrow$ affprop.fit(lev\_similarity).labels \;
+        \eIf{affprop\_label is empty}
+        {
+            return list\_incorrect\;
+        }
+        {\For{cluster in affprop\_label}
+            {list\_incorrect $\leftarrow$ list\_incorrect + incorrect\_grammar(column, cluster, threshold)\;}
+        }
+        return list\_incorrect
+    }
+    \Else{
+        X $\leftarrow$ instance Vectorizer and transform words into it\;
+        dict\_cluster $\leftarrow$ get clusters from MarkovClustering(X)\;
+        \If{dict\_cluster is empty}
+        {return list\_incorrect}
+    }
+    \caption{Typographical checking\label{typo}}
+\end{algorithm}
+
+
+
+\subsubsection{Extreme value algorithm}
+
+\begin{algorithm}
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \Input{A column of a DataFrame, a minimum frequency threshold, The uniqueness ratio of the column, A standard deviation multiplie, 2 uniqueness thresholds}
+    \Output{Index of the DataFrame containing extreme values}
+    \BlankLine
+
+    \uIf{uniqueness $\geq$ threshold\_1 or uniqueness $\leq$ threshold\_2}{return [~] \;}
+    \Else{
+        mean $\leftarrow$ mean(column)\;
+        std $\leftarrow$ std(column)\;
+
+        upper\_bound $\leftarrow$ mean + threshold\_std * std\;
+        lower\_bound $\leftarrow$ mean - threshold\_std * std\;
+
+        idx $\leftarrow$ column where element is $\geq$ lower\_bound and $\leq$ upper\_bound\;
+        return idx\;
+    }
+    \caption{Extreme value checking\label{extreme}}
+\end{algorithm}
+
+
+
+\subsubsection{Row completeness algorithm}
+\begin{algorithm}
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \Input{A DataFrame, a minimum threshold of empty values for rows, a minimum threshold of empty values for rows when low information columns are removed, a minimum threshold of empty values for columns}
+    \Output{Index of the DataFrame containing rows with low completeness}
+    \BlankLine
+    mean\_none\_row1 $\leftarrow$ mean(NA in dataframe.rows)\;
+    index\_1 $\leftarrow$ index(rows $\geq$ thresh\_row\_1 NA)\;
+    \BlankLine
+    mean\_none\_col $\leftarrow$ mean(NA in dataframe.columns)\;
+    index\_col $\leftarrow$ index(columns $\geq$ thresh\_col NA)\;
+    \BlankLine
+    \For{idx in index\_col}{drop column[idx] of dataframe}
+    \BlankLine
+    mean\_none\_row2 $\leftarrow$ mean(NA in dataframe.rows)\;
+    index\_2 $\leftarrow$ index(rows $\geq$ thresh\_row\_2 NA)\;
+    \BlankLine
+    ind = index\_1 and index\_2
+    return ind
+    \caption{Row completeness checking\label{completeness}}
+\end{algorithm}
+
+
+
+\subsubsection{Tendency algorithm}
+\begin{algorithm}
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \Input{A DataFrame, a minimum threshold for an observed order between variable to become a rule to discriminate outliers upon.}
+    \Output{Index of the DataFrame containing rows which breaks the tendency}
+    \BlankLine
+
+    dict\_tendency $\leftarrow$ \{\}\;
+
+    \For{column1 in numerical\_columns(dataframe)}{
+        \For{column2 in numerical\_columns(dataframe)}{
+            dataframe $\leftarrow$ drop(dataframe(column1, column2), any rows with NA)\;
+            tendency $\leftarrow$ $\frac{size(dataframe(column1) \leq dataframe(column2))}{size(dataframe)}$\;
+            \BlankLine
+            \If{tendency $\geq$ tendency\_threshold}{
+                \If{size(dataframe(column1) $\geq$ dataframe(column2)) $\geq$ 1}{
+                    dict\_tendency[(column1, column2)] $\leftarrow$ index(dataframe(column1) $\geq$ dataframe(column2))\;
+                }
+            }
+        }
+    }
+    \caption{Tendency checking\label{tendency}}
+\end{algorithm}
+
+
+
+\subsubsection{Whole row outlier detection algorithm}
+\begin{algorithm}
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \Input{A DataFrame}
+    \Output{Index of the DataFrame containing rows which are deemed to be outliers using the lof method}
+    \BlankLine
+
+    \If{dataframe has NA}{
+        dataframe $\leftarrow$ KNNImputer(dataframe)
+    }
+
+    \caption{Whole row outlier checking\label{outlier}}
+\end{algorithm}
 
 % sectionAlgorithm (end)
 

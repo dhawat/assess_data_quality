@@ -217,8 +217,9 @@ class Data:
         self._uniq_col = value
 
     def firstpass(self, *methods):
-        """Push into self.bad_index the indexes and error types of data.
-        This first pass detects duplicated data, typo, extreme values and incompleteness by row.
+        """First pass of bad data detection by searching for duplicated data, typo, extreme values and incompleteness by row.  This tests are done using respectively the methods :py:meth:`check_duplication`, :py:meth:`typo`, :py:meth:`extreme_value` and :py:meth:completeness. This method find the bed indices and send them to :py:meth:`bad_index`.
+        By default all previous method will run. Specific methods could be set using the parameter `method`.
+
         """
 
         f_dict = {
@@ -244,7 +245,11 @@ class Data:
                 pass
 
     def secondpass(self, *methods):
-        """ """
+        """First pass of bad data detection by searching for tendency, outlier, logic and mixed_logic error.
+        This tests are done using respectively the methods :py:meth:`check_tendency`, :py:meth:`check_outlier`, :py:meth:`check_logic` and :py:meth:`check_mixed_logic`.
+        This method find the bed indices and send them to :py:meth:`bad_index`.
+        By default all previous method will run. Specific methods could be set using the parameter `method`.
+        """
 
         f_dict = {
             "tendency": self.check_tendency,
@@ -262,6 +267,7 @@ class Data:
             self.check_mixed_logic()
 
     def check_duplication(self):
+        """Find duplicated rows and return there indices."""
         n_duped_idx = ~utils._duplicated_idx(self.data)
         n_true_idx = ~utils._duplicated_idx(self.data) & utils._duplicated_idx(
             self.data, False
@@ -284,6 +290,16 @@ class Data:
         random_state=None,
         **kwargs
     ):
+        """Find spelling
+
+        Args:
+            tresh_unique (float, optional): [description]. Defaults to 0.005.
+            tresh_typo_frequency (int, optional): [description]. Defaults to 10.
+            method (str, optional): [description]. Defaults to "affinity_propagation".
+            affinity (str, optional): [description]. Defaults to "precomputed".
+            damping (float, optional): [description]. Defaults to 0.5.
+            random_state ([type], optional): [description]. Defaults to None.
+        """
         n_duped_idx = ~utils._duplicated_idx(self.data)
 
         for column in self.str_col:

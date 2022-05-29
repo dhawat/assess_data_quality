@@ -88,11 +88,20 @@ This is not the case while dealing with bad data.
 Thus, in this framework outlier detection is a hard task highly dependent on the corrupted data missed to identify in the phase of cleaning the data.
 \section{Starategy used to detect bad data}
 \label{sec:Starategy used to detect bad data}
-
+In this section we discibe independently the tests that we used to identify bad data.
+The algorithm are differed to Section \ref{sec:Algorithm}.
+We combined all these tests and proposed a strategy to construct a plug-and-play Python Class denoted \texttt{Data}.
+The code is available upon request.
 
 \subsection{Duplication test} % (fold)
 \label{sub:Duplication test}
-The first test in our package is the detection of duplications between the rows.  As duplicated rows are bad data and can add bias to all the other tests, so the test of duplication is the first deterministic test applied on the data and all the other tests are related to it, so that we drop all the duplications of rows in the data before doing any other test. This test is provided by the method \texttt{check\_duplication} of the class \texttt{Data} and give in output the list of positions of the duplicated rows in the data. The pseudo code for this method is algorithm \ref{duplicate}.
+We start by the test of detection of duplications or redundancies between data rows.
+Duplicated rows are bad data and can bias other tests.
+For example, they can alter the approximated distribution of numerical columns.
+Thus in our stategy, the duplication test is the first deterministic test applied to the data.
+We drop the duplicated rows before doing any other test.
+This test is provided by the method \texttt{check\_duplication} of the class \texttt{Data} and output a list of the positions of the duplicated rows in the data.
+For the corresponding pseudo-code see  \ref{duplicate}.
 
 % subsectionDuplication test (end)
 

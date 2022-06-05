@@ -42,7 +42,7 @@
 \begin{abstract}
     Data is what guides today's decision making process, everyone relies on it, it is at the center of modern institutions, but according to the saying : GIGO (Garbage In Garbage Out), bad data may have detrimental consequences on the company that used it.  It is then of crucial order that the data be of best quality possible, however, the process of cleaning the data usually relies on deterministic rules, which makes it hard, tedious and time consuming. Thus AMIES along with the company Foyer proposed a challenge about the automation of the process. This problem required us to first assess what we meant by ``good data quality'' which led to a definition of data quality and to proposed algorithms that need as little as possible of human intervention.
 \end{abstract}
-
+\tableofcontents
 \section{Intoduction} % (fold)
 \label{sec:Intoduction}
 With any form of decision making, the quality of the decision is only as good as the data analysed, and so there is a need to ensure that the highest quality data is available for analysis. While having good levels of data quality improves analysis accuracy, having bad data quality can have a serious impact on the enterprise.
@@ -77,8 +77,8 @@ Second \textit{completeness} i.e., the comprehensiveness or wholeness of the dat
 However, completeness should be considered in the right context.
 For example, in the schema of product category, the absence of a value for an attribute \texttt{shoe\_size} is not relevant for a product in the category \texttt{notebooks} \cite{amazon}.
 Thus measuring completeness is only relevant when the attribute is applicable.
-\textit{Consistency} refers to whether the same data kept at different places do or do not match.
-\textit{Intra-relation constraints} define the range of admissible values within a column i.e., a specific data type, an interval for numerical columns, or a set of values for categorical ones.
+\textit{Consistency} as the degree to which a set of semantic rules are violated.
+It define the range of admissible values within a column i.e., a specific data type, an interval for numerical columns, or a set of values for categorical ones.
 It represents the logical inter-connectivity and interrelationship of the columns.
 Finally, the \textit{Accuracy}, which refers to whether the values stored are the correct values.
 More precisely, data values must be the right values and must be represented in a consistent and unambiguous form.
@@ -100,7 +100,7 @@ The algorithm are differed to Section \ref{sec:Algorithm}.
 We combined all these tests and proposed a strategy to construct a plug-and-play Python Class denoted \texttt{Data}.
 The code is available upon request.
 
-\subsection{Redundancy metric, duplication test} % (fold)
+\subsection{Redundancy} % (fold)
 \label{sub:Duplication test}
 We start by the test of detection of duplications between data rows.
 Duplicated rows are bad data and can bias other tests.
@@ -113,17 +113,19 @@ For the corresponding pseudo-code see  \ref{duplicate}.
 % subsectionDuplication test (end)
 
 
-\subsection{Accuracy metric, typographic test} % (fold)
-\label{sub:Typographic test}
+\subsection{Consistency} % (fold)
+
 One of the major problem of the data of the company Foyer is the presence of typographical errors.
 \dhawat{TBC: explain more about the difficulty, type of the errors ...}
 Detecting typo errors in strings is a tricky matter that relies on many factors such as how do we define similarities between strings, or how to encode strings in numerical values in an isometric way.
 We have investigate two methods to detect typo errors.
 The first called Affinity propagation technique \dhawat{add more details} and the last \dhawat{TBC}.
-In this section we examine only categorical columns.
+In what follows the first sub-section examins categorical columns, and the last the numerical columns.
 The pseudo code of the typographic test is deffered to Section \ref{sub:Typographical error algorithm}.
 
-\subsubsection{Affinity propagation algorithm}
+\subsubsection{For categorical columns}
+\dhawat{TBC} Typographical test
+\paragraph{ Affinity propagation.}
 \label{sub:Affinity propagation algorithm}
 The first method we used to detect spelling errors consists of partitioning each categorical column into clusters based on a similarity matrix.
 Then assuming that the correct spelling of a word has the highest frequency in the cluster, the words with low frequencies are spelling errors.
@@ -141,7 +143,7 @@ In other words, \texttt{exemplars} are the points that explain the other points 
 After clustering, we count the frequency of each word in each cluster i.e., the number of occurrences over the total number of words in the cluster.
 \dhawat{Unclear: from} All words having a frequency less than a fixed threshold are considered as misspelling errors.
 The problem of this method relies on the fact that it is hard to pick the ``right'' distance between the strings, one possibility would be to run the algorithm in each cluster after computing the similarity matrix of the cluster doing a second pass of the algorithm, empirical tests shows that it seems to work better, but further investigation are necessary. \dhawat{till}
-\subsubsection{Markov clustering}
+\paragraph{Markov clustering}
 The second method we proposed is based on a Markov clustering machine learning algorithm.
 Text data requires special preparation before you can apply a machine learning algorithm.
 The words need to be encoded as integers or floating-point values.
@@ -154,11 +156,13 @@ We applied \href{https://scikit-learn.org/stable/modules/generated/sklearn.featu
 The Markov clustering algorithm uses the transition matrix and starts a random walk by alternating between two operations.
 The first changes the transition probability privileging strong neighbors, and the last connect different regions of the graph.
 The process will be repeated until reaching an equilibrium state.
-We finally get the clustered data and apply the same technique as used in \ref{sub:Affinity propagation algorithm} to identify misspelled words.
+We finally get the clustered data and apply the same technique as used in the previous paragraph to identify misspelled words.
 \dhawat{unclear: from}The problem with this technique is that the accumulation of hidden layers makes it difficult to assess why it works extremely well in some cases and it does not in others. \dhawat{till. clarify in which case it worked ...}
 % subsectionTypographic test (end)
-
-\subsection{Extreme values} % (fold)
+\subsubsection{For numerical columns} % (fold)
+\label{ssub:For numerical columns}
+\dhawat{TBC}
+\paragraph{Extreme values.} % (fold)
 \label{sub:Extreme values}
 \begin{figure}[H]
     \centering
@@ -181,6 +185,11 @@ The algorithm for checking extreme values is present by class method \texttt{che
 The completeness of data is also an important concept to check. We construct an algorithm to flag rows with high ratio of missing values and we associate as error of type completeness error. This algorithm are present by the class method \texttt{check\_completeness} by the pseudo code \ref{completeness}.
 % subsectionCompleteness (end)
 
+
+\subsection{Accuracy} % (fold)
+\label{sub:Accuracy }
+\dhawat{TBC}
+% subsectionAccuracy metric (end)
 \subsection{Logical order relation} % (fold)
 \label{sub:Logical order relation}
 The idea behind this algorithm is to find ordering errors between two numerical columns by detecting if there is an inherent order between them and flagging the elements that does not respect it. For example all the values of the column \texttt{BIRTH\_YEAR} should be lower than there corresponding value in the column \texttt{DEATH\_YEAR} if not then it is an error. We proceed to a what we would call a tendency test between pairs of all numerical columns, let \texttt{column\_a} and \texttt{column\_b} be two numerical columns, we compute the ratio between the number of elements in \texttt{column\_a} that are lower to their corresponding value in \texttt{column\_b} (row-wise comparison) and the length of the columns. We start by dropping the missing values first to avoid any problems. if the ratio is high (let's say 99.99\% the threshold is a parameter that needs to be fixed to avoid too much false positives) that would mean that there is a hidden tendency between those two columns and that the values that does not respect that order might be outliers.

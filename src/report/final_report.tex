@@ -120,7 +120,11 @@ One of the major problem of the data of the company Foyer is the presence of typ
 Detecting typo errors in strings is a tricky matter that relies on many factors such as how do we define similarities between strings, or how to encode strings in numerical values in an isometric way.
 We have investigate two methods to detect typo errors.
 The first called Affinity propagation technique \dhawat{add more details} and the last \dhawat{TBC}.
+In this section we examine only categorical columns.
+The pseudo code of the typographic test is deffered to Section \ref{sub:Typographical error algorithm}.
+
 \subsubsection{Affinity propagation algorithm}
+\label{sub:Affinity propagation algorithm}
 The first method we used to detect spelling errors consists of partitioning each categorical column into clusters based on a similarity matrix.
 Then assuming that the correct spelling of a word has the highest frequency in the cluster, the words with low frequencies are spelling errors.
 For example, if a cluster contains "Single", "Singl", "Singel", and "SINgle" we expect that "Single" will have the highest frequency in the cluster.
@@ -133,16 +137,25 @@ The downside of this method is that it is computationally expensive.
 Although it is possible to use \texttt{real\_quick\_ratio()} which returns quickly an upper bound on \texttt{ratio()}, it will impact the effectiveness of the method. Once we computed the similarity matrix, we use the Class \texttt{AffinityPropagation} from the python package \href{https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AffinityPropagation.html#sklearn-cluster-affinitypropagation}{sklearn} to cluster the data.
 It is an unsupervised machine learning algorithm that does not require the user to specify the number of clusters unlike clustering algorithms such as k-means or k-medoids.
 It consists on finding the elements that are the most representative of clusters usually denoted by \texttt{exemplars}.
-In other words, \texttt{exemplars} are the points that explain the other points ‘best’ and are the most significant of their cluster \cite{richi}.
+In other words, \texttt{exemplars} are the points that explain the other points ‘best’ and are the most significant of their cluster.
 After clustering, we count the frequency of each word in each cluster i.e., the number of occurrences over the total number of words in the cluster.
 \dhawat{Unclear: from} All words having a frequency less than a fixed threshold are considered as misspelling errors.
 The problem of this method relies on the fact that it is hard to pick the ``right'' distance between the strings, one possibility would be to run the algorithm in each cluster after computing the similarity matrix of the cluster doing a second pass of the algorithm, empirical tests shows that it seems to work better, but further investigation are necessary. \dhawat{till}
 \subsubsection{Markov clustering}
-The second method we proposed is based on a Markov clustering algorithm.
-The first step is to transform the data into a suitable format by doing feature extraction using \texttt{CountVectorizer} method from the \texttt{sklearn} class which is \texttt{feature\_extraction.text} \cite{vector} which convert a collection of text documents to a matrix of token counts (\textit{i.e.} a token is an object that holds the place of something else that is usually larger or more complex.), Then we proceed and initialize an object of the \texttt{MarkovClustering} class \cite{MarkovClustering} and use it to perform a type of graph clustering using \textbf{Markov Chain theory} by first creating a \textbf{probability matrix of transition} then simulating a random walk by alternating between two operations \textbf{inflation} that would change the probability of transition to advantage strong neighbors and disadvantage weak ones and \textbf{expansion} that would connect different regions of the graph, it would repeat this process until the state of equilibrium is reached and the algorithm converges \cite{explainMCL}, after that we get the clustered data and apply the same technique as before to detect the misspelled words.\\
-The problem with this technique is that the accumulation of hidden layers makes it difficult to assess why it works extremely well in some cases and it does not in others.\\
-
-The algorithm for checking typographical error is present by class method \texttt{check\_typo} and the pseudo code is in algorithm \ref{typo}.
+The second method we proposed is based on a Markov clustering machine learning algorithm.
+Text data requires special preparation before you can apply a machine learning algorithm.
+The words need to be encoded as integers or floating-point values.
+So, the first step is to transform a wordy column into a suitable format.
+We used the Class \href{https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html}{\texttt{CountVectorizer}} from \texttt{sklearn}.
+It converts a collection of text documents to a matrix of token counts.
+A token is an object replacing a larger or more complex object.
+Second, we use a graph-based Markov clustering method \footnote{An implementation of the algorithm is provided by \href{https://gist.github.com/urigoren/1f76567f3af56ed8c33f076537768a60}{https://gist.github.com/urigoren/}}, which also doesn't require the specification of the number of clusters.
+We applied \href{https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfTransformer.html}{\texttt{TfidfTransformer}} to the matrix of token counts and we used the obtained matrix as the transition matrix of the Markov Chain.
+The Markov clustering algorithm uses the transition matrix and starts a random walk by alternating between two operations.
+The first changes the transition probability privileging strong neighbors, and the last connect different regions of the graph.
+The process will be repeated until reaching an equilibrium state.
+We finally get the clustered data and apply the same technique as used in \ref{sub:Affinity propagation algorithm} to identify misspelled words.
+\dhawat{unclear: from}The problem with this technique is that the accumulation of hidden layers makes it difficult to assess why it works extremely well in some cases and it does not in others. \dhawat{till. clarify in which case it worked ...}
 % subsectionTypographic test (end)
 
 \subsection{Extreme values} % (fold)
@@ -253,7 +266,7 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 \subsection{First method}
 
 \subsubsection{Typographical error algorithm}
-
+\label{sub:Typographical error algorithm}
 \begin{algorithm}[H]
     \SetKwData{Left}{left}\SetKwData{This}{this}\SetKwData{Up}{up}
     \SetKwFunction{Union}{Union}\SetKwFunction{FindCompress}{FindCompress}
@@ -408,7 +421,7 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 \end{algorithm}
 
 \subsubsection{Text categorical logic algorithm}
-
+\label{Text categorical logic algorithm}
 \begin{algorithm}[H]
     \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
     \Input{A DataFrame, a threshold for of the uniqueness for columns, a threshold for the number of time a categorical error happens}
@@ -603,27 +616,6 @@ We would like to thank AMIES for this beautiful opportunity and Foyer for provid
     \bibitem{Hawking}
     Simon Hawkins, Hongxing He, Graham Williams, Rohan Baxte:
     \emph{Outlier Detection Using Replicator Neural Networks}
-
-    \bibitem{richi}
-    Ritchie Vink
-    \emph{Algorithm Breakdown: Affinity Propagation}
-
-    \url{https://www.ritchievink.com/blog/2018/05/18/algorithm-breakdown-affinity-propagation/}
-
-    \bibitem{sklearn}
-    \url{https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AffinityPropagation.html}
-
-    \bibitem{vector}
-    \url{https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html}
-
-    \bibitem{MarkovClustering}
-    Uri Goren
-
-    \url{https://gist.github.com/urigoren/1f76567f3af56ed8c33f076537768a60}
-
-    \bibitem{explainMCL}
-    Anurag Kumar Mishra
-    \url{https://medium.com/analytics-vidhya/demystifying-markov-clustering-aeb6cdabbfc7}
 
 \end{thebibliography}
 \end{document}

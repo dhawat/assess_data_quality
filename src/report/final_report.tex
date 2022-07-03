@@ -77,15 +77,17 @@ Second \textit{completeness} i.e., the comprehensiveness or wholeness of the dat
 However, completeness should be considered in the right context.
 For example, in the schema of product category, the absence of a value for an attribute \texttt{shoe\_size} is not relevant for a product in the category \texttt{notebooks} \cite{amazon}.
 Thus measuring completeness is only relevant when the attribute is applicable.
-\textit{Consistency} as the degree to which a set of semantic rules are violated.
-It define the range of admissible values within a column i.e., a specific data type, an interval for numerical columns, or a set of values for categorical ones.
-It represents the logical inter-connectivity and interrelationship of the columns.
+\textit{Consistency} is the degree to which a set of semantic rules are violated.
+It defines the range of admissible values within a column e.g., a specific data type, an interval for numerical columns, or a set of values for categorical ones.
+It represents the logical inter-connectivity of the columns.
 Finally, the \textit{Accuracy}, which refers to whether the values stored are the correct values.
 More precisely, data values must be the right values and must be represented in a consistent and unambiguous form.
-We can identify two characteristics of accuracy.
-The form and the content.
-The form eliminates ambiguities about the content.
-For example, \texttt{BIRTH\_DAY} would have different formats depending on which representation we choose, the USA or European, and content accuracy compares the value of a column with its real-world representation.
+In other words, a data may be consistent but inaccurate.
+For example, for a product attribute \texttt{color}, a value "blue" can be considered consistent even if the correct value would be "red", whereas a value "XL" would be considered neither consistent nor accurate.
+% We can identify two characteristics of accuracy.
+% The form and the content.
+% The form eliminates ambiguities about the content.
+% For example, \texttt{BIRTH\_DAY} would have different formats depending on which representation we choose, the USA or European, and content accuracy compares the value of a column with its real-world representation.
 We can also mention other metrics like the \textit{amount of data (imbalanced class), heterogeneity, reliability, relevance}, and \textit{timeliness}.
 Note that we need first to assess the type of the data, distinguishing between \textit{categorical} and \textit{continuous}.
 The data type would highly influence the kind of errors we would be looking for and the algorithmic choice.
@@ -188,50 +190,56 @@ The completeness of data is also an important concept to check. We construct an 
 
 \subsection{Accuracy} % (fold)
 \label{sub:Accuracy }
+Two major types of outliers may be present is a dataset, local and global outliers.
+Global outliers are the points which are very different from the data set, while local outliers may looks not very different from the data set but they are far from the clusters of the data.
 \dhawat{TBC}
 % subsectionAccuracy metric (end)
-\subsection{Logical order relation} % (fold)
+\subsubsection{Order relation between columns} % (fold)
 \label{sub:Logical order relation}
-The idea behind this algorithm is to find ordering errors between two numerical columns by detecting if there is an inherent order between them and flagging the elements that does not respect it. For example all the values of the column \texttt{BIRTH\_YEAR} should be lower than there corresponding value in the column \texttt{DEATH\_YEAR} if not then it is an error. We proceed to a what we would call a tendency test between pairs of all numerical columns, let \texttt{column\_a} and \texttt{column\_b} be two numerical columns, we compute the ratio between the number of elements in \texttt{column\_a} that are lower to their corresponding value in \texttt{column\_b} (row-wise comparison) and the length of the columns. We start by dropping the missing values first to avoid any problems. if the ratio is high (let's say 99.99\% the threshold is a parameter that needs to be fixed to avoid too much false positives) that would mean that there is a hidden tendency between those two columns and that the values that does not respect that order might be outliers.
-This algorithm is present in the class method \texttt{check\_tendency} and is presented in the pseudo code \ref{tendency}.
+Suppose that the data contains two columns \texttt{BIRTH\_YEAR} and \texttt{DEATH\_YEAR}.
+The value in \texttt{BIRTH\_YEAR} should be lower than the corresponding value in \texttt{DEATH\_YEAR}.
+So \texttt{BIRTH\_YEAR} is related to \texttt{DEATH\_YEAR} by the order relation $(<)$, and the data not following this relation are corrupted.
+Following this idea, we design an algorithm to search for the order relation $(<)$ between pair of numerical columns and indicate elements not respecting it.
+We denote this test by the \textit{tendency test}.
+First rows with missing values are dropped for any numerical columns \texttt{column\_a} and \texttt{column\_b}.
+Then, we compute the ratio of the number of related elements (by the order relation $(<)$) to the column's length.
+A "high" ratio implies that the order relation $(<)$ holds between \texttt{column\_a} and \texttt{column\_b}, and the elements not related by $(<)$ might be outliers.
+A downside may be that the user needs to specify how "high" the ratio should be to confirm the relation between the columns.
+It depends on the risk level we are ready to accept.
+Prior knowledge of the data can help fix this threshold.
+The pseudo-code of the algorithm differs to \ref{tendency}.
 % subsection Logical order relation (end)
 
-\subsection{Outlier detection with machine learning} % (fold)
+\subsubsection{Outlier detection with machine learning} % (fold)
 \label{sub:Outlier detection with machine learning}
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.6\linewidth]{picture/lof.png}
+    \includegraphics[width=0.6\linewidth]{picture/lof_algo.png}
     \caption{Local Outlier Factor.}
     \label{fig:lof}
 \end{figure}
-The local outlier factor method, or LOF for short, is a technique that attempts to harness the idea of nearest neighbors for outlier detection.
-It is an unsupervised machine learning anomaly detection method.
-The local outlier factor is based on a concept of a local density, where locality is given by k nearest neighbors, whose distance is used to estimate the density.
-By comparing the local density of an object to the local densities of its neighbors, one can identify regions of similar density, and points that have a substantially lower density than their neighbors. These are considered to be outliers.
+The local outlier factor (LOF) is an unsupervised machine learning outlier detection method that attempts to harness the idea of nearest neighbors for outlier detection, i.e., identify local outliers.
+It is based on a concept of a local density, where locality is given by the $k$-nearest neighbors used to estimate the density.
+Points having a lower density than their neighbors are considered to be outliers.
 The local density is estimated by the typical distance at which a point can be ``reached" from its neighbors.
-The definition of ``reachability distance" used in LOF is an additional measure to produce more stable results within clusters.
-Due to the local approach, LOF is able to identify outliers in a data set that would not be outliers in another area of the data set.
+The reachabilit is a measure used to produce more stable results within clusters.
+Due to the local approach, LOF can identify outliers in a data set that would not be outliers in another area of the data set.
 For example, a point at a ``small" distance to a very dense cluster is an outlier, while a point within a sparse cluster might exhibit similar distances to its neighbors.
-The LOF test is available in our Python package by the class method \texttt{check\_outlier}.
-This test is applied on the numerical columns gathered.
-On tables containing \texttt{NaN} in numerical columns and since the LOF test does not apply to data containing missing values, we were facing the problem of dealing with the missing element before being able to to detect outliers by the LOF.
-To overcome the problem of missing values data scientists use \textbf{imputation} methods.\\
 
-\noindent
-The imputation is process for fills missing data with synthetic values.
-Imputation preserves all cases by replacing missing data with an estimated value based on other available information.
-Once all missing values have been imputed, the data set can then be analysed using standard techniques for complete data.
-There are different approach for imputing missing values \cite{corr_lede}:
+LOF doesn't apply to data containing missing values.
+As most of the numerical columns of our data contain missing elements, the first step is to deal with missing data by applying an imputation method.
+Different approaches exist for imputing missing values \cite{corr_lede}.
+For example,
 \begin{enumerate}
     \item Deletion: removes all instances with missing values.
     \item Hot deck: missing data are filled with values from the same dataset.
-    \item Imputation based on missing attributes: computes a new value from measures of central tendency as median, mode, mean,
-          etc. The computed value is used for filling the missing data.
+    \item Imputation based on missing attributes: computes a new value from measures of central tendency as median, mode, mean...
+    The computed value is used for filling the missing data.
     \item Imputation based on non-missing attributes: a classification or regression model is built from available data to fill the missing values.
 \end{enumerate}
-Or for some table all rows contains missing values or most of them so the deletion option could not be used in the case were we are doing imputation over the hole table and not a specific columns.
-From the last 3 methods we chose the imputation based on non-missing attributes using k-Nearest Neighbors provided by \href{https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html}{sklearn}.
-Missing values are imputed using the mean value from k-nearest neighbors found in the table. Two samples are close if the features that neither are missing is close.
+We chose the imputation method based on non-missing attributes using the $k$-nearest neighbors algorithm (KNN) provided by \href{https://scikit-learn.org/stable/modules/generated/sklearn.impute.KNNImputer.html}{sklearn} \cite{Olga+al:2001}.
+Missing values are imputed using the mean value from the $k$-nearest neighbors found in the data where two elements are neighbors if non-missing features are close.
+This test is available in our Python code by the class method \texttt{check\_outlier} and the pseudo-code is deferred to \ref{algo:lof}.
 % subsection  Outlier detection with machine learning (end)
 \subsection{Frequency for logical errors} % (fold)
 \label{sub:Frequency for logical errors}
@@ -411,6 +419,7 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 % subsectionSecond method (end)
 
 \subsubsection{Whole row outlier detection algorithm}
+\label{algo:lof}
 \begin{algorithm}[H]
     \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
     \Input{A DataFrame}
@@ -625,6 +634,9 @@ We would like to thank AMIES for this beautiful opportunity and Foyer for provid
     \bibitem{Hawking}
     Simon Hawkins, Hongxing He, Graham Williams, Rohan Baxte:
     \emph{Outlier Detection Using Replicator Neural Networks}
+    \bibitem{Olga+al:2001}
+    Olga Troyanskaya, Michael Cantor, Gavin Sherlock, Pat Brown, Trevor Hastie, Robert Tibshirani, David Botstein, Russ B. Altman:
+    \emph{Missing value estimation methods for DNA microarrays, Bioinformatics, Volume 17, Issue 6, June 2001}
 
 \end{thebibliography}
 \end{document}

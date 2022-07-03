@@ -280,18 +280,18 @@ To summarize, for numerical columns, this test uses the KNN algorithm first to r
 The downside of this test is that it indicates the rows that may contain outliers and not the position (i.e., column) of the outlier in the rows.
 This test is available in our Python code by the class method \texttt{check\_outlier} and the pseudo-code is deferred to \ref{algo:lof}.
 % subsection  Outlier detection with machine learning (end)
-\paragraph{Intra nominal extreme values.} % (fold)
+\subsubsection{Outliers detection for numerical and nominal columns} % (fold)
 \label{sub:Intra nominal extreme values}
-We proceed as in \ref{par:frequncy_test} applying a pattern-based method between nominal columns and numerical ones, to look for extreme values within a specific class of a category (\textit{e.g.} the distribution of the price of a specific class of the column \texttt{CAR}.). In order to do that we start by selecting nominal columns that contain very few classes (their ratio of uniqueness would be lower than a fixed threshold), for a nominal column and a given numerical column, we partition the values of the numerical column using the classes of the nominal one we get $m$ subsets, $m$ being the number of classes in the nominal column: $\{c_1: n_{1, c_1}, n_{2, c_1}, \ldots, n_{i, c_1}\}, \ldots, \{c_m: n_{j+1, c_m}, \ldots,  n_{l, c_m}\}$ with $c_1, \ldots, c_m$ the classes of the nominal column and $(n_i)_{i \leq l}$ the values of the numerical one. Then we proceed to an extreme value test on each subset.
-It is very important to distinguish between the continuous numerical columns and the discrete ones because the testing procedure will not be the same, for the continuous numerical column we would use a \texttt{z-score} test and for the discrete ones we use the frequency of occurrences as in \ref{sub:Frequency for logical errors}.
-This algorithm is present by the class method \texttt{check\_mixt\_logic} by the pseudo code \ref{mixed_logic}.
-% subsection Intra nominal extreme values (end)
-
-% section  Starategy used to detect bad data (end)
+For a nominal categorical column \texttt{column\_a} (with a high number of categories) and a numerical column \texttt{column\_b}, this test targets numerical outliers of {column\_a} within each category of {column\_b}.
+For example, extreme values of the distribution of the prices of a specific car brand are considered outliers.
+We proceed as follows.
+Consider applicable nominal column{column\_a} and  numerical {column\_b}.
+For each category of {column\_a} the goal is to identify outliers within the associated values in {column\_b}.
+If {column\_b} is continuous, the extreme values test \ref{sub:Extreme values} is applied while if it is discrete, the frequency test \ref{par:frequncy_test} is applied.
+This test is available in our Python code by the class method \texttt{check\_mixt\_logic} and the pseudo-code is deferred to \ref{mixed_logic}.
 
 \section{Experiments} % (fold)
 \label{sec:Experiments}
-
 At the start of the challenge our correspondant at Foyer shared with us a dataset comprised of 100000 columns and 54 columns. This dataset represented a real life example of sales of agricultural machinery. The types of column that we had were composed of numerical quantitative columns e.g. price, numerical category  e.g. Model Id but also verbal columns such as the state in which the sale took place.
 Not all the columns were in a type directly usable such as \texttt{saledate} which were in a non classical format. \\
 

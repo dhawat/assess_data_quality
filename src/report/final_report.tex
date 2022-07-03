@@ -289,6 +289,129 @@ This algorithm is present by the class method \texttt{check\_mixt\_logic} by the
 
 % section  Starategy used to detect bad data (end)
 
+\section{Experiments} % (fold)
+\label{sec:Experiments}
+
+At the start of the challenge our correspondant at Foyer shared with us a dataset comprised of 100000 columns and 54 columns. This dataset represented a real life example of sales of agricultural machinery. The types of column that we had were composed of numerical quantitative columns e.g. price, numerical category  e.g. Model Id but also verbal columns such as the state in which the sale took place.
+Not all the columns were in a type directly usable such as \texttt{saledate} which were in a non classical format. \\
+
+In this section we will discuss the type of errors caught by our algorithms, their strengths and shortcomings.
+In the first method we used \ref{duplicate} for finding duplicate, this method returns both the 'true' index and one of the duplicated index for comparison.
+\subsection{First method}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.8]{picture/exp_duplicated.png}
+    \label{fig:exp_duplicate}
+    \caption{Extract from the returned table of error featuring duplication errors.}
+\end{figure}
+
+As we can see in the first line we do have a duplication in index 307 and 306 which indeed represent a duplicate in the original data. If we look at the origin data we get \ref{fig:exp_duplicate_db}. In terms of speed of execution is it both scalable and accurate, in the order of a second for 5 millions entries.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{picture/exp_duplicated_db.png}
+    \label{fig:exp_duplicate_db}
+    \caption{Extract from the original dataset, here only a few column were taken for tidiness's sake.}
+\end{figure}
+
+The algorithm used for finding typographical errors \ref{typo} can be illustrated using the same method.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.8]{picture/exp_typo.png}
+    \label{fig:exp_typo}
+    \caption{Extract from the returned table of error featuring typographical errors.}
+\end{figure}
+The figure \ref{fig:exp_typo} shows that in the column 'UsageBand' multiple instances of the values 'HIGH' and 'high' were detected as errors. Indeed after confirmation with our correspondant it is an induced error. The correct spelling is 'High', both with the affinity propagation and markov clustering we get this types of results. However, when the database gets bigger and more words starts to appear in a cluster, the base affinity propagation clustering fails to scale up both in terms of speed and performance because of the weak pairwise metric associated to the affinity propagation algorithm. The markov chain clustering methods on the other hand can be used even in high columns or row counts while still being tractable but give less desirable results in lower column counts. \\
+
+For correcting numerical values while still being able to clearly tell in which column the error is we used the \ref{extreme} algorithm.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.8]{picture/exp_extreme.png}
+    \label{fig:exp_extreme}
+    \caption{Extract from the returned table of error featuring extreme values errors.}
+\end{figure}
+
+On numerical column it flags as outliers extreme values using a z\_score method. On columns such as \texttt{YearMade} (of the machinery) it correctly flags absurd years such as negative years and far into the future years. Being a methods which flags when the value is well outside the mean it sometimes fails when considering columns which are made up of a continuous variable such as \texttt{SalePrice} but who has a latent variable such as \texttt{ModelId}. \\ Another type of column which might be a problem with \ref{extreme} is when the data is numerical but purely qualitative such as \texttt{datasource}. It is comprised of numbers but only two of them representing which office aggregated the data. For this type of error we implemented a check inside \ref{extreme} to abort if the ratio of uniqueness of the column is too low.\\
+As for the speed and scalability of the method, on nearly 900000 cells it was in the order of a few seconds. On a larger dataset tested in collaboration of foyer it was similarly fast.
+
+For the algorithm \ref{completeness} we can check \ref{fig:exp_completeness}, that it shows multiple exact same track type tractor-dozer down to the model id having on this subset of column less information.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{picture/exp_completeness_db.png}
+    \label{fig:exp_completeness}
+    \caption{Extract from the returned table of error featuring low row completeness errors.}
+\end{figure}
+On the other column there is also less information. Is is not stricto sensu an error but in our view it doesn't bring enough information to be useful.
+
+\subsection{Second method}
+A general trend for the second method algorithm is that they give harder to interpret results. Not all because of inability to target individual error cells but because trey rely on covariance and tendency between columns and as such need a deeper knowledge of the subject at hand to check if the reported error is indeed a true one.
+
+The algorithm \ref{tendency} only operates on columns which are numerical in nature. A working example might be as shown in \ref{fig:exp_tendency} where we check \texttt{YearMade} against \texttt{saledate}. Up to at least 99,9\% in this case the order is preserved and is recognized by our algorithm. It sometimes fails in assessing the order due to the presence of lot's of outliers.
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale=0.8]{picture/exp_tendency.png}
+    \label{fig:exp_tendency}
+    \caption{Extract from the returned table of error featuring tendency order errors.}
+\end{figure}
+
+In the algorithm \ref{outlier} we get to use the collective result of our previous methods to filter the flagged index. We leverage this to create a temporary higher data quality dataset which allows us to impute which otherwise would results in a low count of possible neighbors. In our case it appears to be (at least on the training set) an low risk low reward method, only flagging 10's indices in place of potentially hundreds for other methods. It however has a severe drawback that the imputation doesn't scale up with the number of rows very well. This methods can take up to a few minutes for a 900 000 data points.\\
+
+
+One of the most interesting algorithm for us was the str and mixed type logic detector. To validate this kind of error we had to check the frequency and the validity of certain association between categories.
+Typically if a certain type of agricultural machinery registered as a wheel loader but doesn't have the proper drive system it is usually a low frequency type of event and thus is detected by \ref{str_logic}.
+Low frequency event, or for numerical table aberrant values can be detected using the mixed type logic algorithm \ref{mixed_logic}. For the verbal algorithm since it precomputes the correlation matrix it can be quite fast at low cells counts but costly if working on a billion data point. Even though the mixed type doesn't use this correlation matrix it can still be slow at similar numbers of inputs.
+As we will discuss in the next section optimisation and adaptations can be improved upon.
+% sectionExperiments (end)
+
+\section{Discussions} % (fold)
+\label{sec:Discussions}
+We tested the algorithm on a data set provided by Foyer, after comparing the flagged errors with the known errors injected by the company, it showed a success rate of 36\%, we made the choice of using very strict thresholds to avoid false positives to not flood the user with information, the major positive component is the fact that the algorithm runs relatively fast. We also proceeded to a quick test on one of the data sets of the company and the test were very encouraging as well. \
+The next step would be to control the number of false positives that we get, one way to proceed would be to improve the choice of the thresholds, also for the \texttt{check\_mixt\_logic()} to run a correlation test between columns in order to only consider the columns that are sufficiently correlated.
+in addition regarding the typo algorithm, we observed that if we run the Affinity Propagation algorithm twice, the first time on the whole data set of words and the second time on the proposed clusters, it highly improves the results and we end up getting a better clustering of the words, which makes it easier to detect spelling errors and suggest a correction to the user. \
+Another axis of research, that we did not have time to explore is about the classification of the missing values (nan's) in the data set, we wanted to implement a solution that would help sort between the null value  missing completely at random, missing at random and missing not at random, which is an outlier types of missing values. Detecting which kind of missing value is important in the imputation phase of pre-processing the data.
+% section Discussions (end)
+
+\section*{Acknowledgments} % (fold)
+\label{sec:Acknowledgments}
+We would like to thank AMIES for this beautiful opportunity and Foyer for providing us with the technical support and supervising (special thanks to Alexandre Hotton).
+
+
+% sectionAcknowledgments (end)
+
+\begin{thebibliography}{999}
+
+    \bibitem{pan_cos_chen}
+    Guansong Pang, Longbing Cao and Ling Chen:
+    \emph{Outlier Detection in Complex nominal Data
+        by Modelling the Feature Value Couplings.}
+
+    \bibitem{amazon}
+    Sebastian Schelter, Dustin Lange, Philipp Schmidt, Meltem Celikel, Felix Biessmann
+    \emph{Automating Large-Scale Data Quality Verification}
+
+    \bibitem{dai_yosh_pars}
+    Wei Dai, Kenji Yoshigoe and William Parsley
+    \emph{Improving Data Quality Through Deep Learning and Statistical Models}
+
+    \bibitem{corr_lede}
+    David Camilo Corrales, Agapito Ledezma and Juan Carlos Corrales
+    \emph{From Theory to Practice: A Data Quality Framework
+        for Classification Tasks}
+
+    \bibitem{Hawking}
+    Simon Hawkins, Hongxing He, Graham Williams, Rohan Baxte:
+    \emph{Outlier Detection Using Replicator Neural Networks}
+    \bibitem{Olga+al:2001}
+    Olga Troyanskaya, Michael Cantor, Gavin Sherlock, Pat Brown, Trevor Hastie, Robert Tibshirani, David Botstein, Russ B. Altman:
+    \emph{Missing value estimation methods for DNA microarrays, Bioinformatics, Volume 17, Issue 6, June 2001}
+
+\end{thebibliography}
+\appendix
+
 \section{Algorithm} % (fold)
 \label{sec:Algorithm}
 Different error types and data types force us to use different methods and algorithm to judge data quality. In light of this we decided to split our algorithm into several standalone module capable of being called independently of one another.
@@ -535,125 +658,4 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 
 % sectionAlgorithm (end)
 
-\section{Experiments} % (fold)
-\label{sec:Experiments}
-
-At the start of the challenge our correspondant at Foyer shared with us a dataset comprised of 100000 columns and 54 columns. This dataset represented a real life example of sales of agricultural machinery. The types of column that we had were composed of numerical quantitative columns e.g. price, numerical category  e.g. Model Id but also verbal columns such as the state in which the sale took place.
-Not all the columns were in a type directly usable such as \texttt{saledate} which were in a non classical format. \\
-
-In this section we will discuss the type of errors caught by our algorithms, their strengths and shortcomings.
-In the first method we used \ref{duplicate} for finding duplicate, this method returns both the 'true' index and one of the duplicated index for comparison.
-\subsection{First method}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[scale=0.8]{picture/exp_duplicated.png}
-    \label{fig:exp_duplicate}
-    \caption{Extract from the returned table of error featuring duplication errors.}
-\end{figure}
-
-As we can see in the first line we do have a duplication in index 307 and 306 which indeed represent a duplicate in the original data. If we look at the origin data we get \ref{fig:exp_duplicate_db}. In terms of speed of execution is it both scalable and accurate, in the order of a second for 5 millions entries.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=\linewidth]{picture/exp_duplicated_db.png}
-    \label{fig:exp_duplicate_db}
-    \caption{Extract from the original dataset, here only a few column were taken for tidiness's sake.}
-\end{figure}
-
-The algorithm used for finding typographical errors \ref{typo} can be illustrated using the same method.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[scale=0.8]{picture/exp_typo.png}
-    \label{fig:exp_typo}
-    \caption{Extract from the returned table of error featuring typographical errors.}
-\end{figure}
-The figure \ref{fig:exp_typo} shows that in the column 'UsageBand' multiple instances of the values 'HIGH' and 'high' were detected as errors. Indeed after confirmation with our correspondant it is an induced error. The correct spelling is 'High', both with the affinity propagation and markov clustering we get this types of results. However, when the database gets bigger and more words starts to appear in a cluster, the base affinity propagation clustering fails to scale up both in terms of speed and performance because of the weak pairwise metric associated to the affinity propagation algorithm. The markov chain clustering methods on the other hand can be used even in high columns or row counts while still being tractable but give less desirable results in lower column counts. \\
-
-For correcting numerical values while still being able to clearly tell in which column the error is we used the \ref{extreme} algorithm.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[scale=0.8]{picture/exp_extreme.png}
-    \label{fig:exp_extreme}
-    \caption{Extract from the returned table of error featuring extreme values errors.}
-\end{figure}
-
-On numerical column it flags as outliers extreme values using a z\_score method. On columns such as \texttt{YearMade} (of the machinery) it correctly flags absurd years such as negative years and far into the future years. Being a methods which flags when the value is well outside the mean it sometimes fails when considering columns which are made up of a continuous variable such as \texttt{SalePrice} but who has a latent variable such as \texttt{ModelId}. \\ Another type of column which might be a problem with \ref{extreme} is when the data is numerical but purely qualitative such as \texttt{datasource}. It is comprised of numbers but only two of them representing which office aggregated the data. For this type of error we implemented a check inside \ref{extreme} to abort if the ratio of uniqueness of the column is too low.\\
-As for the speed and scalability of the method, on nearly 900000 cells it was in the order of a few seconds. On a larger dataset tested in collaboration of foyer it was similarly fast.
-
-For the algorithm \ref{completeness} we can check \ref{fig:exp_completeness}, that it shows multiple exact same track type tractor-dozer down to the model id having on this subset of column less information.
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=\linewidth]{picture/exp_completeness_db.png}
-    \label{fig:exp_completeness}
-    \caption{Extract from the returned table of error featuring low row completeness errors.}
-\end{figure}
-On the other column there is also less information. Is is not stricto sensu an error but in our view it doesn't bring enough information to be useful.
-
-\subsection{Second method}
-A general trend for the second method algorithm is that they give harder to interpret results. Not all because of inability to target individual error cells but because trey rely on covariance and tendency between columns and as such need a deeper knowledge of the subject at hand to check if the reported error is indeed a true one.
-
-The algorithm \ref{tendency} only operates on columns which are numerical in nature. A working example might be as shown in \ref{fig:exp_tendency} where we check \texttt{YearMade} against \texttt{saledate}. Up to at least 99,9\% in this case the order is preserved and is recognized by our algorithm. It sometimes fails in assessing the order due to the presence of lot's of outliers.
-\begin{figure}[h]
-    \centering
-    \includegraphics[scale=0.8]{picture/exp_tendency.png}
-    \label{fig:exp_tendency}
-    \caption{Extract from the returned table of error featuring tendency order errors.}
-\end{figure}
-
-In the algorithm \ref{outlier} we get to use the collective result of our previous methods to filter the flagged index. We leverage this to create a temporary higher data quality dataset which allows us to impute which otherwise would results in a low count of possible neighbors. In our case it appears to be (at least on the training set) an low risk low reward method, only flagging 10's indices in place of potentially hundreds for other methods. It however has a severe drawback that the imputation doesn't scale up with the number of rows very well. This methods can take up to a few minutes for a 900 000 data points.\\
-
-
-One of the most interesting algorithm for us was the str and mixed type logic detector. To validate this kind of error we had to check the frequency and the validity of certain association between categories.
-Typically if a certain type of agricultural machinery registered as a wheel loader but doesn't have the proper drive system it is usually a low frequency type of event and thus is detected by \ref{str_logic}.
-Low frequency event, or for numerical table aberrant values can be detected using the mixed type logic algorithm \ref{mixed_logic}. For the verbal algorithm since it precomputes the correlation matrix it can be quite fast at low cells counts but costly if working on a billion data point. Even though the mixed type doesn't use this correlation matrix it can still be slow at similar numbers of inputs.
-As we will discuss in the next section optimisation and adaptations can be improved upon.
-% sectionExperiments (end)
-
-\section{Discussions} % (fold)
-\label{sec:Discussions}
-We tested the algorithm on a data set provided by Foyer, after comparing the flagged errors with the known errors injected by the company, it showed a success rate of 36\%, we made the choice of using very strict thresholds to avoid false positives to not flood the user with information, the major positive component is the fact that the algorithm runs relatively fast. We also proceeded to a quick test on one of the data sets of the company and the test were very encouraging as well. \
-The next step would be to control the number of false positives that we get, one way to proceed would be to improve the choice of the thresholds, also for the \texttt{check\_mixt\_logic()} to run a correlation test between columns in order to only consider the columns that are sufficiently correlated.
-in addition regarding the typo algorithm, we observed that if we run the Affinity Propagation algorithm twice, the first time on the whole data set of words and the second time on the proposed clusters, it highly improves the results and we end up getting a better clustering of the words, which makes it easier to detect spelling errors and suggest a correction to the user. \
-Another axis of research, that we did not have time to explore is about the classification of the missing values (nan's) in the data set, we wanted to implement a solution that would help sort between the null value  missing completely at random, missing at random and missing not at random, which is an outlier types of missing values. Detecting which kind of missing value is important in the imputation phase of pre-processing the data.
-% section Discussions (end)
-
-\section*{Acknowledgments} % (fold)
-\label{sec:Acknowledgments}
-We would like to thank AMIES for this beautiful opportunity and Foyer for providing us with the technical support and supervising (special thanks to Alexandre Hotton).
-
-
-% sectionAcknowledgments (end)
-
-\begin{thebibliography}{999}
-
-    \bibitem{pan_cos_chen}
-    Guansong Pang, Longbing Cao and Ling Chen:
-    \emph{Outlier Detection in Complex nominal Data
-        by Modelling the Feature Value Couplings.}
-
-    \bibitem{amazon}
-    Sebastian Schelter, Dustin Lange, Philipp Schmidt, Meltem Celikel, Felix Biessmann
-    \emph{Automating Large-Scale Data Quality Verification}
-
-    \bibitem{dai_yosh_pars}
-    Wei Dai, Kenji Yoshigoe and William Parsley
-    \emph{Improving Data Quality Through Deep Learning and Statistical Models}
-
-    \bibitem{corr_lede}
-    David Camilo Corrales, Agapito Ledezma and Juan Carlos Corrales
-    \emph{From Theory to Practice: A Data Quality Framework
-        for Classification Tasks}
-
-    \bibitem{Hawking}
-    Simon Hawkins, Hongxing He, Graham Williams, Rohan Baxte:
-    \emph{Outlier Detection Using Replicator Neural Networks}
-    \bibitem{Olga+al:2001}
-    Olga Troyanskaya, Michael Cantor, Gavin Sherlock, Pat Brown, Trevor Hastie, Robert Tibshirani, David Botstein, Russ B. Altman:
-    \emph{Missing value estimation methods for DNA microarrays, Bioinformatics, Volume 17, Issue 6, June 2001}
-
-\end{thebibliography}
 \end{document}

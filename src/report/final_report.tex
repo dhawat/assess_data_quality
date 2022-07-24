@@ -97,150 +97,151 @@ This is not the case while dealing with bad data.
 Thus, in this framework outlier detection is a hard task highly dependent on the corrupted data missed to identify in the phase of cleaning the data.
 \section{Starategy used to detect bad data}
 \label{sec:Starategy used to detect bad data}
-In this section we discibe independently the tests that we used to identify bad data.
-The algorithm are differed to Section \ref{sec:Algorithm}.
-We combined all these tests and proposed a strategy to construct a plug-and-play Python Class denoted \texttt{Data}.
-The code is available upon request.
+In this section, we describe the tests we used to identify bad data contained in the dataset provided by the company Foyer.
+The corresponding pseudo codes differ to Section \ref{sec:Algorithm}.
+%We combined all these tests and proposed a strategy to construct a plug-and-play Python Class denoted \texttt{Data}.
+%The code is available upon request.
 
 \subsection{Redundancy} % (fold)
 \label{sub:Duplication test}
-We start by the test of detection of duplications between data rows.
+We start by identifying the duplicated rows.
 Duplicated rows are bad data and can bias other tests.
-For example, they can alter the approximated distribution of numerical columns.
-Thus in our stategy, the duplication test is the first deterministic test applied to the data.
+They can alter the approximated distribution of numerical columns so the duplication test is the first deterministic test applied to the data.
 We drop the duplicated rows before doing any other test.
-This test is provided by the method \texttt{check\_duplication} of the class \texttt{Data} and output a list of the positions of the duplicated rows in the data.
-For the corresponding pseudo-code see  \ref{duplicate}.
-
+For the corresponding pseudo-code see Appendix \ref{code:Duplicate errors algorithm}.
 % subsectionDuplication test (end)
 
+\subsection{Completeness} % (fold)
+\label{sub:Completeness}
+The completeness of data is an important metric to consider.
+We construct a simple algorithm to flag rows with a high ratio of missing values as bad rows with error type incompleteness.
+The corresponding pseudo-code defers to Appendix \ref{code:completeness}.
+% subsectionCompleteness (end)
 
 \subsection{Consistency} % (fold)
-
-One of the major problem of the data of the company Foyer is the presence of typographical errors.
-\dhawat{TBC: explain more about the difficulty, type of the errors ...}
-Detecting typo errors in strings is a tricky matter that relies on many factors such as how do we define similarities between strings, or how to encode strings in numerical values in an isometric way.
-We have investigate two methods to detect typo errors.
-The first called Affinity propagation technique \dhawat{add more details} and the last \dhawat{TBC}.
-In what follows the first sub-section examins nominal columns, and the last the numerical columns.
-The pseudo code of the typographic test is deffered to Section \ref{sub:Typographical error algorithm}.
-
+In this section, we try to identify corrupted data concerning the consistency metric first for nominal categorical columns and second for numerical columns.
 \subsubsection{For nominal categorical columns}
-\dhawat{TBC} Typographical test
+One of the major problems with our dataset is the presence of typographical errors in the nominal categorical columns.
+A typographical error is any spelling error like a misspelled mark of cars.
+Detecting this type of error is a hard task.
+One should first define similarities between strings or encode strings in numerical values in an isometric way.
+We have investigated two clustering methods that don't require the number of clusters to be determined or estimated before running the algorithm.
+The first is an affinity propagation technic, and the last is a Markov clustering method.
+The pseudo-codes defers to Appendix \ref{sub:Typographical error algorithm}.
+\dhawat{add few words: why we use 2 methods, difference, efficacity of each}
+
 \paragraph{ Affinity propagation.}
 \label{sub:Affinity propagation algorithm}
-The first method we used to detect spelling errors consists of partitioning each nominal categorical column into clusters based on a similarity matrix.
-Then assuming that the correct spelling of a word has the highest frequency in the cluster, the words with low frequencies are spelling errors.
+The first method we used to detect typographical errors consists of partitioning each nominal categorical column into clusters using a similarity matrix.
+Then assuming that the correct spelling of a word will have the highest frequency in the cluster, words with low frequencies are spelling errors.
 For example, if a cluster contains "Single", "Singl", "Singel", and "SINgle" we expect that "Single" will have the highest frequency in the cluster.
-We used an affinity propagation method.
-It is based on computing a similarity matrix between all the words of a nominal categorical column, then clustering them using a clustering algorithm that would not require the number of clusters as a parameter.
 We computed the similarity matrix using \texttt{SequenceMatcher} from the python package \href{https://docs.python.org/3/library/difflib.html}{difflib}.
-After experimenting with many distances, we opted for the method \texttt{ratio()} which showed the best results.
-This method returns a measure of similarity by the float $2M /T$ where, for each 2 words $T$ is the total number of elements in both, and $M$ is the number of matches.
+After experimenting with many distances, we opted for \texttt{ratio()} which showed the best results.
+This method returns a measure of similarity by the float $2M /T$ where, for any two words, $T$ is the total number of elements in both, and $M$ is the number of matches.
 The downside of this method is that it is computationally expensive.
-Although it is possible to use \texttt{real\_quick\_ratio()} which returns quickly an upper bound on \texttt{ratio()}, it will impact the effectiveness of the method. Once we computed the similarity matrix, we use the Class \texttt{AffinityPropagation} from the python package \href{https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AffinityPropagation.html#sklearn-cluster-affinitypropagation}{sklearn} to cluster the data.
-It is an unsupervised machine learning algorithm that does not require the user to specify the number of clusters unlike clustering algorithms such as k-means or k-medoids.
-It consists on finding the elements that are the most representative of clusters usually denoted by \texttt{exemplars}.
-In other words, \texttt{exemplars} are the points that explain the other points ‘best’ and are the most significant of their cluster.
+Although it is possible to use \texttt{real\_quick\_ratio()} to obtain quickly an upper bound on \texttt{ratio()}, it will impact the efficacity of the method.
+Once we have the similarity matrix, we use the Class \texttt{AffinityPropagation} from the python package \href{https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AffinityPropagation.html#sklearn-cluster-affinitypropagation}{sklearn} to cluster the data.
+It is an unsupervised machine learning algorithm that does not require the user to specify the number of clusters, unlike clustering algorithms such as k-means or k-medoids.
+It consists of finding the elements (usually denoted by \texttt{exemplars}) that are the most representative of the clusters.
+In other words, \texttt{exemplars} are the points that explain the other points \textbf{best} and are the most significant of their cluster.
 After clustering, we count the frequency of each word in each cluster i.e., the number of occurrences over the total number of words in the cluster.
-\dhawat{Unclear: from} All words having a frequency less than a fixed threshold are considered as misspelling errors.
-The problem of this method relies on the fact that it is hard to pick the ``right'' distance between the strings, one possibility would be to run the algorithm in each cluster after computing the similarity matrix of the cluster doing a second pass of the algorithm, empirical tests shows that it seems to work better, but further investigation are necessary. \dhawat{till}
+Then we fix a threshold and all words having a frequency less than this threshold are considered typographical errors.
+\dhawat{Unclear from here}
+The problem of this method is that it is hard to pick the ``right'' distance between the strings, one possibility would be to run the algorithm in each cluster after computing the similarity matrix of the cluster doing a second pass of the algorithm, empirical tests shows that it seems to work better, but further investigation are necessary.
+\dhawat{until here, please check}
+
 \paragraph{Markov clustering}
 The second method we proposed is based on a Markov clustering machine learning algorithm.
 Text data requires special preparation before you can apply a machine learning algorithm.
-The words need to be encoded as integers or floating-point values.
+Each word needs to be represented by an integer or a floating-point value.
 So, the first step is to transform a wordy column into a suitable format.
 We used the Class \href{https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html}{\texttt{CountVectorizer}} from \texttt{sklearn}.
 It converts a collection of text documents to a matrix of token counts.
 A token is an object replacing a larger or more complex object.
 Second, we use a graph-based Markov clustering method \footnote{An implementation of the algorithm is provided by \href{https://gist.github.com/urigoren/1f76567f3af56ed8c33f076537768a60}{https://gist.github.com/urigoren/}}, which also doesn't require the specification of the number of clusters.
 We applied \href{https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfTransformer.html}{\texttt{TfidfTransformer}} to the matrix of token counts and we used the obtained matrix as the transition matrix of the Markov Chain.
-The Markov clustering algorithm uses the transition matrix and starts a random walk by alternating between two operations.
+The Markov clustering algorithm uses the transition matrix to initiate a random walk by alternating between two operations.
 The first changes the transition probability privileging strong neighbors, and the last connect different regions of the graph.
 The process will be repeated until reaching an equilibrium state.
-We finally get the clustered data and apply the same technique as used in the previous paragraph to identify misspelled words.
-\dhawat{unclear: from}The problem with this technique is that the accumulation of hidden layers makes it difficult to assess why it works extremely well in some cases and it does not in others. \dhawat{till. clarify in which case it worked ...}
+We finally get the clustered data and apply the same technic used in the previous paragraph to identify misspelled words.
+\dhawat{unclear: from}The problem with this technic is that the accumulation of hidden layers makes it difficult to assess why it works extremely well in some cases and it does not in others. \dhawat{till. clarify please in which case it works ...}
 % subsectionTypographic test (end)
+
 \subsubsection{For numerical columns} % (fold)
-\label{ssub:For numerical columns}
-The algorithm for checking extreme values is present by class method \texttt{check\_extreme\_value}  and present by the pseudo code \ref{extreme}.
-\dhawat{TBC}
-\paragraph{Extreme values.} % (fold)
-\label{sub:Extreme values}
+\label{ssub:extreme_value_test}
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.6\linewidth]{picture/normal.png}
     \caption{Normal distribution.}
     \label{fig:normal distribution}
 \end{figure}
-We used the following test to identify nconsistent values in numerical columns like negative dates...
-A normal distribution is a symmetric, continuous, and  bell-shaped distribution.
-For Gaussian distributions, within one standard deviation from the mean lie 68\% of the values, while within 3 standard deviations lie 99.73\%, and within 6 standard deviations lie 99,99\% of the values (Figure~\ref{fig:normal distribution}).
-Hence, we suppose that non-constant and non-discrete (non-clustering) numerical columns are Gaussian and identify extreme values as lying outside the sample mean plus/minus six sample standard deviations to cover 99.73\% of the distribution.
+We used the following extreme values test to identify inconsistent data in non-discrete numerical columns like negative dates, extreme high/low prices of cars...
+The test consits on supposing that this type of column follows a Normal distribution.
+A Normal distribution is a symmetric, continuous, and bell-shaped distribution.
+For Normal distributions, within one standard deviation from the mean lie 68\% of the values, while within 3 standard deviations lie 99.73\%, and within 6 standard deviations lie 99,99\% of the values (Figure~\ref{fig:normal distribution}).
+Hence, we suppose that non-constant and non-discrete (non-clustering) numerical columns follow a Normal distribution, and extreme values lie outside the mean plus/minus six standard deviations.
 We denote this test by the extreme values test.
-Although it successfully detects most of the extreme values within our data with a sufficiently small ratio of false negatives, it may give weird results if the distribution of the column is not Gaussian.
+Although it successfully detects all the extreme values within our data with a sufficiently small ratio of false negatives, it may give weird results if the distribution of the column is not Normal.
 We recommend starting with a test of Gaussianity before proceeding with the extreme values test.
+The pseudo-code is deferred to Appendix \ref{code:extreme_values_numerical}.
 % subsection Extreme values (end)
-
-\subsection{Completeness} % (fold)
-\label{sub:Completeness}
-The completeness of data is also an important concept to check. We construct an algorithm to flag rows with high ratio of missing values and we associate as error of type completeness error. This algorithm are present by the class method \texttt{check\_completeness} by the pseudo code \ref{completeness}.
-% subsectionCompleteness (end)
-
 
 \subsection{Accuracy} % (fold)
 \label{sub:Accuracy }
-Two major types of outliers may be present is a dataset, local and global outliers.
-Global outliers are the points which are very different from the data set, while local outliers may looks not very different from the data set but they are far from the clusters of the data.
-Although finding the logical errors in a table (rows) is a difficult task in outlier detection, specifying their positions (rows, columns) is even harder.
-\dhawat{TBC}
+In this section, we try to identify corrupted data concerning the accuracy metric first for nominal categorical columns, second for numerical columns, and finally for combinations of both types.
+We refer to bad data identified with the accuracy metric as outliers or logical errors.
+Two major types of outliers may be present in a dataset, local and global outliers.
+Global outliers are the points that are very different from the data set, while local outliers may look not very different from the data set but inaccurate.
+Although finding the outliers in each row is a difficult task, specifying their positions (columns) is even harder.
+Thus we focus on detecting outliers that we can localize, and we give a method for finding outliers resulting from an unlogical combination of data within many columns and hard to localize.
 % subsectionAccuracy metric (end)
-\subsection{For nominal categorical columns} % (fold)
-TBC
-\paragraph{Frequency test.}
+\subsubsection{For nominal categorical columns} %
 \label{par:frequncy_test}
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\linewidth]{picture/logic_err.png}
-    \caption{Groups from 2 correlated columns.}
+    \includegraphics[width=0.4\linewidth]{picture/logic_err.png}
+    \caption{Two correlated columns from the dataset provided by Foyer.}
     \label{fig:logic_err}
 \end{figure}
-The strategy of this test can be undestood by considering an example from our dataset.
-Figure \ref{fig:logic_err} represents sequences of couples from the columns \texttt{ProductGroupDesc} and \texttt{Drive\_system} with the corresponding occurrence frequencies.
+We use a frequency test to identify inaccurate data within the nominal categorical columns of the dataset.
+The strategy of this test can be understood by considering an example from our dataset.
+Figure \ref{fig:logic_err} represents sequences of couples from columns \texttt{ProductGroupDesc} and \texttt{Drive\_system} with the corresponding occurrence frequencies.
 The basic idea is that outliers occur less frequently than inliers.
 By examining the three \texttt{Drive\_system} associated with \texttt{Backhoe Loeders}, we can deduce that \texttt{All Wheel Drive} occurs remarkably less than the others so it may be an accuracy error.
 Moreover, the high frequencies 11132 and 15639 imply that all couples occurring once are outliers.
-These are spelling errors in the column \texttt{ProductGroupDesc} present as variants of \texttt{Backoe Loeders}.
+They are spelling errors in column \texttt{ProductGroupDesc} present as variants of \texttt{Backoe Loeders}.
 
-The test is a pattern-based method that searches for outlier/inlier patterns and employs the occurrence frequency the outliers measure.
-It applies to sufficiently correlated nominal clustered columns with  a non-unique cluster.
+The test is a pattern-based method that searches for outlier/inlier patterns and employs the occurrence frequency as the outliers measure.
+It applies to sufficiently correlated nominal clustered columns with a non-unique cluster.
 The first step is to compute the matrix of correlations between applicable columns.
 Then, for sufficiently two correlated columns \texttt{column\_a} and \texttt{column\_b} to each element of \texttt{column\_a}, we compute the occurrence frequencies of the associated elements in \texttt{column\_b}.
 The test considers that low frequencies correspond to outliers.
-It is a consistency test able to specify the coordinates (row, column) of the error.
+It is an accuracy test able to specify the coordinates (row, column) of outliers.
 Supplementary steps can be added to propose corrections for the spelling errors.
 The test requires users’ specification of the outlier frequency threshold.
-The test is available in our Python code by the class method \texttt{bad\_logical\_index} and the pseudo-code is deferred to \ref{str_logic}.
+The pseudo-code defers to Appendix \ref{code:nominal_accuracy_error_by_frequencies}.
 % subsection Frequency for logical errors (end)
 
 \subsubsection{For numerical columns} % (fold)
 \label{ssub:For numerical columns}
-TBC
+We used two methods to detect outliers in numerical columns.
+The first search for order relation between columns and consider outliers as data not respecting this relation.
+The latter is an unsupervised machine learning algorithm applied to all numerical columns at once to search for rows with possible outliers without specifying the locations (columns).
 
 \paragraph{Order relation between columns.} % (fold)
 \label{sub:Logical order relation}
-Suppose that the data contains two columns \texttt{BIRTH\_YEAR} and \texttt{DEATH\_YEAR}.
-The value in \texttt{BIRTH\_YEAR} should be lower than the corresponding value in \texttt{DEATH\_YEAR}.
+Suppose that the data contains columns \texttt{BIRTH\_YEAR} and \texttt{DEATH\_YEAR}.
+EAch value in \texttt{BIRTH\_YEAR} should be lower than the corresponding value in \texttt{DEATH\_YEAR}.
 So \texttt{BIRTH\_YEAR} is related to \texttt{DEATH\_YEAR} by the order relation $(<)$, and the data not following this relation are corrupted.
-Following this idea, we design an algorithm to search for the order relation $(<)$ between pair of numerical columns and indicate elements not respecting it.
+Following this idea, we design an algorithm to search for the order relation $(<)$ between pair of numerical columns and indicate elements not following it.
 We denote this test by the \textit{tendency test}.
-First rows with missing values are dropped for any numerical columns \texttt{column\_a} and \texttt{column\_b}.
+First, we drop rows with missing values within columns \texttt{column\_a} and \texttt{column\_b}.
 Then, we compute the ratio of the number of related elements (by the order relation $(<)$) to the column's length.
 A "high" ratio implies that the order relation $(<)$ holds between \texttt{column\_a} and \texttt{column\_b}, and the elements not related by $(<)$ might be outliers.
 A downside may be that the user needs to specify how "high" the ratio should be to confirm the relation between the columns.
 It depends on the risk level we are ready to accept.
-Prior knowledge of the data can help fix this threshold.
-The pseudo-code of the algorithm differs to \ref{tendency}.
+Prior knowledge of the data can help to fix this threshold.
+The pseudo-code defer to Appendix \ref{code:order_relation_tendency_test}.
 % subsection Logical order relation (end)
 
 \paragraph{Outlier detection with unsupervised machine learning.} % (fold)
@@ -253,17 +254,17 @@ The pseudo-code of the algorithm differs to \ref{tendency}.
 % \end{figure}
 In this section, we try to find outliers rows using the numerical columns.
 Specifically, we are looking for errors resulting from unlogical combinations between columns.
-We used the local outlier factor (LOF) to identify the outlier rows.
+We used the local outlier factor (LOF) algorithm to identify the outlier rows.
 LOF is an unsupervised machine learning outlier detection method that attempts to harness the idea of nearest neighbors for outlier detection, i.e., identify local outliers.
 It is based on a concept of a local density, where locality is given by the $k$-nearest neighbors used to estimate the density.
 Points having a lower density than their neighbors are considered to be outliers.
 The local density is estimated by the typical distance at which a point can be ``reached" from its neighbors.
-The reachabilit is a measure used to produce more stable results within clusters.
+Reachability is a measure used to produce more stable results within clusters.
 Due to the local approach, LOF can identify outliers in a data set that would not be outliers in another area of the data set.
 For example, a point at a ``small" distance to a very dense cluster is an outlier, while a point within a sparse cluster might exhibit similar distances to its neighbors.
 
 LOF doesn't apply to data containing missing values.
-As most of the numerical columns of our data contain missing elements, the first step is to deal with missing data by applying an imputation method.
+As most of the numerical columns of our data contain missing data, the first step is to deal with missing data by applying an imputation method.
 Different approaches exist for imputing missing values \cite{corr_lede}.
 For example,
 \begin{enumerate}
@@ -278,17 +279,17 @@ Missing values are imputed using the mean value from the $k$-nearest neighbors f
 
 To summarize, for numerical columns, this test uses the KNN algorithm first to replace missing values then, the obtained rows can be seen as high dimensional points to which we apply the LOF algorithm.
 The downside of this test is that it indicates the rows that may contain outliers and not the position (i.e., column) of the outlier in the rows.
-This test is available in our Python code by the class method \texttt{check\_outlier} and the pseudo-code is deferred to \ref{algo:lof}.
+The pseudo-code defers to Appendix \ref{code:LOF_KNN_algo}.
 % subsection  Outlier detection with machine learning (end)
 \subsubsection{Outliers detection for numerical and nominal columns} % (fold)
 \label{sub:Intra nominal extreme values}
 For a nominal categorical column \texttt{column\_a} (with a high number of categories) and a numerical column \texttt{column\_b}, this test targets numerical outliers of {column\_a} within each category of {column\_b}.
-For example, extreme values of the distribution of the prices of a specific car brand are considered outliers.
+For example, extreme values of the distribution of the prices of a specific car brand.
 We proceed as follows.
 Consider applicable nominal column{column\_a} and  numerical {column\_b}.
 For each category of {column\_a} the goal is to identify outliers within the associated values in {column\_b}.
-If {column\_b} is continuous, the extreme values test \ref{sub:Extreme values} is applied while if it is discrete, the frequency test \ref{par:frequncy_test} is applied.
-This test is available in our Python code by the class method \texttt{check\_mixt\_logic} and the pseudo-code is deferred to \ref{mixed_logic}.
+If {column\_b} is continuous, the extreme values test \ref{ssub:extreme_value_test} is applied while if it is discrete, the frequency test \ref{par:frequncy_test} is applied.
+The pseudo-code defers to Appendix \ref{code:Mixed number text nominal logic algorithm}.
 
 \section{Experiments} % (fold)
 \label{sec:Experiments}
@@ -460,7 +461,7 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 
 
 \subsubsection{Duplicate errors algorithm}
-
+\label{code:Duplicate errors algorithm}
 \begin{algorithm}[H]
     \SetKwData{Left}{left}\SetKwData{This}{this}\SetKwData{Up}{up}
     \SetKwFunction{Union}{Union}\SetKwFunction{FindCompress}{FindCompress}
@@ -480,8 +481,7 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 
 
 \subsubsection{Extreme value algorithm}
-
-
+\label{code:extreme_values_numerical}
 \begin{algorithm}[H]
     \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
     \Input{A column of a DataFrame, a minimum frequency threshold, the uniqueness ratio of the column, a standard deviation multiplier, 2 uniqueness thresholds}
@@ -505,6 +505,7 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 
 
 \subsubsection{Row completeness algorithm}
+\label{code:completeness}
 \begin{algorithm}[H]
     \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
     \Input{A DataFrame, a minimum threshold of empty values for rows, a minimum threshold of empty values for rows when low information columns are removed, a minimum threshold of empty values for columns}
@@ -529,6 +530,7 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 
 
 \subsubsection{Tendency algorithm}
+\label{code:order_relation_tendency_test}
 \begin{algorithm}[H]
     \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
     \Input{A DataFrame, a minimum threshold for an observed order between variable to become a rule to discriminate outliers upon.}
@@ -559,7 +561,7 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 % subsectionSecond method (end)
 
 \subsubsection{Whole row outlier detection algorithm}
-\label{algo:lof}
+\label{code:LOF_KNN_algo}
 \begin{algorithm}[H]
     \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
     \Input{A DataFrame}
@@ -579,7 +581,7 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 \end{algorithm}
 
 \subsubsection{Text nominal logic algorithm}
-\label{Text nominal logic algorithm}
+\label{code:nominal_accuracy_error_by_frequencies}
 \begin{algorithm}[H]
     \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
     \Input{A DataFrame, a threshold for of the uniqueness for columns, a threshold for the number of time a nominal error happens}
@@ -615,7 +617,7 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 
 
 \subsubsection{Mixed number text nominal logic algorithm}
-
+\label{code:Mixed number text nominal logic algorithm}
 \begin{algorithm}[H]
     \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
     \Input{A DataFrame, a threshold for of the uniqueness for verbal columns, a threshold for numerical columns, a standard deviation multiplier}

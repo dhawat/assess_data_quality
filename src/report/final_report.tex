@@ -103,7 +103,7 @@ The corresponding pseudo codes differ to Section \ref{sec:Algorithm}.
 %The code is available upon request.
 
 \subsection{Redundancy} % (fold)
-\label{sub:Duplication test}
+\label{sub:Redundancy}
 We start by identifying the duplicated rows.
 Duplicated rows are bad data and can bias other tests.
 They can alter the approximated distribution of numerical columns so the duplication test is the first deterministic test applied to the data.
@@ -119,6 +119,7 @@ The corresponding pseudo-code defers to Appendix \ref{code:completeness}.
 % subsectionCompleteness (end)
 
 \subsection{Consistency} % (fold)
+\label{sub:consistency}
 In this section, we try to identify corrupted data concerning the consistency metric first for nominal categorical columns and second for numerical columns.
 \subsubsection{For nominal categorical columns}
 One of the major problems with our dataset is the presence of typographical errors in the nominal categorical columns.
@@ -187,7 +188,7 @@ The pseudo-code is deferred to Appendix \ref{code:extreme_values_numerical}.
 % subsection Extreme values (end)
 
 \subsection{Accuracy} % (fold)
-\label{sub:Accuracy }
+\label{sub:Accuracy}
 In this section, we try to identify corrupted data concerning the accuracy metric first for nominal categorical columns, second for numerical columns, and finally for combinations of both types.
 We refer to bad data identified with the accuracy metric as outliers or logical errors.
 Two major types of outliers may be present in a dataset, local and global outliers.
@@ -291,38 +292,67 @@ For each category of {column\_a} the goal is to identify outliers within the ass
 If {column\_b} is continuous, the extreme values test \ref{ssub:extreme_value_test} is applied while if it is discrete, the frequency test \ref{par:frequncy_test} is applied.
 The pseudo-code defers to Appendix \ref{code:Mixed number text nominal logic algorithm}.
 
-\section{Experiments} % (fold)
-\label{sec:Experiments}
-At the start of the challenge our correspondant at Foyer shared with us a dataset comprised of 100000 columns and 54 columns. This dataset represented a real life example of sales of agricultural machinery. The types of column that we had were composed of numerical quantitative columns e.g. price, numerical category  e.g. Model Id but also verbal columns such as the state in which the sale took place.
-Not all the columns were in a type directly usable such as \texttt{saledate} which were in a non classical format. \\
-
-In this section we will discuss the type of errors caught by our algorithms, their strengths and shortcomings.
-In the first method we used \ref{duplicate} for finding duplicate, this method returns both the 'true' index and one of the duplicated index for comparison.
-\subsection{First method}
-
+\section{Algorithmic scheme} % (fold)
+\label{sec:Algorithmic scheme}
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.8]{picture/exp_duplicated.png}
+    \includegraphics[scale=0.17]{picture/algo_scheme.png}
+    \label{fig:algo_scheme}
+    \caption{Algorithmic scheme}
+\end{figure}
+Different error types and data types force us to use different methods and algorithms to detect bad data.
+In light of this, we decided to split our algorithm into several standalone modules capable of being called independently of one another.
+If the user wishes to use all the algorithms with standard parameters, we provided a Python Class called \texttt{data} in which the user can load the data and pre-process it if needed.
+The algorithmic strategy is shown in Figure \ref{fig:algo_scheme} and the code is available upon request.
+\texttt{data} accept an input of type .csv, .json, .sql, or .xlsx.
+First, the input dataset is transformed into a DataFrame object of the Python toolbox \href{https://pandas.pydata.org/}{\texttt{pandas}}.
+Then the columns are classified between date, numerical, and nominal.
+The date columns are transformed into a uniform type.
+The Class is designed of two passes as shown in Figure \ref{fig:algo_scheme}.
+The first pass is used to get rid of duplicated rows and identify errors such as typographical errors, extreme values, and incomplete rows before (if wished) passing its results to the second method which will be a more in-depth check.
+In the second pass, outlier detection by occurrence frequencies, and categorical extreme values are applied only to the remaining good data from the first pass.
+Finally, the LOF algorithm and the tendency test are used.
+
+The first method is also fully identifiable as it is a major consideration for the company to be able to check afterward if the error is true and where it is.
+We wanted the code to be able to be used by users with basic knowledge and have room, if needed, to fine-tune each parameter independently if they have a deep knowledge of the subject.
+Each algorithm used is fully described in Section \ref{sec:Starategy used to detect bad data}, and the pseudo-codes defer to the Appendix \ref{sec:Pseudo-code}.
+% sectionStrategy used (end)
+
+\section{Experiments} % (fold)
+\label{sec:Experiments}
+At the start of the challenge our correspondant at Foyer shared with us a dataset comprised of 100000 columns and 54 columns.
+This dataset is a real life example of sales of agricultural machinery.
+The types of column that we had were composed of numerical quantitative columns e.g. price, numerical category  e.g. Model Id but also verbal columns such as the state in which the sale took place.
+Not all the columns were in a type directly usable such as \texttt{saledate} which were in a non classical format.
+
+In this section we will discuss the type of errors caught by our algorithms, their strengths and shortcomings.
+
+\subsection{First method}
+In the first method we start by the redundency test described in Section \ref{sub:Redundancy} to find duplicated rows.
+This method returns the index of the duplicated rows as we can see in Figure \ref{fig:exp_duplicate}.
+For example, the first row of Figure \ref{fig:exp_duplicate}
+shows that row 307 is a duplication of row 306 in the dataset.
+For the computational time, the method took less than one second to search within 5 millions rows.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{picture/exp_duplicated.png}
     \label{fig:exp_duplicate}
-    \caption{Extract from the returned table of error featuring duplication errors.}
+    \caption{Sample from the detected errors featuring duplication}
 \end{figure}
 
-As we can see in the first line we do have a duplication in index 307 and 306 which indeed represent a duplicate in the original data. If we look at the origin data we get \ref{fig:exp_duplicate_db}. In terms of speed of execution is it both scalable and accurate, in the order of a second for 5 millions entries.
-
+Second, the algorithm used for finding typographical errors \ref{typo} can be illustrated using the same method.
 \begin{figure}[h]
     \centering
     \includegraphics[width=\linewidth]{picture/exp_duplicated_db.png}
     \label{fig:exp_duplicate_db}
-    \caption{Extract from the original dataset, here only a few column were taken for tidiness's sake.}
+    \caption{Sample from the original dataset.  A few columns were taken for tidiness's sake}
 \end{figure}
-
-The algorithm used for finding typographical errors \ref{typo} can be illustrated using the same method.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[scale=0.8]{picture/exp_typo.png}
+    \includegraphics[scale=0.5]{picture/exp_typo.png}
     \label{fig:exp_typo}
-    \caption{Extract from the returned table of error featuring typographical errors.}
+    \caption{Sample from the detected errors featuring typographical errors}
 \end{figure}
 The figure \ref{fig:exp_typo} shows that in the column 'UsageBand' multiple instances of the values 'HIGH' and 'high' were detected as errors. Indeed after confirmation with our correspondant it is an induced error. The correct spelling is 'High', both with the affinity propagation and markov clustering we get this types of results. However, when the database gets bigger and more words starts to appear in a cluster, the base affinity propagation clustering fails to scale up both in terms of speed and performance because of the weak pairwise metric associated to the affinity propagation algorithm. The markov chain clustering methods on the other hand can be used even in high columns or row counts while still being tractable but give less desirable results in lower column counts. \\
 
@@ -330,9 +360,9 @@ For correcting numerical values while still being able to clearly tell in which 
 
 \begin{figure}[h]
     \centering
-    \includegraphics[scale=0.8]{picture/exp_extreme.png}
+    \includegraphics[scale=0.5]{picture/exp_extreme.png}
     \label{fig:exp_extreme}
-    \caption{Extract from the returned table of error featuring extreme values errors.}
+    \caption{Sample from the detected errors featuring extreme values}
 \end{figure}
 
 On numerical column it flags as outliers extreme values using a z\_score method. On columns such as \texttt{YearMade} (of the machinery) it correctly flags absurd years such as negative years and far into the future years. Being a methods which flags when the value is well outside the mean it sometimes fails when considering columns which are made up of a continuous variable such as \texttt{SalePrice} but who has a latent variable such as \texttt{ModelId}. \\ Another type of column which might be a problem with \ref{extreme} is when the data is numerical but purely qualitative such as \texttt{datasource}. It is comprised of numbers but only two of them representing which office aggregated the data. For this type of error we implemented a check inside \ref{extreme} to abort if the ratio of uniqueness of the column is too low.\\
@@ -342,9 +372,9 @@ For the algorithm \ref{completeness} we can check \ref{fig:exp_completeness}, th
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\linewidth]{picture/exp_completeness_db.png}
+    \includegraphics[width=0.6\linewidth]{picture/exp_completeness_db.png}
     \label{fig:exp_completeness}
-    \caption{Extract from the returned table of error featuring low row completeness errors.}
+    \caption{Sample from the detected errors featuring completeness}
 \end{figure}
 On the other column there is also less information. Is is not stricto sensu an error but in our view it doesn't bring enough information to be useful.
 
@@ -354,9 +384,9 @@ A general trend for the second method algorithm is that they give harder to inte
 The algorithm \ref{tendency} only operates on columns which are numerical in nature. A working example might be as shown in \ref{fig:exp_tendency} where we check \texttt{YearMade} against \texttt{saledate}. Up to at least 99,9\% in this case the order is preserved and is recognized by our algorithm. It sometimes fails in assessing the order due to the presence of lot's of outliers.
 \begin{figure}[h]
     \centering
-    \includegraphics[scale=0.8]{picture/exp_tendency.png}
+    \includegraphics[scale=0.5]{picture/exp_tendency.png}
     \label{fig:exp_tendency}
-    \caption{Extract from the returned table of error featuring tendency order errors.}
+    \caption{Sample from the detected errors featuring tendency errors}
 \end{figure}
 
 In the algorithm \ref{outlier} we get to use the collective result of our previous methods to filter the flagged index. We leverage this to create a temporary higher data quality dataset which allows us to impute which otherwise would results in a low count of possible neighbors. In our case it appears to be (at least on the training set) an low risk low reward method, only flagging 10's indices in place of potentially hundreds for other methods. It however has a severe drawback that the imputation doesn't scale up with the number of rows very well. This methods can take up to a few minutes for a 900 000 data points.\\
@@ -412,18 +442,9 @@ We would like to thank AMIES for this beautiful opportunity and Foyer for provid
 
 \end{thebibliography}
 \appendix
-
-\section{Algorithm} % (fold)
-\label{sec:Algorithm}
-Different error types and data types force us to use different methods and algorithm to judge data quality. In light of this we decided to split our algorithm into several standalone module capable of being called independently of one another.
-If the user wishes to simply use all the algorithm and with standard parameters we provided two methods for doing so. The first method is used to get rid of easier to detect errors such as duplicates and typos before (if wished) passing its results to the second method which will be a more in depth check. The first method is also fully identifiable as it is a major consideration for the company to be able to check afterward if the error is true and where it is.\\
-On top of that we provided a class in which the user can load the data and pre-process it if needed. We wanted the code to be able to be used by someone with basic knowledge and have room if needed to fine tune each parameter independently if they have a deeper knowledge of the subject.\\
-Let us then follow our outlined methods and inspect the first method algorithms and then the second method.
-
-
-\subsection{First method}
-
-\subsubsection{Typographical error algorithm}
+\section{Pseudo-code} % (fold)
+\label{sec:Pseudo-code}
+\subsection{Typographical error algorithm}
 \label{sub:Typographical error algorithm}
 \begin{algorithm}[H]
     \SetKwData{Left}{left}\SetKwData{This}{this}\SetKwData{Up}{up}
@@ -460,7 +481,7 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 
 
 
-\subsubsection{Duplicate errors algorithm}
+\subsection{Duplicate errors algorithm}
 \label{code:Duplicate errors algorithm}
 \begin{algorithm}[H]
     \SetKwData{Left}{left}\SetKwData{This}{this}\SetKwData{Up}{up}
@@ -480,7 +501,7 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 
 
 
-\subsubsection{Extreme value algorithm}
+\subsection{Extreme value algorithm}
 \label{code:extreme_values_numerical}
 \begin{algorithm}[H]
     \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
@@ -504,7 +525,7 @@ Let us then follow our outlined methods and inspect the first method algorithms 
 
 
 
-\subsubsection{Row completeness algorithm}
+\subsection{Row completeness algorithm}
 \label{code:completeness}
 \begin{algorithm}[H]
     \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
@@ -554,12 +575,6 @@ Let us then follow our outlined methods and inspect the first method algorithms 
     return dict\_tendency
     \caption{Tendency checking\label{tendency}}
 \end{algorithm}
-
-\subsection{Second method} % (fold)
-\label{sub:Second method}
-
-% subsectionSecond method (end)
-
 \subsubsection{Whole row outlier detection algorithm}
 \label{code:LOF_KNN_algo}
 \begin{algorithm}[H]

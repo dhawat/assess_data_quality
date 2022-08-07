@@ -18,10 +18,11 @@
     filecolor=magenta,
     urlcolor=cyan,
     }
-\title{\Large Report for AMIES challenge, Wasserstein-blind group:\ Automatic data quality assessment}
-
-\author{Abaach Mariem, Boussaa Mehdi, Hawat Diala}
+\title{\Large Automatic data quality assessment \\
+\small Report for AMIES challengedoc, Wasserstein-blind group}
+\author{ Mariem Abaach, Mehdi Boussaa, Diala Hawat}
 \usepackage{fancyhdr}
+%align minpages fig
 %\pagestyle{fancy}
 %\makeatletter
 %\let\runauthor\@author
@@ -320,55 +321,67 @@ Each algorithm used is fully described in Section \ref{sec:Starategy used to det
 
 \section{Experiments} % (fold)
 \label{sec:Experiments}
-At the start of the challenge our correspondant at Foyer shared with us a dataset comprised of 100000 columns and 54 columns.
-This dataset is a real life example of sales of agricultural machinery.
-The types of column that we had were composed of numerical quantitative columns e.g. price, numerical category  e.g. Model Id but also verbal columns such as the state in which the sale took place.
-Not all the columns were in a type directly usable such as \texttt{saledate} which were in a non classical format.
+At the start of the challenge our correspondant at Foyer shared with us a dataset comprised of 100000 rows and 54 columns of sales of agricultural machinery.
+The data gather different types of columns like numerical non-discrete e.g., \texttt{price}, numerical category (or discrete) e.g., \texttt{ModelId} and nominal columns e.g., \texttt{state}.
+Not all the columns were directly usable such as \texttt{saledate} which was in a non classical format.
 
 In this section we will discuss the type of errors caught by our algorithms, their strengths and shortcomings.
 
-\subsection{First method}
-In the first method we start by the redundency test described in Section \ref{sub:Redundancy} to find duplicated rows.
-This method returns the index of the duplicated rows as we can see in Figure \ref{fig:exp_duplicate}.
-For example, the first row of Figure \ref{fig:exp_duplicate}
-shows that row 307 is a duplication of row 306 in the dataset.
-For the computational time, the method took less than one second to search within 5 millions rows.
+\subsection{First pass}
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.5]{picture/exp_duplicated.png}
-    \label{fig:exp_duplicate}
-    \caption{Sample from the detected errors featuring duplication}
-\end{figure}
+    \begin{minipage}[t]{.35\textwidth}
+        \centering
+        \includegraphics[width=0.9\linewidth]{picture/exp_duplicated.png}
+        \caption{Sample from the detected duplicated rows}
+        \label{fig:exp_duplicate}
 
-Second, the algorithm used for finding typographical errors \ref{typo} can be illustrated using the same method.
+    \end{minipage}
+    \begin{minipage}[t]{.55\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{picture/exp_duplicated_db.png}
+        \vspace*{-0.39cm}
+        \caption{Two duplicated rows from the data set}
+        \label{fig:exp_duplicate_2}
+    \end{minipage}
+\end{figure}
+The first pass start by the redundency test described in Section \ref{sub:Redundancy} to find duplicated rows.
+The corresponding algorithm returns the index of the duplicated rows as we can see in Figure \ref{fig:exp_duplicate}.
+For example, the first row of Figure \ref{fig:exp_duplicate_2}
+shows that row 307 is a duplication of row 306 in the dataset.
+For the computational time, the method took less than one second to search within 5 millions rows.
+
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\linewidth]{picture/exp_duplicated_db.png}
-    \label{fig:exp_duplicate_db}
-    \caption{Sample from the original dataset.  A few columns were taken for tidiness's sake}
-\end{figure}
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[scale=0.5]{picture/exp_typo.png}
+    \includegraphics[width=0.2\linewidth]{picture/exp_typo.png}
+    \caption{Sample from the detected typographical errors}
     \label{fig:exp_typo}
-    \caption{Sample from the detected errors featuring typographical errors}
 \end{figure}
-The figure \ref{fig:exp_typo} shows that in the column 'UsageBand' multiple instances of the values 'HIGH' and 'high' were detected as errors. Indeed after confirmation with our correspondant it is an induced error. The correct spelling is 'High', both with the affinity propagation and markov clustering we get this types of results. However, when the database gets bigger and more words starts to appear in a cluster, the base affinity propagation clustering fails to scale up both in terms of speed and performance because of the weak pairwise metric associated to the affinity propagation algorithm. The markov chain clustering methods on the other hand can be used even in high columns or row counts while still being tractable but give less desirable results in lower column counts. \\
-
-For correcting numerical values while still being able to clearly tell in which column the error is we used the \ref{extreme} algorithm.
+Figure \ref{fig:exp_typo}, shows a sample from the detected typographical errors in the column \texttt{UsageBand}.
+Multiple instances of the values 'HIGH' and 'high' were detected as errors.
+Our correspondant confirm inducing these errors since the company was interrested in finding such typographical error frequently found in there database.
+The correct spelling is 'High'.
+Both the affinity propagation and Markov clustering methods described in Section \ref{sub:consistency} successfully detect these errors.
+However, when the database gets bigger and more words appear in each cluster, the affinity propagation clustering fails to scale up, both in terms of speed and performance because of the weak pairwise metric associated to the affinity propagation algorithm \dhawat{clarify more?}.
+On the other hand, the Markov clustering method can be used even in high columns or row counts while still being tractable, but give less desirable results in lower column counts.
 
 \begin{figure}[h]
     \centering
     \includegraphics[scale=0.5]{picture/exp_extreme.png}
-    \label{fig:exp_extreme}
     \caption{Sample from the detected errors featuring extreme values}
+    \label{fig:exp_extreme}
 \end{figure}
 
-On numerical column it flags as outliers extreme values using a z\_score method. On columns such as \texttt{YearMade} (of the machinery) it correctly flags absurd years such as negative years and far into the future years. Being a methods which flags when the value is well outside the mean it sometimes fails when considering columns which are made up of a continuous variable such as \texttt{SalePrice} but who has a latent variable such as \texttt{ModelId}. \\ Another type of column which might be a problem with \ref{extreme} is when the data is numerical but purely qualitative such as \texttt{datasource}. It is comprised of numbers but only two of them representing which office aggregated the data. For this type of error we implemented a check inside \ref{extreme} to abort if the ratio of uniqueness of the column is too low.\\
-As for the speed and scalability of the method, on nearly 900000 cells it was in the order of a few seconds. On a larger dataset tested in collaboration of foyer it was similarly fast.
+Figure \ref{fig:exp_extreme}, show a sample from the errors detected by the extreme value test applied to the column \texttt{YearMade}.
+It correctly identify absurd years such as negative years and future years.
+As this method is based on Gaussian distributions it fails sometimes when considering a non-discreate column such as \texttt{SalePrice} having a latent variable such as \texttt{ModelId}. \dhawat{seems unclear}
+This method also doesn't apply to discrete numerical columns.
+To distinguish between discrete and non-discrete columns, we implemented a method that computes the ratio of the uniqueness (i.e., the number of unrepeated values to the total number of values) of the column.
+If this ratio is too low, such a column is considered discrete.
+For the speed and scalability of the extreme values method on nearly 900000 cells, it took a few seconds to detect the errors.
+Even on a larger dataset (tested in collaboration with Foyer) the execution time was of the same order.
 
-For the algorithm \ref{completeness} we can check \ref{fig:exp_completeness}, that it shows multiple exact same track type tractor-dozer down to the model id having on this subset of column less information.
+Finally, for the completeness test described in Section \ref{completeness} Figure \ref{fig:exp_completeness} shows some columns from rows detected as uncomplete.
 
 \begin{figure}[h]
     \centering
@@ -376,9 +389,11 @@ For the algorithm \ref{completeness} we can check \ref{fig:exp_completeness}, th
     \label{fig:exp_completeness}
     \caption{Sample from the detected errors featuring completeness}
 \end{figure}
-On the other column there is also less information. Is is not stricto sensu an error but in our view it doesn't bring enough information to be useful.
+We can see from the columns shown in Figure \ref{fig:exp_completeness} that these rows doesn't cointains enough informations.
+Even though the other columns of these rows are non-informative.
+It is not stricto sensu an error, so these errors were not counted while computing the total number of detected errors but we believe that this type of row, less informative, is importante to be identified.
 
-\subsection{Second method}
+\subsection{Second pass}
 A general trend for the second method algorithm is that they give harder to interpret results. Not all because of inability to target individual error cells but because trey rely on covariance and tendency between columns and as such need a deeper knowledge of the subject at hand to check if the reported error is indeed a true one.
 
 The algorithm \ref{tendency} only operates on columns which are numerical in nature. A working example might be as shown in \ref{fig:exp_tendency} where we check \texttt{YearMade} against \texttt{saledate}. Up to at least 99,9\% in this case the order is preserved and is recognized by our algorithm. It sometimes fails in assessing the order due to the presence of lot's of outliers.
@@ -400,7 +415,7 @@ As we will discuss in the next section optimisation and adaptations can be impro
 
 \section{Discussions} % (fold)
 \label{sec:Discussions}
-We tested the algorithm on a data set provided by Foyer, after comparing the flagged errors with the known errors injected by the company, it showed a success rate of 36\%, we made the choice of using very strict thresholds to avoid false positives to not flood the user with information, the major positive component is the fact that the algorithm runs relatively fast. We also proceeded to a quick test on one of the data sets of the company and the test were very encouraging as well. \
+We tested the algorithm on a data set provided by Foyer, after comparing the flagged errors with the known errors injected by the company, it showed a success rate of 50\%, we made the choice of using very strict thresholds to avoid false positives to not flood the user with information, the major positive component is the fact that the algorithm runs relatively fast. We also proceeded to a quick test on one of the data sets of the company and the test were very encouraging as well. \
 The next step would be to control the number of false positives that we get, one way to proceed would be to improve the choice of the thresholds, also for the \texttt{check\_mixt\_logic()} to run a correlation test between columns in order to only consider the columns that are sufficiently correlated.
 in addition regarding the typo algorithm, we observed that if we run the Affinity Propagation algorithm twice, the first time on the whole data set of words and the second time on the proposed clusters, it highly improves the results and we end up getting a better clustering of the words, which makes it easier to detect spelling errors and suggest a correction to the user. \
 Another axis of research, that we did not have time to explore is about the classification of the missing values (nan's) in the data set, we wanted to implement a solution that would help sort between the null value  missing completely at random, missing at random and missing not at random, which is an outlier types of missing values. Detecting which kind of missing value is important in the imputation phase of pre-processing the data.

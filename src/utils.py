@@ -18,15 +18,15 @@ df = df.sort_index()  # to sort with respect to the index """
 
 
 def check_extension(path):
-    """Check if the extension of the data set belongs to {csv, json, sql, xlsx}.
+    """Checks if the extension of the data set belongs to {csv, json, sql, xlsx}.
 
     Args:
 
-        path (path): path of the set of data.
+        path (str): data set name. The allowed formats are {csv, json, sql, xlsx}.
 
     Returns:
 
-        type of allowed extension or none.
+        string specifying the type of the data set if allowed, else none.
     """
     if re.search("\.csv$", path, flags=re.IGNORECASE):
         return "csv"
@@ -40,18 +40,22 @@ def check_extension(path):
 
 
 def _to_DataFrame(path, **kwargs):
-    """Read data and transform it to DataFrame.
+    """Transforms the input data into a DataFrame.
 
     Args:
 
-        path (path): path to the corresponding directory of the data.
+        path (str): data set name. The allowed formats are {csv, json, sql, xlsx}.
+
+    Keyword Args:
+
+        kwargs(dict): keyword arguments of ``pandas.read``.
 
     Returns:
 
-        df (pandas.DataFrame): DataFrame containing of the data.
+        df (pandas.DataFrame): DataFrame containing the input data.
     """
 
-    ext = check_extension(path)  # check if the format of the data is acceptable
+    ext = check_extension(path)  #Check if the data format is acceptable
     assert ext != "none"
     f_dict = {
         "csv": pd.read_csv,
@@ -59,16 +63,16 @@ def _to_DataFrame(path, **kwargs):
         "sql": pd.read_sql,
         "xlsx": pd.read_excel,
     }
-    df = f_dict[ext](path, **kwargs)  # DataFrame containing the data
+    df = f_dict[ext](path, **kwargs)
     return df
 
 
 def get_metadata(df):
-    """Read a dataframe and generate relevant metadata such as columns types etc.
+    """Read the input DataFrame and generate relevant metadata.
 
     Args:
 
-        df (pandas.DataFrame): DataFrame of data.
+        df (pandas.DataFrame): input DataFrame.
 
     Returns:
 
@@ -80,17 +84,18 @@ def get_metadata(df):
     return metadata
 
 
+#todo check the last return after else
 def check_data_type(column):
 
-    """Set a type for the column by using the maximun type of not nan element in the column.
+    """Returns the dominant type (non-NAN) of the elements in the input column.
 
     Args:
 
-        column (pandas.core.series.Series): column from a dataframe.
+        column (pandas.core.series.Series): input DataFrame's column.
 
     Returns:
 
-        [type]: [description]
+        str: dominant type (non-NAN) of the elements in the input column.
     """
 
     types_dict = {}
@@ -115,99 +120,64 @@ def check_data_type(column):
         return
 
 
-def _is_date(string, fuzzy=False):
-    """Check if a given string is a date, return the date if true and raise  ValueError if false.
-
-    Args:
-
-        string (str): string to check.
-
-        fuzzy (bool, optional): Enable a more lenient search in the string. Defaults to False.
-
-    Returns:
-
-        string: datetime as a string.
-
-    Raises:
-
-        ValueError: raised when string is not likely to be a date.
-    """
-    try:
-        pd.to_datetime(string)
-        return pd.to_datetime(string)
-
-    except ValueError:
-        raise ValueError
-
-
 def _is_duplicated(df):
-    """Find duplicated row and return dataframe without the duplication.
+    """Return a copy of the input DataFrame without duplicate rows.
 
     Args:
 
-        df (pandas.DataFrame): data frame.
+        df (pandas.DataFrame): input DataFrame.
 
     Returns:
 
-        duplicated_row: the duplicated rows.
+        duplicated_row (pandas.DataFrame): DataFrame containing the duplicate rows.
 
-        df_clean: the DataFrame without the duplicated rows.
+        df_clean (pandas.DataFrame): DataFrame without duplicate rows.
     """
-    duplicated_row = df[df.duplicated()]  # duplicated row
-    df_clean = df[~df.duplicated()]  # without duplication row
-
+    duplicated_row = df[df.duplicated()]
+    df_clean = df[~df.duplicated()]
     return df_clean, duplicated_row
 
 
 def _duplicated_idx(df, keep='first'):
-    """Find index of duplicated row in the DataFrame
+    """Return boolean Series denoting duplicate rows.
+    pandas.DataFrame.duplicated function ``https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.duplicated.html``.
 
     Args:
 
-        df (pandas.DataFrame): DataFrame of input data
-        
-        return_all(boolean) : If true returns all the occurence, if false doesn't return the first occurence.
+        df (pandas.DataFrame): input DataFrame.
+        keep (str, bool): "first", "last" or bool. Determines which duplicates (if any) to mark. See ``https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.duplicated.html#:~:text=keep%7B%E2%80%98first%E2%80%99%2C%20%E2%80%98last%E2%80%99%2C%20False%7D%2C%20default%20%E2%80%98first%E2%80%99``
 
     Returns:
 
-        list of index of duplicated row
+        Series: Boolean series for each duplicated rows.
     """
     return df.duplicated(keep=keep)
 
 
-#! remove this function
-def _summery_duplication(df, col_name):
-    """summery of duplications in a specific column.
+
+def _is_unique(df, column_name=""):
+    """Returns the value of the uniqueness ratio for the input DataFrame's column.
+    The ratio is equal to:
+        1 - (number of repeated elements)/(total number of elements).
+    NAN elements are excluded.
 
     Args:
 
-        df ([type]): Data frame
+        df (pandas.DataFrame): input DataFrame.
 
-        col_name ([type]): column name
-    """
-    df.pivot_table(columns=[col_name], aggfunc="size")  # summery of duplication
-
-
-def _is_unique(df, col_name=""):
-    """Uniqueness ratio of specified column of the DataFrame
-
-    Args:
-
-        df pandas.DataFrame): DataFrame of input data.
-
-        col_name (str, optional): name of the column. Defaults to "".
+        column_name (str, optional): name of the column to be used. Defaults to "".
 
     Returns:
 
-        ratio : 1 - (number of repeated data in a column without nan)/card(the column without nan)
+        float : 1 - (number of repeated elements in the column)/(total number of elements in the column).
 
     .. note::
 
-            A ratio 1 means all values are unique.
-            A ratio 0 means all values in the columns are repeated or empty column.
+            A ratio 1 means all the elements are unique.
+            A ratio 0 means all the elements are repeated or the column is empty (NAN).
     """
-    if col_name is not nan:
-        df = df[col_name]
+    if column_name is not nan:
+        df = df[column_name]
     else:
         df = df
     if df.dropna().shape[0] == 0:
@@ -216,36 +186,18 @@ def _is_unique(df, col_name=""):
         return df.dropna().nunique() / df.dropna().shape[0]
 
 
-def _is_none(df, col_name):
-    """Find none ratio in a specific column.
-
-    Args:
-
-        df (pandas.DataFrame): DataFrame of input data.
-
-        col_name (str): name of the column. Defaults to "".
-
-    Returns:
-
-        ratio: none ration in the columns
-                1 means all the columns is none
-                0 means non none
-    """
-    df_clean, _ = _is_duplicated(df)  # remove duplicated lines
-    none_element = df_clean[col_name][df_clean[col_name].isnull()]
-    ratio = len(none_element) / df_clean.shape[0]
-    return ratio
-
-
 def _z_score(col, uniq_col, thresh_std=6, thresh_unique1=0.99, thresh_unique2=0.0001):
-    r"""Result of the Z score test defined by
+    r"""Z-score test.
+    The value of Z is computed as followes
 
     .. math::
 
         Z = \frac{x-\nu}{\sigma}
 
-    where :math:`x`is the observation data (the column DataFrame), :math:`\nu` is the mean of the sample and :math:`\sigma` is the standard deviation of the sample.
-    The Z score test is calculated for the input column DataFrame and return the index of elements lying outside the interval :math:`[\nu - 6{\sigma}, \nu + 6{\sigma}]`. The test is only applied if the input satisfy the condition that the uniqueness ratio (see :py:meth:`_is_unique`), lies between the input uniqueness thresholds,This prevent false positive.
+    where :math:`x` is the input column, :math:`\nu` is the corresponding sample mean and :math:`\sigma` is the corresponding sample standard deviation.
+    This test is applied to the input DataFrame column and return the index of elements lying outside the interval :math:`[\nu - 6{\sigma}, \nu + 6{\sigma}]`. The test is only applied if the input satisfy the condition that the uniqueness ratio (see :py:meth:`_is_unique`), lies between the input uniqueness thresholds,This prevent false positive.
+
+
 
     .. seealso::
 
@@ -322,7 +274,7 @@ def index_incorrect_grammar(col, thresh=10, method='affinity_propagation', affin
         col ([type]): input column DataFrame.
 
         thresh(int, optional): minimum of allowed number of repetition of a word in `cluster`to not consider it as bad word, used by the function :py:meth:`incorrect_grammar`.
-        
+
         method(str, optional): set wether the function use affinity propagation from sklearn or use markov clustering to cluster the words inside col.
 
     Returns:
@@ -359,7 +311,7 @@ def index_incorrect_grammar(col, thresh=10, method='affinity_propagation', affin
         X = TfidfTransformer(use_idf=False).fit_transform(X)
         Model = MarkovClustering(X, **kwargs)
         dict_cluster = Model.fit().clusters()
-    
+
         if len(dict_cluster) == 1:
             return list_incorrect
         else:
@@ -492,7 +444,7 @@ def _tendancy_detection(df, thresh=0.999):
             dictionnaire with the pair of columns and the anomaly index detected.
     """
     dictionnaire_anomalie_tendance = {}
-    
+
     for w1 in df:
         for w2 in df:
             elements = df.loc[df[[w1, w2]].dropna().index]

@@ -603,7 +603,7 @@ class Data:
         return idxes, col_names
 
     def compute_corr_str(self, threshold=0.5):
-        """transform the strings column into categorical number and then compute the correlation matrix
+        """transform the strings column into nominal number and then compute the correlation matrix
         between the now number dataframe. Return for the columns the columns which have more than threshold of
         correlation.
 

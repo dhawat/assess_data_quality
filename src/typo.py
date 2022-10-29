@@ -13,7 +13,7 @@ def incorrect_grammar(df_names, cluster, min_occurrence):
         min_occurrence (int): minimum number of occurrence to be considered an error.
 
     Returns:
-        [list]:  list of indexes in df_names of the elements of cluster of which the occurrence is inferior to min_occurrence.
+       index_in_words:  list of bad indexes. 
     """
     
     words = np.asarray(df_names)
@@ -58,16 +58,18 @@ def index_incorrect_grammar(df):
 
 
 def incorrect_grammar_suggestion(df_names, cluster, min_occurrence, nb_suggestion):
-    """Does the same thing as the previous function, just gives a suggestion of a correction 
+    """ List of incorrect words in `df_names`. The incorrect words are decided via `min_occurrence` and suggest the correct grammar.
     Args:
-        df_names ([type]): [description]
-        cluster ([type]): [description]
-        min_occurrence (int): [min # of repetition of a label to be considered an error]
+        df_names (pandas.core.series.Series): column of names.
+        cluster (numpy.ndarray): group of strings that have the same label that was given by the affinity propagation method.
+        min_occurrence (int): minimum number of occurrence to be considered an error.
+        nb_suggestion (int): number of suggestions. 
 
     Returns:
-        [type]: [description]
+         index_in_words: list of bad indexes. 
+         suggestions: the right grammar. 
+          
     """
-
     words = np.asarray(df_names)
     unique_words, unique_counts = np.unique(df_names, return_counts=True)
     cluster_count = []
@@ -85,14 +87,15 @@ def incorrect_grammar_suggestion(df_names, cluster, min_occurrence, nb_suggestio
 
 
 def index_incorrect_grammar_suggestion(df, nb_suggestion=1):
-    """[function for finding typo in a array like structure using clustering methods]
-
+    """function that finds typos in a DataFrame using clustering methods
     Args:
-        df ([DataFrame column, array_like]): [Array like variable containing strings to check for typos.]
-        nb_suggestion ([int]): [Number of suggestion added with the returned index]
+        df (pandas.core.frame.DataFrame): DataFrame variable containing strings to check for typos.
+        nb_suggestion (int): Number of suggestions added with the returned index.
 
     Returns:
-        [list]: [returns a list of location index of found typos.]
+        list_incorrect: list of location index of found typos.
+        list_suggestion: list of propositions for each mistake. 
+        
     """
 
     df_unique = np.unique(df)

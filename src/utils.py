@@ -140,12 +140,13 @@ def _is_duplicated(df):
 
 def _duplicated_idx(df, keep='first'):
     """Return boolean Series denoting duplicate rows.
-    pandas.DataFrame.duplicated function ``https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.duplicated.html``.
+    pandas.DataFrame.duplicated function `pandas.DataFrame.duplicated <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.duplicated.html>`_.
 
     Args:
 
         df (pandas.DataFrame): input DataFrame.
-        keep (str, bool): "first", "last" or bool. Determines which duplicates (if any) to mark. See ``https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.duplicated.html#:~:text=keep%7B%E2%80%98first%E2%80%99%2C%20%E2%80%98last%E2%80%99%2C%20False%7D%2C%20default%20%E2%80%98first%E2%80%99``
+        keep (str, bool): "first", "last" or bool. Determines which duplicates (if any) to mark.
+        See `pandas.DataFrame.duplicated <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.duplicated.html#:~:text=keep%7B%E2%80%98first%E2%80%99%2C%20%E2%80%98last%E2%80%99%2C%20False%7D%2C%20default%20%E2%80%98first%E2%80%99>`_.
 
     Returns:
 
@@ -186,71 +187,72 @@ def _is_unique(df, column_name=""):
         return df.dropna().nunique() / df.dropna().shape[0]
 
 
-def _z_score(col, uniq_col, thresh_std=6, thresh_unique1=0.99, thresh_unique2=0.0001):
+def _z_score(column, uniqueness_ratio, thresh_std=6, thresh_unique1=0.99, thresh_unique2=0.0001):
     r"""Z-score test.
-    The value of Z is computed as followes
+    The value of Z is computed as follows
 
     .. math::
 
         Z = \frac{x-\nu}{\sigma}
 
-    where :math:`x` is the input column, :math:`\nu` is the corresponding sample mean and :math:`\sigma` is the corresponding sample standard deviation.
-    This test is applied to the input DataFrame column and return the index of elements lying outside the interval :math:`[\nu - 6{\sigma}, \nu + 6{\sigma}]`. The test is only applied if the input satisfy the condition that the uniqueness ratio (see :py:meth:`_is_unique`), lies between the input uniqueness thresholds,This prevent false positive.
-
-
+    where :math:`x` is the input column, :math:`\nu` and :math:`\sigma` are the corresponding sample mean and sample standard deviation.
+    The test is applied to the input column if the value of the corresponding uniqueness ratio belongs to :math:`[thresh_unique1, thresh_unique2]`, see :py:meth:`_is_unique`.
+    It returns the indexes of the elements lying outside the interval :math:`[\nu - 6 \sigma, \nu + 6 \sigma]`.
 
     .. seealso::
 
-        `Z score <https://en.wikipedia.org/wiki/Standard_score>`_
+        `Z score <https://en.wikipedia.org/wiki/Standard_score>`_.
 
     Args:
-        col (pandas.DataFrame): Input column DataFrame
+        column (pandas.core.series.Series): input DataFrame.
 
-        thresh_std (int, optional): Z score cut threshold. Defaults to 6.
+        uniqueness_ratio (float): value of the uniqueness ratio of the input column. Obtained using :py:func:`_is_unique`.
 
-        thresh_unique1 (float, optional): threshold to skip the test for DataFrame with high uniqueness. Defaults to 0.99.
+        thresh_std (int, optional): Z-score threshold. The indexes of the elements lying outside the interval :math:`[\nu - thresh_std \sigma, \nu + thresh_std \sigma]` will be returned. Defaults to 6.
 
-        thresh_unique2 (float, optional): threshold to skip the test for discret DataFrame i.e. high clustering sample. Defaults to 0.0001.
+        thresh_unique1 (float, optional): upper bound of the uniqueness threshold. The test is performed if the uniqueness ratio of the input column is lower than ``thresh_unique1``. Defaults to 0.99.
+
+        thresh_unique2 (float, optional): lower bound of the uniqueness threshold. The test is performed if the uniqueness ratio of the input column is greater than ``thresh_unique1``. Defaults to 0.0001.
 
     Returns:
 
-        list of indices of row rejected by  the Z score test.
+        list: Indexes of the rejected elements of the input columns by the Z-score tests.
     """
-    if (uniq_col > thresh_unique1) or (uniq_col < thresh_unique2):
+    if (uniqueness_ratio > thresh_unique1) or (uniqueness_ratio < thresh_unique2):
         return []
     else:
-        mean = col.mean()
-        std = col.std()
+        mean = column.mean()
+        std = column.std()
 
         upper_bound = mean + thresh_std * std
         lower_bound = mean - thresh_std * std
-        idx = col[
-            ~((col > lower_bound) & (col < upper_bound))
+        idx = column[
+            ~((column > lower_bound) & (column < upper_bound))
         ].index  # trancate values from the column
         return idx
 
 
-# todo: Possibilité d'améliorer: Threshold for anomalie is fixed at Q_1 = round(np.percentile(unique_counts, 5)), could be improved. DBSCAN for example on the number of occurences on words.
+# todo: Suggestion: Currently the threshold for the anomaly is fixed at Q_1 = round(np.percentile(unique_counts, 5)), which could be improved. Using for example the number of occurrences of words. Also, duplicate words can be detected using this method. For each word detected as an outlier, we can divide the obtained score by the frequency of occurrence of the word.
 
-# todo: or the repeated words also could be detected by this method, for each word detected as outlier we can divide the score by  the number of repetition of the word
 def incorrect_grammar(col, cluster, thresh):
-    """Find bad index of elements of a column `col` belonging to the same cluster `cluster`. The bad index are those having number of occurrence less then thresh.
-
-    .. seealso::
-
-        :py:meth:`index_uncorrect_grammar`
+    """Return the indexes (in ``col``) of the elements of ``clusters`` identified as bad data.
+    The bad data are those having an occurrence number less than the input threshold.
 
     Args:
 
-        col (pandas.DataFrame): input column DataFrame.
+        col (pandas.core.series.Series): input DataFrame column.
 
-        cluster (numpy.1darray): cluster of words in col.
+        cluster (numpy.array): cluster of words to be checked.
 
-        thresh (int): minimum of allowed number of repetition of a word in `cluster`to not consider it as bad word.
+        thresh (int): lower bound for the number of repetitions of each word of ``cluster`` in the input column. Bad words are the ones with a repetition number less than this threshold.
 
     Returns:
 
-        list of bad indices.
+        list: the list of the bad indexes.
+
+    .. seealso::
+
+        :py:meth:`index_uncorrect_grammar`.
     """
     words = np.asarray(col)
     unique_words, unique_counts = np.unique(col, return_counts=True)
@@ -264,35 +266,48 @@ def incorrect_grammar(col, cluster, thresh):
     return bad_idx
 
 
-# todo replace thresh by values from medi function
-# todo change name funcxtion
+# todo change the name of the function
+# todo check spell
 def index_incorrect_grammar(col, thresh=10, method='affinity_propagation', affinity="precomputed", damping=0.5, random_state=None, **kwargs):
-    """List of uncorect words in `col`. The incorrect words are decided via `thresh` used by :py:meth:`incorrect_grammar`.
+    r"""Returns a list of the detected miss-spelled words in the input column.
+        First, the words are clustered using affinity propagation, or a Markov clustering method.
+        Finally, the function :py:func:`incorrect_grammar` is used to identify the errors.
 
     Args:
 
-        col ([type]): input column DataFrame.
+        col (pandas.core.series.Series): input DataFrame column.
 
-        thresh(int, optional): minimum of allowed number of repetition of a word in `cluster`to not consider it as bad word, used by the function :py:meth:`incorrect_grammar`.
 
-        method(str, optional): set wether the function use affinity propagation from sklearn or use markov clustering to cluster the words inside col.
+        thresh (int, optional): lower bound for the number of repetitions of each word of ``cluster`` in the input column. Errors are the ones with a repetition number less than this threshold. See :py:func:`incorrect_grammar`. Default to 10.
+
+        method(str, optional): "affinity_propagation" or "markov_clustering". The available clustering methods. The words of the input column are clustered using the specified method, then the function :py:func:`incorrect_grammar` is applied to identify the errors.
+
+        affinity(str, optional): used when method="affinity_propagation". Specify which affinity to use. At the moment 'precomputed' and 'euclidean' are supported. 'euclidean' uses the negative squared euclidean distance between points. See ` sklearn.cluster.AffinityPropagation <https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AffinityPropagation.html#:~:text=the%20input%20similarities.-,affinity,-%7B%E2%80%98euclidean%E2%80%99%2C%20%E2%80%98precomputed%E2%80%99%7D%2C%20default>`_. Default to "precomputed".
+
+        damping(float, optional): used when method="affinity_propagation". Damping factor in the range [0.5, 1.0) is the extent to which the current value is maintained relative to incoming values (weighted 1 - damping). This in order to avoid numerical oscillations when updating these values. See ` sklearn.cluster.AffinityPropagation <https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AffinityPropagation.html>`_. Default to 0.5.
+
+        random_state (int, optional): Pseudo-random number generator to control the starting state. Use an int for reproducible results across function calls.See ` sklearn.cluster.AffinityPropagation <https://scikit-learn.org/stable/modules/generated/sklearn.cluster.AffinityPropagation.html>`_. Default to None.
+
+    Keyword arguments:
+
+        kwargs: keyword arguments of the input method.
 
     Returns:
 
-        list of location of incorrect words.
+        list: The list of indexes of the detected miss-spelled or error words.
 
     .. seealso::
 
             :py:meth:`incorrect_grammar`.
     """
     list_incorrect = []
-    words = np.unique(np.asarray(col))  # unique words in col
+    words = np.unique(np.asarray(col))
     if method == 'affinity_propagation':
         lev_similarity = np.array(
             [[SequenceMatcher(None, w1, w2).ratio() for w1 in words] for w2 in words]
-        )  # similarity matrix of `words`
+        )  #similarity matrix of `words`
 
-        # fitting model
+        #fitting the model
         affprop = AffinityPropagation(affinity=affinity, damping=damping, random_state=random_state, **kwargs)
         affprop.fit(lev_similarity)
 
@@ -323,9 +338,10 @@ def index_incorrect_grammar(col, thresh=10, method='affinity_propagation', affin
                         )
             return list_incorrect
     else:
-        raise ValueError('Method name must be either affinity_propagation or markov_clustering')
+        raise ValueError("The available methods are 'affinity_propagation' and 'markov_clustering'.")
 
 
+#! I'm here
 def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
     """check row having mean number of none > thresh_row_1 in the data frame cleaned and > thresh_row_2 in data frame cleaned from columns having mean number of none > threshcol.
     Args:

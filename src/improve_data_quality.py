@@ -14,15 +14,17 @@ class Data:
         """
         Args:
 
-            path (path): path to the data file.
+            path (str): path to the data file, extension should be either csv, json, sql or xlsx.
 
-            drop_first_col (bool, optional): If true drop first column which most of the time is unique and so there it is not interresting to use it for finding bad data. Defaults to True.
+            drop_first_col (bool, optional): if true drop the first column which most of the time is a unique identifier and not directly data points. Defaults to True.
+        
+        Keywords Args:
 
-            kwargs(dic): dictionary of additional argument passed to the read method of the data. See :py:meth:`utils._to_DataFrame`
+            kwargs (dic): dictionary of additional argument passed to the read method of the data. See utils._to_DataFrame.
 
         Raises:
 
-            TypeError: if the format of the data does not belong to {.csv, .json, .sql, .xlsx}
+            TypeError: if the format of the data does not belong to {.csv, .json, .sql, .xlsx}.
         """
         if utils.check_extension(path) == "none":
             raise TypeError(
@@ -45,37 +47,37 @@ class Data:
 
     @property
     def good_index(self):
-        """getter for private attribute _good_index
+        """Getter for private attribute _good_index.
 
         Returns:
 
-            list: list of good indexes to use for ML training purposes
+            list: list of good indexes, typically used for algorithm training purposes.
         """
         return self._good_index
 
     @property
     def bad_index(self):
-        """getter for private attribute for _bad_index.
+        """Getter for private attribute for _bad_index.
 
         Returns:
 
-            dataFrame: dataFrame containing error indexes and if applicable column and an explanation of the error
+            dataFrame: dataFrame containing error indexes and if applicable column and an explanation of the error. Format as ["idx", "column", "errtype", "value1", "value2"].
         """
         return self._bad_index
 
     @bad_index.setter
     def bad_index(self, list_idx):
-        """setter if private attribute bad_index.
+        """Setter if private attribute bad_index.
 
         Args:
 
-            list_idx (dataFrame): used as bad_index = bad_index.append(df).
+            list_idx (dataFrame): dataFrame of bad index basic form has columns : ["idx", "column", "errtype", "value1", "value2"], used as bad_index = bad_index.append(df).
         """
         self._bad_index = list_idx
 
     @good_index.setter
     def good_index(self, list_idx):
-        """setter for private attribute _good_index.
+        """Setter for private attribute _good_index.
 
         Args:
 
@@ -83,7 +85,7 @@ class Data:
 
         Raises:
 
-            ValueError: if length is greater than the initial dataFrame raises Valueerror.
+            ValueError: if length is greater than the initial dataFrame raises ValueError.
         """
         if len(list_idx) > self.data.shape[0]:
             raise ValueError(
@@ -93,11 +95,11 @@ class Data:
 
     @property
     def str_col(self):
-        """getter for private attribute :py:meth:`_str_col`.
+        """Getter for private attribute _str_col. If empty, creates a list containing the names of string like columns and columns containing numbers present in the data file.
 
         Returns:
 
-            [list]: list of string columns.
+            [list]: list of string containing columns names of the stringlike columns present in the data file.
         """
         if not self._str_col:
             for column in self.data.columns:
@@ -116,15 +118,20 @@ class Data:
 
     @str_col.setter
     def str_col(self, value):
+        """Setter for private attribute _str_col. 
+
+        Args:
+            value (list): list of string containing columns names of the stringlike columns present in the data file.
+        """
         self._str_col = value
 
     @property
     def nbr_col(self):
-        """getter for private attribute :py:meth:`_nbr_col`.
+        """Getter for private attribute _nbr_col. If empty, creates a list containing the names of string like columns and columns containing numbers present in the data file.
 
         Returns:
 
-            [list]: list of number columns.
+            [list]: list of strings containing columns names of the columns containing numbers present in the data file.
         """
         if not self._nbr_col:
             for column in self.data.columns:
@@ -143,19 +150,20 @@ class Data:
 
     @nbr_col.setter
     def nbr_col(self, value):
-        """setter method for setting :py:meth:`_nbr_col` private attribute.
+        """Setter method for setting _nbr_col private attribute.
 
         Args:
 
-            value ([list of strings]): [list of column names].
+            value ([list]): list of strings containing names of the string like columns in the data file.
         """
         self._nbr_col = value
 
     # todo check if used
     def push_bad_index(self, list_idx):  # Find a better method name
-        """decrepated, not sure if will be used or not.
+        """Appends all the element in list_idx to the list of bad indexes. Decrepated.
+
         Args:
-            list_idx ([type]): [description]
+            list_idx (list): list of bad indexes to be added to bad_index.
         """
         for elem in list_idx:
             try:
@@ -165,11 +173,11 @@ class Data:
 
     @property
     def corr_col(self):
-        """getter for private attribute py:meth:`_corr_col`.
+        """Getter for private attribute _corr_col. If empty, compute for each stringlike columns the correlation with other stringlike columns and stores them in a dictionnary.
 
         Returns:
 
-            [list]: dict of {col: [correlated_cols]}.
+            dict: dictionnary following the structure {col: [correlated_cols]}.
         """
         if not self._corr_col:
             self._corr_col = self.compute_corr_str()
@@ -182,21 +190,21 @@ class Data:
 
     @corr_col.setter
     def corr_col(self, value):
-        """setter for private attribute :py:meth:`_corr_col`.
+        """Setter for private attribute _corr_col.
 
         Args:
 
-            value ([dict]): dict of {col: [correlated_cols]}
+            value (dict): dictionnary following the structure {col: [correlated_cols]}.
         """
         self._corr_col = value
 
     @property
     def uniq_col(self):
-        """getter for private attribute :py:meth:`_uniq_col`.
+        """Getter for private attribute _uniq_col. If empty, creates a dictionnary containing for each columns the ration of uniqueness computed via the method _is_unique.
 
         Returns:
 
-            [dict]: [dict containing {name_of_col: ratio_of_uniqueness}]
+            dict: dictionnary following the structure {name_of_column: ratio_of_uniqueness}.
         """
         if not self._uniq_col:
             self._uniq_col = {
@@ -208,17 +216,21 @@ class Data:
 
     @uniq_col.setter
     def uniq_col(self, value):
-        """setter for private attribute :py:meth:`_uniq_col`.
+        """Setter for private attribute _uniq_col.
 
         Args:
 
-            value ([dict]): [dict containing {name_of_col: ratio_of_uniqueness}]
+            value (dict): dictionnary following the structure {name_of_column: ratio_of_uniqueness}.
         """
         self._uniq_col = value
 
     def firstpass(self, *methods):
-        """First pass of bad data detection by searching for duplicated data, typo, extreme values and incompleteness by row.  This tests are done using respectively the methods :py:meth:`check_duplication`, :py:meth:`typo`, :py:meth:`extreme_value` and :py:meth:completeness. This method find the bed indices and send them to :py:meth:`bad_index`.
+        """First pass of bad data detection by searching for duplicated data, typo, extreme values and incompleteness by row.  This tests are done using respectively the methods check_duplication, typo, extreme_value and completeness. This method find the bad indices and send them to bad_index.
         By default all previous method will run. Specific methods could be set using the parameter `method`.
+
+        Args:
+
+            *methods (tuple): tuple of string presented as positional arguments. Methods can be 'duplication', 'typo', 'extreme_value', 'competeness' or any combination of those. Defaults is all methods.
 
         """
 
@@ -245,10 +257,15 @@ class Data:
                 pass
 
     def secondpass(self, *methods):
-        """First pass of bad data detection by searching for tendency, outlier, logic and mixed_logic error.
-        This tests are done using respectively the methods :py:meth:`check_tendency`, :py:meth:`check_outlier`, :py:meth:`check_logic` and :py:meth:`check_mixed_logic`.
-        This method find the bed indices and send them to :py:meth:`bad_index`.
+        """Second pass of bad data detection by searching for tendency, outlier, logic and mixed_logic errors.
+        This tests are done using respectively the methods check_tendency, check_outlier, check_logic and check_mixed_logic.
+        This method find the bad indices and send them to bad_index.
         By default all previous method will run. Specific methods could be set using the parameter `method`.
+
+        Args:
+
+            *methods (tuple): tuple of string presented as positional arguments. Methods can be 'tendency', 'outlier', 'logic', 'mixed_logic' or any combination of those.
+
         """
 
         f_dict = {
@@ -267,7 +284,7 @@ class Data:
             self.check_mixed_logic()
 
     def check_duplication(self):
-        """Find duplicated rows and return there indices."""
+        """Find duplicated rows and stores their indexes into the bad_index property."""
         n_duped_idx = ~utils._duplicated_idx(self.data)
         n_true_idx = ~utils._duplicated_idx(self.data) & utils._duplicated_idx(
             self.data, False
@@ -290,7 +307,7 @@ class Data:
         random_state=None,
         **kwargs
     ):
-        """Find spelling
+        """Find spelling errors in all string like columns in the data using _index_incorrect_grammar function. Stores the indexes, columns and values of the error into the bad_index property.
 
         Args:
 
@@ -305,7 +322,9 @@ class Data:
 
             damping (float, optional): Damping factor (between 0.5 and 1) is the extent to which the current value is maintained relative to incoming values (weighted 1 - damping). This in order to avoid numerical oscillations when updating these values (messages). Defaults to 0.5.
 
-            random_state ([type], optional): [description]. Defaults to None.
+            random_state (int, optional): RandomState instance or None, default=0
+            Pseudo-random number generator to control the starting state.
+            Use an int for reproducible results across function calls. Defaults to None.
         """
         n_duped_idx = ~utils._duplicated_idx(self.data)
 
@@ -334,15 +353,15 @@ class Data:
     def check_extreme_value(
         self, thresh_std=6, thresh_unique1=0.99, thresh_unique2=0.0001
     ):
-        """Find indices of extrem values using the z-score test
+        """Find indexes of extreme values for every number columns using a z-score test with _z_score function. Stores the indexes, columns and values of the error into the bad_index property.
 
         Args:
 
             thresh_std (int, optional): coefficient of the standard deviation. Defaults to 6.
 
-            thresh_unique1 (float, optional): thresholding for rejecting test on uniqueness. Defaults to 0.99.
+            thresh_unique1 (float, optional): threshold to skip the test for a column with high uniqueness ratio. Defaults to 0.99.
 
-            thresh_unique2 (float, optional): threshhold for rejecting discret. Defaults to 0.0001.
+            thresh_unique2 (float, optional): threshhold to skip the test for a column with very low uniqueness ratio. Defaults to 0.0001.
         """
         n_duped_idx = ~utils._duplicated_idx(self.data)
 
@@ -364,7 +383,7 @@ class Data:
                 )
 
     def check_completeness(self, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
-        """Find index of incomplete rows, i.e. rows containing too much nan.
+        """Find indexes of incomplete rows, i.e rows containing too much nan using _row_is_none function. Stores the indexes, into the bad_index property.
 
         Args:
 
@@ -377,7 +396,7 @@ class Data:
             self.add_to_bad_idx(idx, col="All", col_type="empty", VALUE_FLAG=False)
 
     def check_tendency(self, tresh_order=0.999):
-        """Detecting order between numerical columns
+        """Detecting order between numerical columns using _tendency_detection.
 
         Args:
 

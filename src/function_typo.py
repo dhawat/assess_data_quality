@@ -3,14 +3,15 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 
-"""Data_file = "~/Downloads/echantillon.csv"
-
-df = pd.read_csv(Data_file)
-
-df_names = np.asarray(df["MARQUE"])"""
-
-
 def Typo_correction(df_names):
+    """
+        function that finds typos in a DataFrame using Markov Clustering methods.
+    Args:
+        df_names (pandas.core.series.Series): column of names.
+    Returns:
+        list_incorrect: list of location index of found typos.
+        list_suggestion: list of propositions for each mistake. 
+    """
     words = np.asarray(df_names)
     df_unique = np.unique(df_names)
     unique_words = np.asarray(df_unique)
@@ -22,7 +23,7 @@ def Typo_correction(df_names):
     correct_words = []
     i = 0
     if len(list_cluster) == len(words):
-        print("Rien n'a été détecter")
+        print("Nothing has been detected")
         return 0
     else:
         for cluster in list_cluster:

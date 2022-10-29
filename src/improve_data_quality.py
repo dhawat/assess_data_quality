@@ -396,7 +396,7 @@ class Data:
             self.add_to_bad_idx(idx, col="All", col_type="empty", VALUE_FLAG=False)
 
     def check_tendency(self, tresh_order=0.999):
-        """Detecting order between numerical columns using _tendency_detection.
+        """Detects order between numerical columns using _tendency_detection function. Stores the indexes, columns and values of the error into the bad_index property.
 
         Args:
 
@@ -412,17 +412,18 @@ class Data:
                 )
 
     def check_outlier(self, **params):
-        """Outlier row detection by LOF algorithm, preceeded by imputation method"""
+        """Outlier row detection by LOF algorithm preceeded by imputation method using the outlier_lof function. Stores the indexes of the error into the bad_index property.
+        """
         idx = self.outlier_lof(**params)[0]
         for index in idx:
             self.add_to_bad_idx(index, col="NA", col_type="Outlier", VALUE_FLAG=False)
 
     def check_logic(self, thres_uniqueness=0.001, freq_error=10):
-        """logic error on the numerical columns using frequency method
+        """Logic error detection on the numerical columns using a frequency based method using bad_logical_index function. Stores the indexes, columns and values of the error into the bad_index property.
 
         Args:
 
-            thres_uniqueness (float, optional): uniquenesess thresh. Defaults to 0.001.
+            thres_uniqueness (float, optional): uniquenesess threshold, skip the test if a column has a uniqueness ratio too high. Defaults to 0.001.
 
             freq_error (int, optional): threshold for frequency detected as error. Defaults to 10.
         """
@@ -436,15 +437,15 @@ class Data:
     def check_mixed_logic(
         self, thres_unique_str=0.0002, thres_unique_nbr=0.04, thresh_std=6
     ):
-        """Find index for logical error.
+        """Logical error detection between numerical columns and string like columns using bad_float_index function. Stores the indexes, columns and values of the error into the bad_index property.
 
         Args:
 
-            thres_unique_str (float, optional): uniqueness . Defaults to 0.0002.
+            thres_unique_str (float, optional): uniqueness threshold for string like column, skip the test if a column has a uniqueness ratio too high. Defaults to 0.0002.
 
-            thres_unique_nbr (float, optional): [description]. Defaults to 0.04.
+            thres_unique_nbr (float, optional): uniqueness threshold for number column, skip the test if a column has a uniqueness ratio too high. Defaults to 0.04.
 
-            thresh_std (int, optional): [description]. Defaults to 6.
+            thresh_std (int, optional): standard deviation used for the z_score method. Defaults to 6.
         """
         idxes, col_names = self.bad_float_index(
             thres_unique_str, thres_unique_nbr, thresh_std
@@ -456,10 +457,10 @@ class Data:
                 )
 
     def imputation_method(self, **params):
-        """Imputation method used to fill missing using k nearest neighbors provided by sklearn. This method is used by :py:meth`outlier_lof`since it doesn't support missing values
+        """Imputation method used to fill missing values using k the nearest neighbors method provided by sklearn. This method is used by outlier_lof since it doesn't support missing values.
 
         Returns:
-            Data frame without missing values.
+            dataFrame: copy of self.data with imputed number columns.
         """
 
         parameters = {}
@@ -479,15 +480,24 @@ class Data:
         return numeric_df_imputation
 
     def outlier_lof(self, **params):
-        """outlier detection over rows, from numerical columns using the local outlier factor algorithm
+        """Outlier detection over rows, for numerical columns only using the local outlier factor method provided by sklearn.
+
+                
+        .. seealso:: 
+            `Z score <https://en.wikipedia.org/wiki/Local_outlier_factor>`_
 
         .. warning::
 
-                it use automatic imputation on the numerical columns by alling the method :py:meth`imputation_method`.
+                it use automatic imputation on the numerical columns by alling the method imputation_method.
 
         Returns:
 
-            indices of rows detected as outliers.
+            ind (pandas.core.indexes.base.Index) : indices of rows detected as outliers.
+
+            normalized_lof_score (ndarray) : array containing the negative outlier factor score of each data point.
+
+            df_with_score (dataFrame) : dataFrame of the numerical columns with their index replaced as the lof score.
+
         """
         # set default params
         params.setdefault("n_neighbors", 20)
@@ -519,18 +529,17 @@ class Data:
 
     def col_combined_result(self, col1_name, col2_name, first_pass=False):
         # todo add if condition for column where we do not detect error
-        """Combine good result after first path of two columns, the output is a data frame combining good result from 2 column after first path with good index/
+        """Create a dataFrame containing two columns sanitized from their bad rows found from the first pass algorithms.
+
         Args:
 
-            col1_name (str): name of the first column
-
-            col2_name (str): name of the second column
-
-            first_pass (bool, optional): precision whether doing the first pass or not. Default to False.
+            col1_name (str): name of the first column to be combined into the output dataFrame.
+            col2_name (str): name of the second column to be combined into the output dataFrame.
+            first_pass (bool, optional): enables a full first pass with all algorithm if set to True. Default to False.
 
         Returns:
 
-            Data frame combining good result from 2 column after first path.
+            dataFrame : dataFrame containing [col1_name, col2_name] sanitized from their bad rows found from the first pass algorithms
         """
 
         if first_pass:
@@ -556,16 +565,16 @@ class Data:
         return good_cols
 
     def dual_hist(self, col1_name, col2_name, unique_tresh=0.7, first_pass=False):
-        """Not used yet
+        """Create a tuple containing the values and occurence of the pairs of values on each row of the combined dataFrame of (column1, column2)
 
         Args:
-            col1_name ([type]): [description]
-            col2_name ([type]): [description]
-            unique_tresh (float, optional): [description]. Defaults to 0.7.
-            first_pass (bool, optional): [description]. Defaults to False.
+            col1_name (str): name of the first column to be combined into the output dataFrame.
+            col2_name (str): name of the second column to be combined into the output dataFrame.
+            unique_tresh (float, optional): skip the test if a column has a uniqueness ratio too high. Defaults to 0.7.
+            first_pass (bool, optional): enables a full first pass with all algorithm if set to True. Defaults to False.
 
         Returns:
-            [type]: [description]
+            tuple: tuple containing two ndarrays, the first is the sorted unique values the second is the number of times each of the unique values comes up in the original array.
         """
         if first_pass:
             self.firstpass()
@@ -585,12 +594,14 @@ class Data:
         return summery_tuple
 
     def bad_logical_index(self, thres_uniqueness=0.001, freq_error=10):
-        """Operates on data attribute directly. For each column which contains strings and doesn't have a uniqueness ratio too high.
-        On theses columns compute the frequency between each unique data in columns.
+        """Operates on data attribute directly. For each two columns which contain strings and doesn't have a uniqueness ratio too high.
+        A frequency histogram is established for each non na element of column 1 with regards to column 2. If an element of column 2 in this histogram is too rare it is then flagged as a logical error.
+
 
         Returns:
 
-            [idxes, col_names]: [list of list of bad indexes and associated columns names]
+            idxes (list): list of bad indexes found to have logical errors in the rows associated.
+            col_names (list): associated columns names of the raised logical error.
         """
         # TODO : Take good index from 2 columns only
         df = self.data.iloc[self.good_index]
@@ -622,17 +633,17 @@ class Data:
         return idxes, col_names
 
     def compute_corr_str(self, threshold=0.5):
-        """transform the strings column into nominal number and then compute the correlation matrix
-        between the now number dataframe. Return for the columns the columns which have more than threshold of
+        """Transform the strings column into nominal number and then compute the correlation matrix
+        between the now number dataframe. Return  the columns which have more than threshold of
         correlation.
 
         Args:
 
-            threshold (float, optional): [minimum correlation for a column to be considered correlated]. Defaults to 0.5.
+            threshold (float, optional): minimum correlation for a column to be considered correlated. Defaults to 0.5.
 
         Returns:
 
-            dictionary containing for each column a list of possibly empty correlated columns
+            corr_dict (dict): dictionary containing for each column a list of (possibly empty) correlated columns.
         """
         list_col = []
         for col in self.str_col:
@@ -658,6 +669,14 @@ class Data:
         return corr_dict
 
     def add_to_bad_idx(self, idx, col, col_type, VALUE_FLAG=True):
+        """Gather the bad index raised by the differents methods and format the returns into the bad_index property.
+
+        Args:
+            idx (int): index of the row raised by detection methods to be added to bad_index.
+            col (str): name of the column raised by detection methods  to be added to the bad_index.
+            col_type (str): name of the error raised by detection methods to be added to the bad_index. 
+            VALUE_FLAG (bool, optional): flag deciding wether to add the value of the data point raised as an error. Defaults to True.
+        """
         if VALUE_FLAG:
             if type(col) == type(str()):
                 row = {

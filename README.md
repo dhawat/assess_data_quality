@@ -1,18 +1,20 @@
-# improved_data_quality
-This github repo contains the data and works on the challenge de mathematiques et entrepris 2021:  https://challenge-maths.sciencesconf.org/
+# Introduction 
+Data is what guides today's decision making process, it is at the center of modern institutions, but according to the saying : GIGO (Garbage In Garbage Out), bad data may have detrimental consequences on the company that used it. It is then of crucial order that the data be of best quality possible, however, the process of cleaning the data usually relies on deterministic rules, which makes it hard, tedious and time consuming. Thus AMIES along with the company Foyer proposed a challenge about the automation of the process. This lead us to propose algorithms that need as little as possible of human intervention. 
+* Fully automated code for the evaluation of data quality. 
+* Several strategies to detect "bad data".
+We refer the reader to the <url_arxiv_rapport> for more information on the used methods. 
 # some useful git command
-The folder code will contains the file .py and .ibynb
-The folder report will contains the latex repo as file .tex (please do not add .pdf unless picture to prevent conflict).
+The folder code will contain the file .py and .ibynb
 You can add this repo on your local machine using: git clone <url>
 Before any work session use: git pull
 this will prevent you from conflict
 when your work is done use:
 git add ... ,(to add your change)****
 git commit -m "write a message explaining your change"
-git push , (to add your change online on gitub).
+git push , (to add your change online on github).
 for notebook please clear the output before push to prevent conflict, and load data.
-# project informations:
-Nom of the company : Foyer : https://www.foyer.lu/en/homepage
+# project information:
+
 \
 Bibliography:
 \

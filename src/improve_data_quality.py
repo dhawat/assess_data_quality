@@ -594,12 +594,15 @@ class Data:
         return summery_tuple
 
     def bad_logical_index(self, thres_uniqueness=0.001, freq_error=10):
-        """Operates on data attribute directly. For each two columns which contain strings and doesn't have a uniqueness ratio too high.
-        A frequency histogram is established for each non na element of column 1 with regards to column 2. If an element of column 2 in this histogram is too rare it is then flagged as a logical error.
+        """Selects two numerical columns (nbr_col1, nbr_col2). For each value contained in nbr_col1 gets all the rows (index) which contains this word.
+        From all the values of nbr_col2[index] forms a frequency histogram. Every extreme values in this histogram are flagged as an error.
+        Only does this routine if the uniqueness ratio of nbr_col1 and nbr_col2 is lower than thres_uniqueness. 
 
+        Args:
+            thres_uniqueness (float, optional): threshold of uniqueness below which a numerical column is considered. Defaults to 0.001.
+            freq_error (int, optional): threshold below which if a value appear less than the treshold it is considered an error. Defaults to 10.
 
         Returns:
-
             idxes (list): list of bad indexes found to have logical errors in the rows associated.
             col_names (list): associated columns names of the raised logical error.
         """
@@ -716,18 +719,23 @@ class Data:
             self.bad_index = self.bad_index.append(row, ignore_index=True)
 
     def bad_float_index(
-        self, thres_unique_str=0.0002, thres_unique_nbr=0.04, thresh_std=7
+        self, thres_unique_str=0.0002, thres_unique_nbr=0.04, std=7
     ):
-        """Same idea as in bad_logical_index function, execept it's between columns
-        of string and columns of floats, using quantiles to determine interclasses extremes.
+        """
+        Selects two columns, one nominal (str_col) and one numerical (nbr_col). For each word contained in str_col gets all the rows (index) which contains this word.
+        From all the values of nbr_col[index] forms a frequency histogram. Every extreme values in this histogram are flagged as an error.
+        Only does this routine if the uniqueness ratio of str_col is lower than thres_unique_str and the uniqueness ratio of the nbr_col is higher than thres_unique_nbr.
 
-        Args :
-            function_name : quantiles or z-scores.
+        Args:
+            thres_unique_str (float, optional): threshold of uniqueness below which a nominal column is considered. Defaults to 0.0002.
+            thres_unique_nbr (float, optional): threshold of uniqueness above which a numerical column. Defaults to 0.04.
+            std (int, optional): multiplying factor of the standard deviation used in function z_score, called on number columns. Defaults to 7.
 
         Returns:
-
-        [idxes, col_names]: [list of list of bad indexes and associated columns names]
+            idxes (list): list of bad indexes found to have extreme values errors in the rows associated.
+            col_names (list): associated columns names of the raised errors.
         """
+
         df = self.data.iloc[self.good_index]
         col_names = []
         idxes = []
@@ -743,7 +751,7 @@ class Data:
                                     ar_classe = elements[col2][elements[col1] == elem]
                                     if len(ar_classe) > 0:
                                         indx_outliers = utils._z_score(
-                                            ar_classe, 0.2, thresh_std
+                                            ar_classe, 0.2, std
                                         )  # 0,2 value is here to keep consistency when calling z_score and is for uniq_col
                                         if len(indx_outliers) > 0:
                                             val_outliers = ar_classe.loc[indx_outliers]
@@ -758,4 +766,9 @@ class Data:
         return idxes, col_names
 
     def save_result(self, path, **kwargs):
+        """Saves the results of the bad indexes inside a csv file.
+
+        Args:
+            path (string): path and name of the csv file.
+        """
         self.bad_index.to_csv(path, **kwargs)

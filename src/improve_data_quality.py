@@ -17,7 +17,7 @@ class Data:
             path (str): path to the data file, extension should be either csv, json, sql or xlsx.
 
             drop_first_col (bool, optional): if true drop the first column which most of the time is a unique identifier and not directly data points. Defaults to True.
-        
+
         Keywords Args:
 
             kwargs (dic): dictionary of additional argument passed to the read method of the data. See utils._to_DataFrame.
@@ -118,7 +118,7 @@ class Data:
 
     @str_col.setter
     def str_col(self, value):
-        """Setter for private attribute _str_col. 
+        """Setter for private attribute _str_col.
 
         Args:
             value (list): list of string containing columns names of the stringlike columns present in the data file.
@@ -317,8 +317,8 @@ class Data:
 
             method (str, optional): name of the chosen method. Defaults to "affinity_propagation".
 
-            affinity (str, optional): which affinity to use. At the moment ‘precomputed’ and euclidean are supported.
-            ‘euclidean’ uses the negative squared euclidean distance between points. Defaults to "precomputed".
+            affinity (str, optional): which affinity to use. At the moment "precomputed" and euclidean are supported.
+            "euclidean" uses the negative squared euclidean distance between points. Defaults to "precomputed".
 
             damping (float, optional): Damping factor (between 0.5 and 1) is the extent to which the current value is maintained relative to incoming values (weighted 1 - damping). This in order to avoid numerical oscillations when updating these values (messages). Defaults to 0.5.
 
@@ -482,8 +482,8 @@ class Data:
     def outlier_lof(self, **params):
         """Outlier detection over rows, for numerical columns only using the local outlier factor method provided by sklearn.
 
-                
-        .. seealso:: 
+
+        .. seealso::
             `Z score <https://en.wikipedia.org/wiki/Local_outlier_factor>`_
 
         .. warning::
@@ -596,7 +596,7 @@ class Data:
     def bad_logical_index(self, thres_uniqueness=0.001, freq_error=10):
         """Selects two numerical columns (nbr_col1, nbr_col2). For each value contained in nbr_col1 gets all the rows (index) which contains this word.
         From all the values of nbr_col2[index] forms a frequency histogram. Every extreme values in this histogram are flagged as an error.
-        Only does this routine if the uniqueness ratio of nbr_col1 and nbr_col2 is lower than thres_uniqueness. 
+        Only does this routine if the uniqueness ratio of nbr_col1 and nbr_col2 is lower than thres_uniqueness.
 
         Args:
             thres_uniqueness (float, optional): threshold of uniqueness below which a numerical column is considered. Defaults to 0.001.
@@ -677,7 +677,7 @@ class Data:
         Args:
             idx (int): index of the row raised by detection methods to be added to bad_index.
             col (str): name of the column raised by detection methods  to be added to the bad_index.
-            col_type (str): name of the error raised by detection methods to be added to the bad_index. 
+            col_type (str): name of the error raised by detection methods to be added to the bad_index.
             VALUE_FLAG (bool, optional): flag deciding wether to add the value of the data point raised as an error. Defaults to True.
         """
         if VALUE_FLAG:

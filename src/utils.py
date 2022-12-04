@@ -9,7 +9,7 @@ from sklearn.cluster import AffinityPropagation
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from markov_clustering import MarkovClustering
 
-# from gensim.models import Word2Vec
+from gensim.models import Word2Vec
 #! add insignifante column test for non in column
 
 """df = pd.read_csv("logs.csv")  # read data
@@ -341,17 +341,7 @@ def index_incorrect_grammar(col, thresh=10, method='affinity_propagation', affin
         raise ValueError("The available methods are 'affinity_propagation' and 'markov_clustering'.")
 
 
-#! I'm here
 def _row_is_none(df, thresh_row_1=0.7, thresh_row_2=0.5, thresh_col=0.8):
-    """check row having mean number of none > thresh_row_1 in the data frame cleaned and > thresh_row_2 in data frame cleaned from columns having mean number of none > threshcol.
-    Args:
-        df ([DataFrame]): [description]
-        thresh_row_1 (float, optional): [description]. Defaults to 0.75.
-        thresh_row_2 (float, optional): [description]. Defaults to 0.5.
-        thresh_col (float, optional): [description]. Defaults to 0.8.
-    Returns:
-        [type]: [description]
-    """
     df_clean, _ = _is_duplicated(df)
 
     mean_none_row_1 = df_clean.isnull().mean(axis=1)  # mean(none) in each row of df_c
@@ -394,17 +384,6 @@ def _drop_non_unique(df, col_name, thresh_1=0.99, thresh_2=0.001, clean_dup=True
 
 
 def _col_is_none(df, thresh_col=0.99, clean_dup=False):
-    """check column having mean number of nan > thresh
-
-    Args:
-        df ([type]): [description]
-        thresh_col (float, optional): [description]. Defaults to 0.99.
-        clean_dup (bool, optional): [description]. Defaults to False.
-
-    Returns:
-        [type]: [description]
-    """
-
     if clean_dup:
         df, _ = _is_duplicated(df)  # cleaning duplications in the dataframe
 
@@ -417,13 +396,6 @@ def _col_is_none(df, thresh_col=0.99, clean_dup=False):
 
 
 def _string_to_nbr(df):
-    """Convert a DataFrame (which may have multiple columns) of strings into a return df
-    with vectors inside.
-    Args:
-        df ([DataFrame]): [DataFrame containing strings]
-    Returns:
-        [DataFrame]: [DataFrame converted into vectors]
-    """
     df = df.fillna("Nan")
     document = []
     for col in df.columns:
@@ -453,12 +425,6 @@ def _to_date_and_float(df):
 
 
 def _tendancy_detection(df, thresh=0.999):
-    """
-    df = dataframe
-    thresh = threshold for the tendancy detection
-    return:
-            dictionnaire with the pair of columns and the anomaly index detected.
-    """
     dictionnaire_anomalie_tendance = {}
 
     for w1 in df:
@@ -474,15 +440,25 @@ def _tendancy_detection(df, thresh=0.999):
                     )
     return dictionnaire_anomalie_tendance
 
-def outlier_detection(array_classe, q_1=0.25, q_3=0.75):
-        QQ_1 = np.quantile(array_classe, 0.05)
-        Q_1 = np.quantile(array_classe, q_1)
-        Q_3 = np.quantile(array_classe, q_3)
-        IQR = Q_3 - Q_1
-        upper_bound = Q_3 + (IQR * 1.25)
-        v_outlier = np.where(((array_classe <= QQ_1)
-                                        | (array_classe >= upper_bound)))[0]
-        if len(v_outlier) > 0:
-            return v_outlier
-        else:
-            return []
+# def outlier_detection(array_classe, q_1=0.25, q_3=0.75):
+#     """
+
+#     Args:
+#         array_classe (_type_): _description_
+#         q_1 (float, optional): _description_. Defaults to 0.25.
+#         q_3 (float, optional): _description_. Defaults to 0.75.
+
+#     Returns:
+#         _type_: _description_
+#     """
+#     QQ_1 = np.quantile(array_classe, 0.05)
+#     Q_1 = np.quantile(array_classe, q_1)
+#     Q_3 = np.quantile(array_classe, q_3)
+#     IQR = Q_3 - Q_1
+#     upper_bound = Q_3 + (IQR * 1.25)
+#     v_outlier = np.where(((array_classe <= QQ_1)
+#                                     | (array_classe >= upper_bound)))[0]
+#     if len(v_outlier) > 0:
+#         return v_outlier
+#     else:
+#         return []

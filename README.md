@@ -1,33 +1,44 @@
-# Assess data quality 
-is a selection of plug-and-play algorithms that need as little as possible of human intervention to asses data quality.
+# Assess data quality
+
+A plug-and-play algorithm that needs as little as possible human intervention to assess data quality.
+
 - [Assess data quality](#assess-data-quality)
     - [Introduction](#introduction)
     - [Installation](#installation)
-    - [Brief overview of the folder](#brief-overview-of-the-folder)
-### Introduction
-> Data is what guides today's decision making process, it is at the center of modern institutions, but according to the saying : GIGO (Garbage In Garbage Out), bad data may have detrimental consequences on the company that used it. It is then of crucial order that the data be of best quality possible, however, the process of cleaning the data usually relies on deterministic rules, which makes it hard, tedious and time consuming. Thus AMIES along with the company Foyer proposed a challenge about the automation of the process. This leads us to propose plug-and-play algorithms that need as little as possible of human intervention. 
+    - [Getting started](#getting-started)
 
-`Assess data quality` is a project that allows for
-  - Fully automated code for the evaluation of data quality. 
-  - Proposes several strategies to detect "bad data".
+### Introduction
+
+> Data is what guides today's decision-making process, it is at the center of modern institutions.
+> But according to the saying: GIGO (Garbage In Garbage Out), bad data may have detrimental consequences on the company that used it.
+> It is then of crucial order that the data be of the best quality possible.
+> However, the process of cleaning the data usually relies on deterministic rules, which makes it hard, tedious, and time-consuming.
+> Thus [`AMIES`](<https://www.agence-maths-entreprises.fr/public/pages/index.html>) along with the company [`Foyer`](https://www.foyer.lu/en) proposed a [`challenge`](https://challenge-maths.sciencesconf.org/) about the automation of the process.
+> These plug-and-play algorithms are the results of our work during the challenge.
+> As we are among the [`winners`](https://briques2math.home.blog/2021/10/26/diala-mariem-et-mehdi-evaluation-automatique-de-la-qualite-de-donnees/) of the challenge we decided to publish the code and develop it in future work.
+
+`Assess data quality` is an open-source Python project which currently collects
+
+- A plug-and-play algorithm with several strategies to detect "bad data" in a given data set.
 
 ### Installation
 
-You can add this repository on your local machine using git commands:
+Two different paths are suggested:
 
-- if you considered [forking the repository](https://github.com/)
+- Fork the repository:
+
+  This will allow you to interact with the original repository (raise issues, get updates, propose pull requests, etc.) based on the fact that you'll share a common history.
+
+- Clone the repository:
+
+  Make sure you have git installed on the computer
 
   ```bash
-  git clone https://github.com/your_user_name/put_name_here
+  cd <directory-of-the-choice>
+  git clone https://github.com/<github-user-name>/assess_data_quality.git
   ```
 
-- if you have **not** forked the repository
+### Getting started
 
-  ```bash
-  git clone https://github.com/
-  ```
-
-### Brief overview of the folder
-
-The folder contains .py and .ipynb files containing the functions that we propose and some tests that we have run, along with a presentation (.pptx file) of the work and functions that were used.
-
+``test.py`` that showcases the result of the algorithm applied to the test dataset ``data.csv`` is available in the [`./test`](./test) folder.
+The dataset ``data.csv`` (available in the [`./test`](./test) folder) is a subset of a sales of agricultural machinery dataset.

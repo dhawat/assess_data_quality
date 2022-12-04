@@ -10,7 +10,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from markov_clustering import MarkovClustering
 
 from gensim.models import Word2Vec
-#! add insignifante column test for non in column
+# add insignifante column test for non in column
 
 """df = pd.read_csv("logs.csv")  # read data
 df = df.set_index("d")  # to re-index with a column 'd'
